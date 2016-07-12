@@ -47,7 +47,7 @@ With no input, read standard input.
 ```
 Usage: pscut [-h|--help] [-d "delimiter"] -i "index,..." [input ...]
 Print selected parts of lines from each input to standard output.
-With no FILE, read standard input.
+With no input, read standard input.
 
   -d "delimiter"        use "delimiter" instead of "," for field delimiter
   -i "index,..."        select only these fields(0 origin)
