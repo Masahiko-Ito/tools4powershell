@@ -45,12 +45,12 @@ With no input, read standard input.
 
 ## pscut - remove sections from each line of files
 ```
-Usage: pscut [-h|--help] [-d ""delimiter""] -i ""index,..."" [input ...]
+Usage: pscut [-h|--help] [-d "delimiter"] -i "index,..." [input ...]
 Print selected parts of lines from each input to standard output.
 With no FILE, read standard input.
 
-  -d ""delimiter""        use ""delimiter"" instead of "","" for field delimiter
-  -i ""index,...""        select only these fields(0 origin)
+  -d "delimiter"        use "delimiter" instead of "," for field delimiter
+  -i "index,..."        select only these fields(0 origin)
 ```
 
 ## pstee - read from standard input and write to standard output and files
@@ -72,13 +72,13 @@ With no options, matching lines are merged to the first occurrence.
 
 ## psjoin - join lines of two files on a common field
 ```
-Usage: psjoin [-h|--help] [-d ""delimiter""] [-1 ""index,...""] [-2 ""index,...""] [-a [m|1|2|12|21]] [-m [1|2]] input1 input2
+Usage: psjoin [-h|--help] [-d "delimiter"] [-1 "index,..."] [-2 "index,..."] [-a [m|1|2|12|21]] [-m [1|2]] input1 input2
 For each pair of input lines with identical join fields, write a line to
-standard output.  The default join field is the first, delimited by "","".
+standard output.  The default join field is the first, delimited by ",".
 
-  -d ""delimiter""        use ""delimiter"" as input and output field separator instead of "",""
-  -1 ""index,...""        join on this index(s) of file 1 (default 0)
-  -2 ""index,...""        join on this index(s) of file 2 (default 0)
+  -d "delimiter"        use "delimiter" as input and output field separator instead of ","
+  -1 "index,..."        join on this index(s) of file 1 (default 0)
+  -2 "index,..."        join on this index(s) of file 2 (default 0)
   -a m                    write only matching lines (default)
      1                    write only unpairable lines from input1
      2                    write only unpairable lines from input2
@@ -92,8 +92,8 @@ standard output.  The default join field is the first, delimited by "","".
 Usage: psxls2csv [-h|--help] [-i input] [-s sheet] [-o [output|-]]
 Convert specified excel sheet to csv.
 If input is not specified, all excel files in current directory will be converted.
-If output is not specified, input will be converted into same filename, but with extention "".csv"".
-If ""-"" is specified for ""-o"" option, input will be converted into stdout.
+If output is not specified, input will be converted into same filename, but with extention ".csv".
+If "-" is specified for "-o" option, input will be converted into stdout.
 
 BUGS
   If input is not specified and output is specified, only last excel sheet in current directory will remain in output file.
