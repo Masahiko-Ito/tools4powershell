@@ -1,3 +1,6 @@
+#
+# pscat - concatenate files and print on the standard output
+#
 function pscat {
 	begin{
 		$numberSw = "off"
@@ -6,7 +9,10 @@ function pscat {
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "pscat [-h|--help] [-n] [input ...]"
+				write-output "Usage: pscat [-h|--help] [-n] [input ...]"
+				write-output "Concatenate input(s), or standard input, to standard output."
+				write-output ""
+				write-output "  -n        number all output lines"
 				return
 			}elseif ($args[$i] -eq "-n"){
 				$numberSw = "on"
@@ -44,6 +50,9 @@ function pscat {
 	}
 }
 
+#
+# psgrep - print lines matching a pattern
+#
 function psgrep {
 	begin{
 		$ignorecaseSw = "off"
@@ -54,7 +63,11 @@ function psgrep {
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "psgrep [-h|--help] [-v] [-i] regex [input ...]"
+				write-output "Usage: psgrep [-h|--help] [-v] [-i] regex [input ...]"
+				write-output "Search for regex in each input or standard input."
+				write-output ""
+				write-output "  -v        select non-matching lines"
+				write-output "  -i        ignore case distinctions"
 				return
 			}elseif ($args[$i] -eq "-v"){
 				$invertSw = "on"
@@ -136,16 +149,21 @@ function psgrep {
 	}
 }
 
+#
+# pswcl - print newline counts for each file
+#
 function pswcl {
 	begin{
 		$helpSw = $false
 		$number = 0
+		$total_number = 0
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "pswcl [-h|--help] [input ...]"
+				write-output "Usage: pswcl [-h|--help] [input ...]"
+				write-output "Print newline counts for each input, and a total line if more than one input is specified."
 				return
 			}else{
 				$files[$filesIndex] = $args[$i]
@@ -163,6 +181,7 @@ function pswcl {
 				}
 				$out = $number.tostring() + " " + $args[$i]
 				write-output $out
+				$total_number += $number
 			}
 		}else{
 			if ($_ -ne $null){
@@ -174,11 +193,17 @@ function pswcl {
 		if ($helpSw -eq $false){
 			if ($filesIndex -eq 0){
 				write-output $number
+			}else{
+				$out = $total_number.tostring() + " TOTAL"
+				write-output $out
 			}
 		}
 	}
 }
 
+#
+# pssed - stream editor for filtering and transforming text
+#
 function pssed {
 	begin{
 		$before_string = $null
@@ -187,7 +212,8 @@ function pssed {
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "pssed [-h|--help] regex string [input ...]"
+				write-output "Usage: pssed [-h|--help] regex string [input ...]"
+				write-output "For each substring matching regex in each lines from input, substitute the string."
 				return
 			}elseif ($before_string -eq $null){
 				$before_string = $args[$i]
@@ -217,17 +243,25 @@ function pssed {
 	}
 }
 
+#
+# pshead - output the first part of files
+#
 function pshead {
 	begin{
-		$line = $null
+		$line = 10
 		$wline = 0
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "pshead [-h|--help] line_number [input ...]"
+				write-output "Usage: pshead [-h|--help] [-l line_number] [input ...]"
+				write-output "Print the first 10 lines of each input to standard output."
+				write-output "With no input, read standard input."
+				write-output ""
+				write-output "  -l line_number        print the first line_number lines instead of the first 10"
 				return
-			}elseif ($line -eq $null){
+			}elseif ($args[$i] -eq "-l"){
+				$i++
 				$line = $args[$i]
 			}else{
 				$files[$filesIndex] = $args[$i]
@@ -263,19 +297,27 @@ function pshead {
 	}
 }
 
+#
+# pstail - output the last part of files
+#
 function pstail {
 	begin{
 		$helpSw = $false
 		$tmpfile = [System.IO.Path]::GetTempFileName()
-		$line = $null
+		$line = 10
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "pstail [-h|--help] line_number [input ...]"
+				write-output "Usage: pstail [-h|--help] [-l line_number] [input ...]"
+				write-output "Print the last 10 lines of each input to standard output."
+				write-output "With no input, read standard input."
+				write-output ""
+				write-output "  -l line_number        print the last line_number lines instead of the last 10"
 				return
-			}elseif ($line -eq $null){
+			}elseif ($args[$i] -eq "-l"){
+				$i++
 				$line = $args[$i]
 			}else{
 				$files[$filesIndex] = $args[$i]
@@ -304,6 +346,9 @@ function pstail {
 	}
 }
 
+#
+# pscut - remove sections from each line of files
+#
 function pscut {
 	begin{
 		$delimiter = ","
@@ -311,7 +356,12 @@ function pscut {
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "pscut [-h|--help] [-d ""delimiter""] [-i ""index,...""] [input ...]"
+				write-output "Usage: pscut [-h|--help] [-d ""delimiter""] -i ""index,..."" [input ...]"
+				write-output "Print selected parts of lines from each input to standard output."
+				write-output "With no FILE, read standard input."
+				write-output ""
+				write-output "  -d ""delimiter""        use ""delimiter"" instead of "","" for field delimiter"
+				write-output "  -i ""index,...""        select only these fields(0 origin)"
 				return
 			}elseif ($args[$i] -eq "-d"){
 				$i++
@@ -359,13 +409,17 @@ function pscut {
 	}
 }
 
+#
+# pstee - read from standard input and write to standard output and files
+#
 function pstee {
 	begin{
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "pstee [-h|--help] [output ...]"
+				write-output "Usage: pstee [-h|--help] [output ...]"
+				write-output "Copy standard input to each output, and also to standard output."
 				return
 			}else{
 				$files[$filesIndex] = $args[$i]
@@ -383,6 +437,9 @@ function pstee {
 	}
 }
 
+#
+# psuniq - report or omit repeated lines
+#
 function psuniq {
 	begin{
 		$helpSw = $false
@@ -395,7 +452,13 @@ function psuniq {
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "psuniq [-h|--help] [-d|-c] [input ...]"
+				write-output "Usage: psuniq [-h|--help] [-d|-c] [input ...]"
+				write-output "Filter adjacent matching lines from input (or standard input),"
+				write-output "writing to standard output."
+				write-output "With no options, matching lines are merged to the first occurrence."
+				write-output ""
+				write-output "  -d        only print duplicate lines"
+				write-output "  -c        prefix lines by the number of occurrences"
 				return
 			}elseif ($args[$i] -eq "-d"){
 				$duplicateSw = "on"
@@ -529,6 +592,9 @@ function psuniq {
 	}
 }
 
+#
+# psjoin - join lines of two files on a common field
+#
 function psjoin {
 	begin{
 		$helpSw = $false
@@ -542,7 +608,19 @@ function psjoin {
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "psjoin [-h|--help] [-d ""delimiter""] [-1 ""index,...""] [-2 ""index,...""] [-a [m|1|2|12|21]] [-m [1|2]] [input ...]"
+				write-output "Usage: psjoin [-h|--help] [-d ""delimiter""] [-1 ""index,...""] [-2 ""index,...""] [-a [m|1|2|12|21]] [-m [1|2]] input1 input2"
+				write-output "For each pair of input lines with identical join fields, write a line to"
+				write-output "standard output.  The default join field is the first, delimited by "",""."
+				write-output ""
+				write-output "  -d ""delimiter""        use ""delimiter"" as input and output field separator instead of "","""
+				write-output "  -1 ""index,...""        join on this index(s) of file 1 (default 0)"
+				write-output "  -2 ""index,...""        join on this index(s) of file 2 (default 0)"
+				write-output "  -a m                    write only matching lines (default)"
+				write-output "     1                    write only unpairable lines from input1"
+				write-output "     2                    write only unpairable lines from input2"
+				write-output "     12                   write all lines from input1 and matching lines from input2"
+				write-output "     21                   write all lines from input2 and matching lines from input1"
+				write-output "  -m [1|2]                specify input which has multiple join fields"
 				return
 			}elseif ($args[$i] -eq "-d"){
 				$i++
@@ -704,7 +782,7 @@ function psjoin {
 				}elseif ($key2 -eq $null){
 					$ret = $true
 				}else{
-					if ($key1 -clt $key2){
+					if ($key1.tostring() -clt $key2.tostring()){
 						$ret = $true
 					}else{
 						$ret = $false
@@ -728,6 +806,9 @@ function psjoin {
 	}
 }
 
+#
+# psxls2csv - convert excel to csv
+#
 function psxls2csv {
 	begin{
 		$helpSw = $false
@@ -739,7 +820,14 @@ function psxls2csv {
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "psxls2csv [-h|--help] [-i input] [-s sheet] [-o [output|-]]"
+				write-output "Usage: psxls2csv [-h|--help] [-i input] [-s sheet] [-o [output|-]]"
+				write-output "Convert specified excel sheet to csv."
+				write-output "If input is not specified, all excel files in current directory will be converted."
+				write-output "If output is not specified, input will be converted into same filename, but with extention "".csv""."
+				write-output "If ""-"" is specified for ""-o"" option, input will be converted into stdout."
+				write-output ""
+				write-output "BUGS"
+				write-output "  If input is not specified and output is specified, only last excel sheet in current directory will remain in output file."
 				return
 			}elseif ($args[$i] -eq "-i"){
 				$i++
@@ -771,7 +859,7 @@ function psxls2csv {
 				}elseif ($strOutput -eq "-"){
 					$OutPath = [System.IO.Path]::GetTempFileName()
 				}else{
-					$OutPath = (get-location) + "\" + $strOutput
+					$OutPath = (get-location).tostring() + "\" + $strOutput
 				}
 				$objExcel = New-Object -ComObject Excel.Application
 				$objExcel.DisplayAlerts = $false
