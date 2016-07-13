@@ -358,7 +358,7 @@ function pscut {
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				write-output "Usage: pscut [-h|--help] [-d ""delimiter""] -i ""index,..."" [input ...]"
 				write-output "Print selected parts of lines from each input to standard output."
-				write-output "With no FILE, read standard input."
+				write-output "With no input read standard input."
 				write-output ""
 				write-output "  -d ""delimiter""        use ""delimiter"" instead of "","" for field delimiter"
 				write-output "  -i ""index,...""        select only these fields(0 origin)"
