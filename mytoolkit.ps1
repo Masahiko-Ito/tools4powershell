@@ -194,8 +194,10 @@ function pswcl {
 			if ($filesIndex -eq 0){
 				write-output $number
 			}else{
-				$out = $total_number.tostring() + " TOTAL"
-				write-output $out
+				if ($filesIndex -gt 1){
+					$out = $total_number.tostring() + " TOTAL"
+					write-output $out
+				}
 			}
 		}
 	}
