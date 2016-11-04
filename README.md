@@ -116,3 +116,33 @@ Print temporary file path to standard output.
 Usage: psabspath [-h|--help] file
 Print absolute file path for file to standard output.
 ```
+
+## psreadpassword - get password safely from console
+```
+Usage: psreadpassword [-h|--help]
+Get password safely from console and decrypt and print it to console.
+```
+
+## psconwrite - output arguments to console without newline
+```
+Usage: psconwrite [-h|--help] [arg ...]
+Print arguments to console without newline.
+```
+
+## psconwriteline - output arguments to console with newline
+```
+Usage: psconwriteline [-h|--help] [arg ...]
+Print arguments to console with newline.
+```
+
+## psconreadline - read from console
+```
+Usage: psconreadline [-h|--help]
+Read line and print it to console with newline.
+```
+
+## psopen - Open IO.Stream
+```
+Usage: psopen [-h|--help] [[-r|-w|-a] [inputfile|output]] [-e encoding]
+Open IO.Stream and get object.
+```
