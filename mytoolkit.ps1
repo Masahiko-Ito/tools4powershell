@@ -971,3 +971,147 @@ function psabspath ($path){
 		}
 	}
 }
+#
+# psreadpassword - get password safely from console
+#
+function psreadpassword (){
+	begin{
+		$helpSw = $false
+		if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+			$helpSw = $true
+			write-output "Usage: psreadpassword [-h|--help]"
+			write-output "Get password safely from console and decrypt and print it to console."
+			write-output ""
+			return
+		}
+	}
+	process{
+	}
+	end{
+		if ($helpSw -eq $false){
+			$ss = Read-Host -AsSecureString
+			$ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($ss)
+			$password = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+			[System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr);
+			Write-Output $password
+		}
+	}
+}
+#
+# psconwrite - output arguments to console without newline
+#
+function psconwrite(){
+	begin{
+		$helpSw = $false
+		if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+			$helpSw = $true
+			write-output "Usage: psconwrite [-h|--help] [arg ...]"
+			write-output "Print arguments to console without newline."
+			write-output ""
+			return
+		}
+	}
+	process{
+	}
+	end{
+		if ($helpSw -eq $false){
+			$out = $args -join ""
+			[Console]::Out.write($out)
+		}
+	}
+	
+}
+#
+# psconwriteline - output arguments to console with newline
+#
+function psconwriteline(){
+	begin{
+		$helpSw = $false
+		if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+			$helpSw = $true
+			write-output "Usage: psconwriteline [-h|--help] [arg ...]"
+			write-output "Print arguments to console with newline."
+			write-output ""
+			return
+		}
+	}
+	process{
+	}
+	end{
+		if ($helpSw -eq $false){
+			$out = $args -join ""
+			[Console]::Out.writeLine($out)
+		}
+	}
+	
+}
+#
+# psconreadline - read from console
+#
+function psconreadline(){
+	begin{
+		$helpSw = $false
+		if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+			$helpSw = $true
+			write-output "Usage: psconreadline [-h|--help]"
+			write-output "Read line and print it to console with newline."
+			write-output ""
+			return
+		}
+	}
+	process{
+	}
+	end{
+		if ($helpSw -eq $false){
+			$input = [Console]::In.readLine()
+			write-output $input
+		}
+	}
+}
+#
+# psopen - Open IO.Stream
+#
+function psopen(){
+	begin{
+		$encoding = "Shift_JIS"
+		$helpSw = $false
+		for ($i = 0; $i -lt $args.length; $i++){
+			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
+				$helpSw = $true
+				write-output "Usage: psopen [-h|--help] [[-r|-w|-a] [inputfile|output]] [-e encoding]"
+				write-output "Open IO.Stream and get object."
+				write-output ""
+				return
+			}elseif ($args[$i] -eq "-r"){
+				$iomode = "r"
+				$i++
+				$inputfile = (get-location).tostring() + "\" + $args[$i]
+			}elseif ($args[$i] -eq "-w"){
+				$iomode = "w"
+				$i++
+				$outputfile = (get-location).tostring() + "\" + $args[$i]
+			}elseif ($args[$i] -eq "-a"){
+				$iomode = "a"
+				$i++
+				$outputfile = (get-location).tostring() + "\" + $args[$i]
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$encoding = $args[$i]
+			}
+		}
+	}
+	process{
+	}
+	end{
+		if ($helpSw -eq $false){
+			if ($iomode -eq "r"){
+				$objIO = New-Object System.IO.StreamReader($inputfile, [Text.Encoding]::GetEncoding($encoding))
+			}elseif ($iomode -eq "w"){
+				$objIO = New-Object System.IO.StreamWriter($outputfile, $false, [Text.Encoding]::GetEncoding($encoding))
+			}else{
+				$objIO = New-Object System.IO.StreamWriter($outputfile, $true, [Text.Encoding]::GetEncoding($encoding))
+			}
+			return $objIO
+		}
+	}
+}
