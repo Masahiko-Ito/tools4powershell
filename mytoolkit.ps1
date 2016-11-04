@@ -360,7 +360,7 @@ function pscut {
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				write-output "Usage: pscut [-h|--help] [-d ""delimiter""] -i ""index,..."" [input ...]"
 				write-output "Print selected parts of lines from each input to standard output."
-				write-output "With no input read standard input."
+				write-output "With no input, read standard input."
 				write-output ""
 				write-output "  -d ""delimiter""        use ""delimiter"" instead of "","" for field delimiter"
 				write-output "  -i ""index,...""        select only these fields(0 origin)"
@@ -902,5 +902,72 @@ function psxls2csv {
 		}
 	}
 	end{
+	}
+}
+#
+# print
+#
+function psprint (){
+	begin{
+		$helpSw = $false
+		if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+			$helpSw = $true
+			write-output "Usage: psprint [-h|--help] [arg ...]"
+			write-output "Print arguments to standard output."
+			write-output ""
+			return
+		}
+	}
+	process{
+	}
+	end{
+		if ($helpSw -eq $false){
+			$out = $args -join ""
+			write-output $out
+		}
+	}
+}
+#
+# pstmpfile - get temporary file
+#
+function pstmpfile (){
+	begin{
+		$helpSw = $false
+		if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+			$helpSw = $true
+			write-output "Usage: pstmpfile [-h|--help]"
+			write-output "Print temporary file path to standard output."
+			write-output ""
+			return
+		}
+	}
+	process{
+	}
+	end{
+		if ($helpSw -eq $false){
+			[System.IO.Path]::GetTempFileName()
+		}
+	}
+}
+#
+# psabspath - get absolute file path
+#
+function psabspath ($path){
+	begin{
+		$helpSw = $false
+		if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+			$helpSw = $true
+			write-output "Usage: psabspath [-h|--help] file"
+			write-output "Print absolute file path for file to standard output."
+			write-output ""
+			return
+		}
+	}
+	process{
+	}
+	end{
+		if ($helpSw -eq $false){
+			(get-location).tostring() + "\" + $path
+		}
 	}
 }
