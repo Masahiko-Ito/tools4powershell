@@ -98,3 +98,21 @@ If "-" is specified for "-o" option, input will be converted into stdout.
 BUGS
   If input is not specified and output is specified, only last excel sheet in current directory will remain in output file.
 ```
+
+## psprint - print arguments to standard output
+```
+Usage: psprint [-h|--help] [arg ...]
+Print arguments to standard output.
+```
+
+## pstmpfile - get temporary file
+```
+Usage: pstmpfile [-h|--help]
+Print temporary file path to standard output.
+```
+
+## psabspath - get absolute file path
+```
+Usage: psabspath [-h|--help] file
+Print absolute file path for file to standard output.
+```
