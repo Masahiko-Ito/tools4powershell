@@ -1081,9 +1081,11 @@ function psconreadline(){
 #
 # ex. $inObj = psopen -r "input.txt"
 #     $rec = $inObj.readLine()
+#     $inObj.Close()
 #
 #     $outObj = psopen -w "output.txt"
 #     $outObj.writeLine($rec)
+#     $outObj.Close()
 #
 function psopen(){
 	begin{
