@@ -146,3 +146,177 @@ Read line and print it to console with newline.
 Usage: psopen [-h|--help] [[-r|-w|-a] [inputfile|output]] [-e encoding]
 Open IO.Stream and get object.
 ```
+
+## psexcel_open - Open excel_file and get excel_object for it
+```
+Usage: psexcel_open excel_file
+Open excel_file and get excel_object for it.
+```
+
+## psexcel_update - Save by overwrite
+```
+Usage: psexcel_update excel_object
+Save by overwrite.
+```
+
+## psexcel_save - Save into excel_file
+```
+Usage: psexcel_save excel_object excel_file
+Save into excel_file.
+```
+
+## psexcel_close - Close excel file by excel_object
+```
+Usage: psexcel_close excel_object
+Close excel file by excel_object.
+```
+
+## psexcel_getCell - Get value from range on sheet
+```
+Usage: psexcel_getCell excel_object sheet range
+Get value from range on sheet.
+```
+
+## psexcel_getCell - Get value from range on sheet
+```
+Usage: psexcel_getCell excel_object sheet range
+Get value from range on sheet.
+```
+
+## psexcel_setCell Set value on range on sheet
+```
+Usage: psexcel_setCell excel_object sheet range value
+Set value on range on sheet.
+```
+
+## psexcel_getFormula - Get formula from range on sheet
+```
+Usage: psexcel_getFormula excel_object sheet range
+Get formula from range on sheet.
+```
+
+## psexcel_setFormula - Set formula on range on sheet
+```
+Usage: psexcel_setFormula excel_object sheet range formula
+Set formula on range on sheet.
+```
+
+## psexcel_getBackgroundColor - Get index of background color from range on sheet
+```
+Usage: psexcel_getBackgroundColor excel_object sheet range
+Get index of background color from range on sheet.
+```
+
+## psexcel_setBackgroundColor - Set background color to color_index on range on sheet
+```
+Usage: psexcel_setBackgroundColor excel_object sheet range color_index
+Set background color to color_index on range on sheet.
+```
+
+## psexcel_getForegroundColor Get index of foreground color from range on sheet
+```
+Usage: psexcel_getForegroundColor excel_object sheet range
+Get index of foreground color from range on sheet.
+```
+
+## psexcel_setForegroundColor - Set foreground color to color_index on range on sheet
+```
+Usage: psexcel_setForegroundColor excel_object sheet range color_index
+Set foreground color to color_index on range on sheet.
+```
+
+## psexcel_getBold - Get $true or $false about bold from range on sheet
+```
+Usage: psexcel_getBold excel_object sheet range
+Get $true or $false about bold from range on sheet.
+```
+
+## psexcel_turnonBold - Turn on bold on range on sheet
+```
+Usage: psexcel_turnonBold excel_object sheet range
+Turn on bold on range on sheet.
+```
+
+## psexcel_turnoffBold - Turn off bold on range on sheet
+```
+Usage: psexcel_turnoffBold excel_object sheet range
+Turn off bold on range on sheet.
+```
+
+## psexcel_toggleBold - Toggle bold on range on sheet
+```
+Usage: psexcel_toggleBold excel_object sheet range
+Toggle bold on range on sheet.
+```
+
+## psexcel_getSheetCount - Get count of sheets
+```
+Usage: psexcel_getSheetCount excel_object
+Get count of sheets.
+```
+
+## psexcel_getSheetName - Get name of sheet
+```
+Usage: psexcel_getSheetName excel_object sheet
+Get name of sheet.
+```
+
+## psexcel_setSheetName - Set name of sheet
+```
+Usage: psexcel_setSheetName excel_object sheet name
+Set name of sheet.
+```
+
+## psexcel_getActiveSheetName Get name of active sheet
+```
+Usage: psexcel_getActiveSheetName excel_object
+Get name of active sheet.
+```
+
+## psexcel_setActiveSheetName - Set name of active sheet
+```
+Usage: psexcel_setActiveSheetName excel_object name
+Set name of active sheet.
+```
+
+## psexcel_copyCell - Copy range of cell to another cell
+```
+Usage: psexcel_copyCell excel_object source_sheet source_range dest_sheet dest_cell
+Copy range of cell to another cell.
+```
+
+## psexcel_preview - Print preview sheet
+```
+Usage: psexcel_preview excel_object sheet
+Print preview sheet.
+```
+
+## psexcel_print - Print sheet
+```
+Usage: psexcel_print excel_object sheet
+Print sheet.
+```
+
+## psexcel_turnonVisible - Turn on visible
+```
+Usage: psexcel_turnonVisible excel_object
+Turn on visible.
+```
+
+## psexcel_turnoffVisible - Turn off visible
+```
+Usage: psexcel_turnoffVisible excel_object
+Turn off visible.
+```
+
+## psexcel_turnonAlert - Turn on displayAlerts
+```
+Usage: psexcel_turnonAlert excel_object
+Turn on displayAlerts.
+```
+
+## psexcel_turnoffAlert - Turn off displayAlerts
+```
+Usage: psexcel_turnoffAlert excel_object
+Turn off displayAlerts.
+```
