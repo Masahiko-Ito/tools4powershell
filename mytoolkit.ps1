@@ -1627,7 +1627,3 @@ function psexcel_turnoffAlert($objExcel) {
 	}
 	$objExcel.DisplayAlerts = $false
 }
-
-#
-#$sheet.Range("A1:C3").Borders.LineStyle = 1 # A1 ‚©‚ç C3 ‚Ü‚ÅŒrü‚ğˆø‚­
-#
