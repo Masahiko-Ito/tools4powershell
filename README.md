@@ -177,12 +177,6 @@ Usage: psexcel_getCell excel_object sheet range
 Get value from range on sheet.
 ```
 
-## psexcel_getCell - Get value from range on sheet
-```
-Usage: psexcel_getCell excel_object sheet range
-Get value from range on sheet.
-```
-
 ## psexcel_setCell Set value on range on sheet
 ```
 Usage: psexcel_setCell excel_object sheet range value
