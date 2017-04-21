@@ -904,6 +904,7 @@ function psxls2csv {
 	end{
 	}
 }
+
 #
 # print
 #
@@ -927,6 +928,7 @@ function psprint (){
 		}
 	}
 }
+
 #
 # pstmpfile - get temporary file
 #
@@ -949,6 +951,7 @@ function pstmpfile (){
 		}
 	}
 }
+
 #
 # psabspath - get absolute file path
 #
@@ -971,6 +974,7 @@ function psabspath ($path){
 		}
 	}
 }
+
 #
 # psreadpassword - get password safely from console
 #
@@ -997,6 +1001,7 @@ function psreadpassword (){
 		}
 	}
 }
+
 #
 # psconwrite - output arguments to console without newline
 #
@@ -1021,6 +1026,7 @@ function psconwrite(){
 	}
 	
 }
+
 #
 # psconwriteline - output arguments to console with newline
 #
@@ -1045,6 +1051,7 @@ function psconwriteline(){
 	}
 	
 }
+
 #
 # psconreadline - read from console
 #
@@ -1068,8 +1075,15 @@ function psconreadline(){
 		}
 	}
 }
+
 #
 # psopen - Open IO.Stream
+#
+# ex. $inObj = psopen -r "input.txt"
+#     $rec = $inObj.readLine()
+#
+#     $outObj = psopen -w "output.txt"
+#     $outObj.writeLine($rec)
 #
 function psopen(){
 	begin{
@@ -1115,3 +1129,505 @@ function psopen(){
 		}
 	}
 }
+
+#
+# psexcel_open - Open excel_file and get excel_object for it
+#
+function psexcel_open($xlsPath) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_open excel_file"
+		write-output "Open excel_file and get excel_object for it."
+		write-output "ex."
+		write-output '    $xls = psexcel_open "Foo.xlsx"'
+		write-output ""
+		return
+	}
+
+	$objExcel = New-Object -ComObject Excel.Application
+
+#	$objExcel.Visible = $true
+	$objExcel.Visible = $false
+
+#	$objExcel.DisplayAlerts = $true
+	$objExcel.DisplayAlerts = $false
+
+	if ($xlsPath -match "^[A-Za-z]:"){
+		$strPath = $xlsPath
+	}else{
+		$strPath = (get-location).tostring() + "\" + $xlsPath
+	}
+
+	try {
+		$objExcel.Workbooks.Open($strPath) | out-null
+	}catch{
+		$objExcel.Workbooks.Add() | out-null
+		$objExcel.Workbooks.item(1).SaveAs($strPath) | out-null
+		$objExcel.Workbooks.Close() | out-null
+		$objExcel.Workbooks.Open($strPath) | out-null
+	}
+
+	return $objExcel
+}
+
+#
+# psexcel_update - Save by overwrite
+#
+function psexcel_update($objExcel) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_update excel_object"
+		write-output "Save by overwrite."
+		write-output "ex."
+		write-output '    psexcel_update $xls'
+		write-output ""
+		return
+	}
+
+	$objExcel.Save() | out-null
+}
+
+#
+# psexcel_save - Save into excel_file
+#
+function psexcel_save($objExcel, $xlsPath) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_save excel_object excel_file"
+		write-output "Save into excel_file."
+		write-output "ex."
+		write-output '    psexcel_save $xls "Foo.xlsx"'
+		write-output ""
+		return
+	}
+
+	if ($xlsPath -match "^[A-Za-z]:"){
+		$strPath = $xlsPath
+	}else{
+		$strPath = (get-location).tostring() + "\" + $xlsPath
+	}
+	$objExcel.Workbooks.item(1).SaveAs($strPath) | out-null
+}
+
+#
+# psexcel_close - Close excel file by excel_object
+#
+function psexcel_close($objExcel) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_close excel_object"
+		write-output "Close excel file by excel_object."
+		write-output "ex."
+		write-output '    psexcel_close $xls'
+		write-output ""
+		return
+	}
+
+	$objExcel.Workbooks.Close() | out-null
+	$objExcel.Quit() | out-null
+	[System.Runtime.Interopservices.Marshal]::ReleaseComObject($objExcel) | out-null
+	[System.GC]::Collect() | out-null
+}
+
+#
+# psexcel_getCell - Get value from range on sheet
+#
+function psexcel_getCell($objExcel, $sheet, $range) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_getCell excel_object sheet range"
+		write-output "Get value from range on sheet."
+		write-output "ex."
+		write-output '    $val1 = psexcel_getCell $xls "Sheet1" "A1"'
+		write-output '    $val2 = psexcel_getCell $xls 2 "B2"'
+		write-output ""
+		return
+	}
+
+	return $objExcel.Worksheets.Item($sheet).Range($range).Text
+}
+
+#
+# psexcel_setCell Set value on range on sheet
+#
+function psexcel_setCell($objExcel, $sheet, $range, $text) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_setCell excel_object sheet range value"
+		write-output "Set value on range on sheet."
+		write-output "ex."
+		write-output '    psexcel_setCell $xls "Sheet1" "A1" "some text"'
+		write-output '    psexcel_setCell $xls 2 "=A1+B2"'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($sheet).Range($range).Value2 = $text
+}
+
+#
+# psexcel_getFormula - Get formula from range on sheet
+#
+function psexcel_getFormula($objExcel, $sheet, $range) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_getFormula excel_object sheet range"
+		write-output "Get formula from range on sheet."
+		write-output "ex."
+		write-output '    $f1 = psexcel_getFormula $xls "Sheet1" "A1"'
+		write-output '    $f2 = psexcel_getFormula $xls 2 "B2"'
+		write-output ""
+		return
+	}
+
+	return $objExcel.Worksheets.Item($sheet).Range($range).Formula
+}
+
+#
+# psexcel_setFormula - Set formula on range on sheet
+#
+function psexcel_setFormula($objExcel, $sheet, $range, $formula) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_setFormula excel_object sheet range formula"
+		write-output "Set formula on range on sheet."
+		write-output "ex."
+		write-output '    psexcel_setFormula $xls "Sheet1" "A1" "=A1+B2"'
+		write-output '    psexcel_setFormula $xls 2 "B2" "=C3+D4"'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($sheet).Range($range).Formula = $formula
+}
+
+#
+# psexcel_getBackgroundColor - Get index of background color from range on sheet
+#
+function psexcel_getBackgroundColor($objExcel, $sheet, $range) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_getBackgroundColor excel_object sheet range"
+		write-output "Get index of background color from range on sheet."
+		write-output "ex."
+		write-output '    $colIndex1 = psexcel_getBackgroundColor $xls "Sheet1" "A1"'
+		write-output '    $colIndex2 = psexcel_getBackgroundColor $xls 2 "B2"'
+		write-output ""
+		return
+	}
+
+	return $objExcel.Worksheets.Item($sheet).Range($range).interior.ColorIndex
+}
+
+#
+# psexcel_setBackgroundColor - Set background color to color_index on range on sheet
+#
+function psexcel_setBackgroundColor($objExcel, $sheet, $range, $colorIndex) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_setBackgroundColor excel_object sheet range color_index"
+		write-output "Set background color to color_index on range on sheet."
+		write-output "ex."
+		write-output '    psexcel_setBackgroundColor $xls "Sheet1" "A1" 1'
+		write-output '    psexcel_setBackgroundColor $xls 2 "B2" 3'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($sheet).Range($range).interior.ColorIndex = $colorIndex
+}
+
+#
+# psexcel_getForegroundColor Get index of foreground color from range on sheet
+#
+function psexcel_getForegroundColor($objExcel, $sheet, $range) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_getForegroundColor excel_object sheet range"
+		write-output "Get index of foreground color from range on sheet."
+		write-output "ex."
+		write-output '    $colIndex1 = psexcel_getForegroundColor $xls "Sheet1" "A1"'
+		write-output '    $colIndex2 = psexcel_getForegroundColor $xls 2 "B2"'
+		write-output ""
+		return
+	}
+
+	return $objExcel.Worksheets.Item($sheet).Range($range).Font.ColorIndex
+}
+
+#
+# psexcel_setForegroundColor - Set foreground color to color_index on range on sheet
+#
+function psexcel_setForegroundColor($objExcel, $sheet, $range, $colorIndex) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_setForegroundColor excel_object sheet range color_index"
+		write-output "Set foreground color to color_index on range on sheet."
+		write-output "ex."
+		write-output '    psexcel_setForegroundColor $xls "Sheet1" "A1" 1'
+		write-output '    psexcel_setForegroundColor $xls 2 "B2" 3'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($sheet).Range($range).Font.ColorIndex = $colorIndex
+}
+
+#
+# psexcel_getBold - Get $true or $false about bold from range on sheet
+#
+function psexcel_getBold($objExcel, $sheet, $range) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_getBold excel_object sheet range"
+		write-output 'Get $true or $false about bold from range on sheet.'
+		write-output "ex."
+		write-output '    $boolean1 = psexcel_getBold $xls "Sheet1" "A1"'
+		write-output '    $boolean2 = psexcel_getBold $xls 2 "B2"'
+		write-output ""
+		return
+	}
+
+	return $objExcel.Worksheets.Item($sheet).Range($range).Font.Bold
+}
+
+#
+# psexcel_turnonBold - Turn on bold on range on sheet
+#
+function psexcel_turnonBold($objExcel, $sheet, $range) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_turnonBold excel_object sheet range"
+		write-output 'Turn on bold on range on sheet.'
+		write-output "ex."
+		write-output '    psexcel_turnonBold $xls "Sheet1" "A1"'
+		write-output '    psexcel_turnonBold $xls 2 "B2"'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($sheet).Range($range).Font.Bold = $true
+}
+
+#
+# psexcel_turnoffBold - Turn off bold on range on sheet
+#
+function psexcel_turnoffBold($objExcel, $sheet, $range) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_turnoffBold excel_object sheet range"
+		write-output 'Turn off bold on range on sheet.'
+		write-output "ex."
+		write-output '    psexcel_turnoffBold $xls "Sheet1" "A1"'
+		write-output '    psexcel_turnoffBold $xls 2 "B2"'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($sheet).Range($range).Font.Bold = $false
+}
+
+#
+# psexcel_toggleBold - Toggle bold on range on sheet
+#
+function psexcel_toggleBold($objExcel, $sheet, $range) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_toggleBold excel_object sheet range"
+		write-output 'Toggle bold on range on sheet.'
+		write-output "ex."
+		write-output '    psexcel_toggleBold $xls "Sheet1" "A1"'
+		write-output '    psexcel_toggleBold $xls 2 "B2"'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($sheet).Range($range).Font.Bold = -Not($objExcel.Worksheets.Item($sheet).Range($range).Font.Bold)
+}
+
+#
+# psexcel_getSheetCount - Get count of sheets
+#
+function psexcel_getSheetCount($objExcel) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_getSheetCount excel_object"
+		write-output 'Get count of sheets.'
+		write-output "ex."
+		write-output '    $sc = psexcel_getSheetCount $xls'
+		write-output ""
+		return
+	}
+
+	return $objExcel.Workbooks.item(1).Sheets.Count
+}
+
+#
+# psexcel_getSheetName - Get name of sheet
+#
+function psexcel_getSheetName($objExcel, $sheet) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_getSheetName excel_object sheet"
+		write-output 'Get name of sheet.'
+		write-output "ex."
+		write-output '    $sn = psexcel_getSheetName $xls 2'
+		write-output ""
+		return
+	}
+
+	return $objExcel.Worksheets.Item($sheet).Name
+}
+
+#
+# psexcel_setSheetName - Set name of sheet
+#
+function psexcel_setSheetName($objExcel, $sheet, $name) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_setSheetName excel_object sheet name"
+		write-output 'Set name of sheet.'
+		write-output "ex."
+		write-output '    psexcel_setSheetName $xls "Sheet1" "SHEET1"'
+		write-output '    psexcel_setSheetName $xls 2 "SHEET2"'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($sheet).Name = $name
+}
+
+#
+# psexcel_getActiveSheetName Get name of active sheet
+#
+function psexcel_getActiveSheetName($objExcel) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_getActiveSheetName excel_object"
+		write-output 'Get name of active sheet.'
+		write-output "ex."
+		write-output '    $sn = psexcel_getActiveSheetName $xls'
+		write-output ""
+		return
+	}
+
+	return $objExcel.Workbooks.item(1).ActiveSheet.Name
+}
+
+#
+# psexcel_setActiveSheetName - Set name of active sheet
+#
+function psexcel_setActiveSheetName($objExcel, $name) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_setActiveSheetName excel_object name"
+		write-output 'Set name of active sheet.'
+		write-output "ex."
+		write-output '    psexcel_setActiveSheetName $xls "SHEET1"'
+		write-output ""
+		return
+	}
+
+	for ($i = 1; $i -le $objExcel.Workbooks.item(1).Sheets.Count; $i++){
+		if ($objExcel.Worksheets.Item($i).Name -eq $objExcel.Workbooks.item(1).ActiveSheet.Name){
+			$objExcel.Worksheets.Item($i).Name = $name
+			break
+		}
+	}
+}
+
+#
+# psexcel_copyCell - Copy range of cell to another cell
+#
+function psexcel_copyCell($objExcel, $srcSheet, $srcRange, $destSheet, $destCell) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_copyCell excel_object source_sheet source_range dest_sheet dest_cell"
+		write-output 'Copy range of cell to another cell.'
+		write-output "ex."
+		write-output '    psexcel_copyCell $xls "Sheet1" "A1:C3" "sheet2" "D4"'
+		write-output '    psexcel_copyCell $xls 1 "A1:C3" 2 "D4"'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($srcSheet).Range($srcRange).copy($objExcel.Worksheets.Item($destSheet).Range($destCell)) | out-null
+}
+
+#
+# psexcel_preview - Print preview sheet
+#
+function psexcel_preview($objExcel, $sheet){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_preview excel_object sheet"
+		write-output 'Print preview sheet.'
+		write-output "ex."
+		write-output '    psexcel_preview $xls "Sheet1"'
+		write-output '    psexcel_preview $xls 2'
+		write-output ""
+		return
+	}
+
+	$objExcel.Visible = $true
+	$objExcel.Worksheets.Item($sheet).PrintPreview($true)
+	$objExcel.Visible = $false
+}
+
+#
+# psexcel_print - Print sheet
+#
+function psexcel_print($objExcel, $sheet){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_print excel_object sheet"
+		write-output 'Print sheet.'
+		write-output "ex."
+		write-output '    psexcel_print $xls "Sheet1"'
+		write-output '    psexcel_print $xls 2'
+		write-output ""
+		return
+	}
+
+	$objExcel.Worksheets.Item($sheet).PrintOut()
+}
+
+#
+# psexcel_turnonVisible - Turn on visible
+#
+function psexcel_turnonVisible($objExcel) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_turnonVisible excel_object"
+		write-output "Turn on visible."
+		write-output "ex."
+		write-output '    psexcel_turnonVisible $xls'
+		write-output ""
+		return
+	}
+	$objExcel.Visible = $true
+}
+
+#
+# psexcel_turnoffVisible - Turn off visible
+#
+function psexcel_turnoffVisible($objExcel) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_turnoffVisible excel_object"
+		write-output "Turn off visible."
+		write-output "ex."
+		write-output '    psexcel_turnoffVisible $xls'
+		write-output ""
+		return
+	}
+	$objExcel.Visible = $false
+}
+
+#
+# psexcel_turnonAlert - Turn on displayAlerts
+#
+function psexcel_turnonAlert($objExcel) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_turnonAlert excel_object"
+		write-output "Turn on displayAlerts."
+		write-output "ex."
+		write-output '    psexcel_turnonAlert $xls'
+		write-output ""
+		return
+	}
+	$objExcel.DisplayAlerts = $true
+}
+
+#
+# psexcel_turnoffAlert - Turn off displayAlerts
+#
+function psexcel_turnoffAlert($objExcel) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_turnoffAlert excel_object"
+		write-output "Turn off displayAlerts."
+		write-output "ex."
+		write-output '    psexcel_turnoffAlert $xls'
+		write-output ""
+		return
+	}
+	$objExcel.DisplayAlerts = $false
+}
+
+#
+#$sheet.Range("A1:C3").Borders.LineStyle = 1 # A1 Ç©ÇÁ C3 Ç‹Ç≈årê¸Çà¯Ç≠
+#
