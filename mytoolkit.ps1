@@ -878,7 +878,11 @@ function psxls2csv {
 				}
 			}
 		}else{
-			$InPath = resolve-path $strInput
+			if ($strInput -match '^\\'){
+				$InPath = $strInput
+			}else{
+				$InPath = resolve-path $strInput
+			}
 			if ($strOutput -eq ""){
 				$OutPath = $InPath -replace ".xls.*", ".csv"
 			}elseif ($strOutput -eq "-"){
@@ -902,6 +906,9 @@ function psxls2csv {
 		}
 	}
 	end{
+		[System.Runtime.Interopservices.Marshal]::ReleaseComObject($objSheet) | out-null
+		[System.Runtime.Interopservices.Marshal]::ReleaseComObject($objExcel) | out-null
+		[System.GC]::Collect() | out-null
 	}
 }
 
@@ -1153,7 +1160,7 @@ function psexcel_open($xlsPath) {
 #	$objExcel.DisplayAlerts = $true
 	$objExcel.DisplayAlerts = $false
 
-	if ($xlsPath -match "^[A-Za-z]:"){
+	if ($xlsPath -match "^[A-Za-z]:" -or $xlsPath -match "^\\"){
 		$strPath = $xlsPath
 	}else{
 		$strPath = (get-location).tostring() + "\" + $xlsPath
@@ -1200,7 +1207,7 @@ function psexcel_save($objExcel, $xlsPath) {
 		return
 	}
 
-	if ($xlsPath -match "^[A-Za-z]:"){
+	if ($xlsPath -match "^[A-Za-z]:" -or $xlsPath -match "^\\"){
 		$strPath = $xlsPath
 	}else{
 		$strPath = (get-location).tostring() + "\" + $xlsPath
