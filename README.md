@@ -314,3 +314,17 @@ Turn on displayAlerts.
 Usage: psexcel_turnoffAlert excel_object
 Turn off displayAlerts.
 ```
+
+## psprov - Print formatted data with overlay
+```
+Usage: psprov [-p] [-d "DELIMITER"] -o OVERLAY.XLS [-i INPUT.CSV] -f FORMAT.TXT
+Print formatted data with overlay
+
+  -p                    preview mode.
+  -d "DELIMITER"        use DELIMITER instead of comma for INPUT.CSV.
+  -o OVERLAY.XLS        overlay definition by excel.
+  -i INPUT.CSV          input data in csv format. If omitted then read stdin.
+  -f FORMAT.TXT         format definition for INPUT.CSV.
+                        each line should have like "A1=1"
+                        "A1=1" means "A1" cell in OVERLAY.XLS should be setted to "1st column" in INPUT.CSV
+```
