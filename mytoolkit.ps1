@@ -92,12 +92,20 @@ function psgrep {
 					foreach-object {
 						if ($ignorecaseSw -eq "off"){
 							if ($_ -cmatch $string){
-								$out = $files[$i] + ":" + $_
+								if ($filesIndex -eq 1){
+									$out = $_
+								}else{
+									$out = $files[$i] + ":" + $_
+								}
 								write-output $out
 							}
 						}else{
 							if ($_ -match $string){
-								$out = $files[$i] + ":" + $_
+								if ($filesIndex -eq 1){
+									$out = $_
+								}else{
+									$out = $files[$i] + ":" + $_
+								}
 								write-output $out
 							}
 						}
@@ -121,12 +129,20 @@ function psgrep {
 					foreach-object {
 						if ($ignorecaseSw -eq "off"){
 							if ($_ -cnotmatch $string){
-								$out = $files[$i] + ":" + $_
+								if ($filesIndex -eq 1){
+									$out = $_
+								}else{
+									$out = $files[$i] + ":" + $_
+								}
 								write-output $out
 							}
 						}else{
 							if ($_ -notmatch $string){
-								$out = $files[$i] + ":" + $_
+								if ($filesIndex -eq 1){
+									$out = $_
+								}else{
+									$out = $files[$i] + ":" + $_
+								}
 								write-output $out
 							}
 						}
@@ -640,7 +656,7 @@ function psjoin {
 				$i++
 				$multikey = $args[$i]
 			}else{
-				$files[$filesIndex] = resolve-path $args[$i]
+				$files[$filesIndex] = (resolve-path $args[$i]).Path
 				$filesIndex++
 			}
 		}
@@ -853,7 +869,7 @@ function psxls2csv {
 		if ($strInput -eq ""){
 			Get-ChildItem *.xls* |
 			ForEach-Object {
-				$InPath = resolve-path $_.Name
+				$InPath = (resolve-path $_.Name).Path
 				if ($strOutput -eq ""){
 					$OutPath = $InPath -replace ".xls.*", ".csv"
 					$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".csv")
@@ -881,7 +897,7 @@ function psxls2csv {
 			if ($strInput -match '^\\'){
 				$InPath = $strInput
 			}else{
-				$InPath = resolve-path $strInput
+				$InPath = (resolve-path $strInput).Path
 			}
 			if ($strOutput -eq ""){
 				$OutPath = $InPath -replace ".xls.*", ".csv"
@@ -1087,12 +1103,12 @@ function psconreadline(){
 # psopen - Open IO.Stream
 #
 # ex. $inObj = psopen -r "input.txt"
-#     $rec = $inObj.readLine()
-#     $inObj.Close()
-#
 #     $outObj = psopen -w "output.txt"
-#     $outObj.writeLine($rec)
-#     $outObj.Close()
+#     while (($rec = $inObj.readLine()) -ne $null){
+#         $outObj.writeLine($rec)
+#     }
+#     $inObj.close()
+#     $outObj.close()
 #
 function psopen(){
 	begin{
@@ -1103,20 +1119,40 @@ function psopen(){
 				$helpSw = $true
 				write-output "Usage: psopen [-h|--help] [[-r|-w|-a] [inputfile|output]] [-e encoding]"
 				write-output "Open IO.Stream and get object."
+				write-output "ex."
+				write-output '  $inObj = psopen -r "input.txt"'
+				write-output '  $outObj = psopen -w "output.txt"'
+				write-output '  while (($rec = $inObj.readLine()) -ne $null){'
+				write-output '      $outObj.writeLine($rec)'
+				write-output '  }'
+				write-output '  $inObj.close()'
+				write-output '  $outObj.close()'
 				write-output ""
 				return
 			}elseif ($args[$i] -eq "-r"){
 				$iomode = "r"
 				$i++
-				$inputfile = (get-location).tostring() + "\" + $args[$i]
+				if ($args[$i] -match "^[A-Za-z]:" -or $args[$i] -match "^\\"){
+					$inputfile = $args[$i]
+				}else{
+					$inputfile = (get-location).tostring() + "\" + $args[$i]
+				}
 			}elseif ($args[$i] -eq "-w"){
 				$iomode = "w"
 				$i++
-				$outputfile = (get-location).tostring() + "\" + $args[$i]
+				if ($args[$i] -match "^[A-Za-z]:" -or $args[$i] -match "^\\"){
+					$outputfile = $args[$i]
+				}else{
+					$outputfile = (get-location).tostring() + "\" + $args[$i]
+				}
 			}elseif ($args[$i] -eq "-a"){
 				$iomode = "a"
 				$i++
-				$outputfile = (get-location).tostring() + "\" + $args[$i]
+				if ($args[$i] -match "^[A-Za-z]:" -or $args[$i] -match "^\\"){
+					$outputfile = $args[$i]
+				}else{
+					$outputfile = (get-location).tostring() + "\" + $args[$i]
+				}
 			}elseif ($args[$i] -eq "-e"){
 				$i++
 				$encoding = $args[$i]
@@ -1260,7 +1296,7 @@ function psexcel_setCell($objExcel, $sheet, $range, $text) {
 		write-output "Set value on range on sheet."
 		write-output "ex."
 		write-output '    psexcel_setCell $xls "Sheet1" "A1" "some text"'
-		write-output '    psexcel_setCell $xls 2 "=A1+B2"'
+		write-output '    psexcel_setCell $xls 2 "C3" "=A1+B2"'
 		write-output ""
 		return
 	}
@@ -1635,4 +1671,112 @@ function psexcel_turnoffAlert($objExcel) {
 		return
 	}
 	$objExcel.DisplayAlerts = $false
+}
+
+#
+# psprov - Print formatted data with overlay
+#
+Function psprov(){
+	begin{
+		$helpSw = $false
+		$previewSw = $false
+		$delimiter = ","
+		$overlay_path = ""
+		$input_path = ""
+		$format_path = ""
+		$formatArray = @{}
+		$files = @{}
+		$filesIndex = 0
+
+		for ($i = 0; $i -lt $args.length; $i++){
+			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
+				$helpSw = $true
+				write-output 'Usage: psprov [-p] [-d "DELIMITER"] -o OVERLAY.XLS [-i INPUT.CSV] -f FORMAT.TXT'
+				write-output 'Print formatted data with overlay.'
+				write-output ''
+				write-output '  -p                    preview mode.'
+				write-output '  -d "DELIMITER"        use DELIMITER instead of comma for INPUT.CSV.'
+				write-output '  -o OVERLAY.XLS        overlay definition by excel.'
+				write-output '  -i INPUT.CSV          input data in csv format. If omitted then read stdin.'
+				write-output '  -f FORMAT.TXT         format definition for INPUT.CSV.'
+				write-output '                        each line should have like "A1=1"'
+				write-output '                        "A1=1" means "A1" cell in OVERLAY.XLS should be setted to "1st column" in INPUT.CSV'
+				write-output ''
+				return
+			}elseif ($args[$i] -eq "-p"){
+				$previewSw = $true
+			}elseif ($args[$i] -eq "-d"){
+				$i++
+				$delimiter = $args[$i]
+			}elseif ($args[$i] -eq "-o"){
+				$i++
+				$overlay_path = $args[$i]
+			}elseif ($args[$i] -eq "-i"){
+				$i++
+				$input_path = psabspath $args[$i]
+			}elseif ($args[$i] -eq "-f"){
+				$i++
+				$format_path = $args[$i]
+			}else{
+				$files[$filesIndex] = (resolve-path $args[$i]).Path
+				$filesIndex++
+			}
+		}
+
+		if ($overlay_path -ne ""){
+			$oOverlay = psexcel_open $overlay_path
+		}
+
+		if ($input_path -ne ""){
+			$oIn = psopen -r $input_path
+		}
+
+		if ($format_path -ne ""){
+			$fmt = psopen -r $format_path
+			while (($rec = $fmt.readLine()) -ne $null){
+				if ($rec.split("=")[0] -match "^[A-z][A-z]*[0-9][0-9]*$"){
+					$formatArray[$rec.split("=")[0]] = [int]$rec.split("=")[1] - 1
+				}
+			}
+			$fmt.close()
+		}
+	}
+	process{
+		if ($helpSw -eq $false){
+			if ($input_path -ne ""){
+				while (($rec = $oIn.readLine()) -ne $null){
+					foreach ($i in $formatArray.keys){
+						psexcel_setCell $oOverlay 1 $i $rec.split($delimiter)[$formatArray[$i]]
+					}
+					if ($previewSw -eq $true){
+						psexcel_preview $oOverlay 1
+					}else{
+						psexcel_print $oOverlay 1
+					}
+
+				}
+			}else{
+				$rec = $_
+				foreach ($i in $formatArray.keys){
+					psexcel_setCell $oOverlay 1 $i $rec.split($delimiter)[$formatArray[$i]]
+				}
+				if ($previewSw -eq $true){
+					psexcel_preview $oOverlay 1
+				}else{
+					psexcel_print $oOverlay 1
+				}
+
+			}
+		}
+	}
+	end{
+		if ($helpSw -eq $false){
+			if ($input_path -ne ""){
+				$oIn.close()
+			}
+			if ($overlay_path -ne ""){
+				psexcel_close $oOverlay
+			}
+		}
+	}
 }
