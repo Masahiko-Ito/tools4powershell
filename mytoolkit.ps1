@@ -1678,6 +1678,17 @@ function psexcel_turnoffAlert($objExcel) {
 #
 Function psprov(){
 	begin{
+		Function psprov_prpv($rec) {
+			foreach ($i in $formatArray.keys){
+				psexcel_setCell $oOverlay 1 $i $rec.split($delimiter)[$formatArray[$i]]
+			}
+			if ($previewSw -eq $true){
+				psexcel_preview $oOverlay 1
+			}else{
+				psexcel_print $oOverlay 1
+			}
+		}
+
 		$helpSw = $false
 		$previewSw = $false
 		$delimiter = ","
@@ -1745,27 +1756,10 @@ Function psprov(){
 		if ($helpSw -eq $false){
 			if ($input_path -ne ""){
 				while (($rec = $oIn.readLine()) -ne $null){
-					foreach ($i in $formatArray.keys){
-						psexcel_setCell $oOverlay 1 $i $rec.split($delimiter)[$formatArray[$i]]
-					}
-					if ($previewSw -eq $true){
-						psexcel_preview $oOverlay 1
-					}else{
-						psexcel_print $oOverlay 1
-					}
-
+					psprov_prpv $rec
 				}
 			}else{
-				$rec = $_
-				foreach ($i in $formatArray.keys){
-					psexcel_setCell $oOverlay 1 $i $rec.split($delimiter)[$formatArray[$i]]
-				}
-				if ($previewSw -eq $true){
-					psexcel_preview $oOverlay 1
-				}else{
-					psexcel_print $oOverlay 1
-				}
-
+				psprov_prpv $_
 			}
 		}
 	}
