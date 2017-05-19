@@ -832,16 +832,17 @@ function psxls2csv {
 		$helpSw = $false
 		$strInput = ""
 		$sheet = 1
+		$tabSw = "off"
 		$strOutput = ""
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "Usage: psxls2csv [-h|--help] [-i input] [-s sheet] [-o [output|-]]"
-				write-output "Convert specified excel sheet to csv."
+				write-output "Usage: psxls2csv [-h|--help] [-i input] [-s sheet] [-t] [-o [output|-]]"
+				write-output "Convert specified excel sheet to csv or tsv with -t option."
 				write-output "If input is not specified, all excel files in current directory will be converted."
-				write-output "If output is not specified, input will be converted into same filename, but with extention "".csv""."
+				write-output "If output is not specified, input will be converted into same filename, but with extention "".csv"" or "".txt""."
 				write-output "If ""-"" is specified for ""-o"" option, input will be converted into stdout."
 				write-output ""
 				write-output "BUGS"
@@ -853,6 +854,8 @@ function psxls2csv {
 			}elseif ($args[$i] -eq "-s"){
 				$i++
 				$sheet = $args[$i]
+			}elseif ($args[$i] -eq "-t"){
+				$tabSw = "on"
 			}elseif ($args[$i] -eq "-o"){
 				$i++
 				$strOutput = $args[$i]
@@ -871,8 +874,13 @@ function psxls2csv {
 			ForEach-Object {
 				$InPath = (resolve-path $_.Name).Path
 				if ($strOutput -eq ""){
-					$OutPath = $InPath -replace ".xls.*", ".csv"
-					$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".csv")
+					if ($tabSw -eq "on"){
+						$OutPath = $InPath -replace ".xls.*", ".txt"
+						$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".txt")
+					}else{
+						$OutPath = $InPath -replace ".xls.*", ".csv"
+						$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".csv")
+					}
 					write-output $out
 				}elseif ($strOutput -eq "-"){
 					$OutPath = [System.IO.Path]::GetTempFileName()
@@ -885,9 +893,19 @@ function psxls2csv {
 				$objExcel.Workbooks.open($InPath) | out-null
 			
 				$objSheet = $objExcel.Worksheets.Item($sheet)
-				$objSheet.SaveAs($OutPath, 6)
+				if ($tabSw -eq "on"){
+#					$objSheet.SaveAs($OutPath, -4158)
+					$objSheet.SaveAs($OutPath, 42)
+				}else{
+					$objSheet.SaveAs($OutPath, 6)
+				}
 				$objExcel.Workbooks.Close()
 				$objExcel.Quit()
+				if ($tabSw -eq "on"){
+					$TmpOutPath = [System.IO.Path]::GetTempFileName()
+					Get-Content $OutPath | Out-File -Encoding default $TmpOutPath 
+					Move-Item -Force -path $TmpOutPath -destination $OutPath
+				}
 				if ($strOutput -eq "-"){
 					get-content $OutPath
 					remove-item $OutPath
@@ -900,7 +918,13 @@ function psxls2csv {
 				$InPath = (resolve-path $strInput).Path
 			}
 			if ($strOutput -eq ""){
-				$OutPath = $InPath -replace ".xls.*", ".csv"
+				if ($tabSw -eq "on"){
+					$OutPath = $InPath -replace ".xls.*", ".txt"
+					$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".txt")
+				}else{
+					$OutPath = $InPath -replace ".xls.*", ".csv"
+					$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".csv")
+				}
 			}elseif ($strOutput -eq "-"){
 				$OutPath = [System.IO.Path]::GetTempFileName()
 			}else{
@@ -912,9 +936,19 @@ function psxls2csv {
 			$objExcel.Workbooks.open($InPath) | out-null
 		
 			$objSheet = $objExcel.Worksheets.Item($sheet)
-			$objSheet.SaveAs($OutPath, 6)
+			if ($tabSw -eq "on"){
+#				$objSheet.SaveAs($OutPath, -4158)
+				$objSheet.SaveAs($OutPath, 42)
+			}else{
+				$objSheet.SaveAs($OutPath, 6)
+			}
 			$objExcel.Workbooks.Close()
 			$objExcel.Quit()
+			if ($tabSw -eq "on"){
+				$TmpOutPath = [System.IO.Path]::GetTempFileName()
+				Get-Content $OutPath | Out-File -Encoding default $TmpOutPath 
+				Move-Item -Force -path $TmpOutPath -destination $OutPath
+			}
 			if ($strOutput -eq "-"){
 				get-content $OutPath
 				remove-item $OutPath
@@ -922,9 +956,11 @@ function psxls2csv {
 		}
 	}
 	end{
-		[System.Runtime.Interopservices.Marshal]::ReleaseComObject($objSheet) | out-null
-		[System.Runtime.Interopservices.Marshal]::ReleaseComObject($objExcel) | out-null
-		[System.GC]::Collect() | out-null
+		if ($helpSw -ne $true){
+			[System.Runtime.Interopservices.Marshal]::ReleaseComObject($objSheet) | out-null
+			[System.Runtime.Interopservices.Marshal]::ReleaseComObject($objExcel) | out-null
+			[System.GC]::Collect() | out-null
+		}
 	}
 }
 
