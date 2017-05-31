@@ -658,7 +658,6 @@ function psjoin {
 			}else{
 #				$files[$filesIndex] = (resolve-path $args[$i]).Path
 				$files[$filesIndex] = psabspath $args[$i]
-				$InPath = psabspath $_.Name
 				$filesIndex++
 			}
 		}
