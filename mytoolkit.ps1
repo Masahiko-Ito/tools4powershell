@@ -533,9 +533,9 @@ function psuniq {
 							if ($_ -eq $oldrec){
 								$isDuplicateSw = "on"
 							}else{
-								if ($isDuplicateSw -eq "off"){
+#								if ($isDuplicateSw -eq "off"){
 									write-output $oldrec
-								}
+#								}
 								$oldrec = $_	
 								$isDuplicateSw = "off"
 							}
@@ -582,9 +582,9 @@ function psuniq {
 					if ($_ -eq $oldrec){
 						$isDuplicateSw = "on"
 					}else{
-						if ($isDuplicateSw -eq "off"){
+#						if ($isDuplicateSw -eq "off"){
 							write-output $oldrec
-						}
+#						}
 						$oldrec = $_	
 						$isDuplicateSw = "off"
 					}
@@ -602,9 +602,9 @@ function psuniq {
 				$out = $count.tostring() + " " + $oldrec
 				write-output $out
 			}else{
-				if ($isDuplicateSw -eq "off"){
+#				if ($isDuplicateSw -eq "off"){
 					write-output $oldrec
-				}
+#				}
 			}
 		}
 	}
@@ -656,7 +656,9 @@ function psjoin {
 				$i++
 				$multikey = $args[$i]
 			}else{
-				$files[$filesIndex] = (resolve-path $args[$i]).Path
+#				$files[$filesIndex] = (resolve-path $args[$i]).Path
+				$files[$filesIndex] = psabspath $args[$i]
+				$InPath = psabspath $_.Name
 				$filesIndex++
 			}
 		}
@@ -872,7 +874,8 @@ function psxls2csv {
 		if ($strInput -eq ""){
 			Get-ChildItem *.xls* |
 			ForEach-Object {
-				$InPath = (resolve-path $_.Name).Path
+#				$InPath = (resolve-path $_.Name).Path
+				$InPath = psabspath $_.Name
 				if ($strOutput -eq ""){
 					if ($tabSw -eq "on"){
 						$OutPath = $InPath -replace ".xls.*", ".txt"
@@ -915,7 +918,8 @@ function psxls2csv {
 			if ($strInput -match '^\\'){
 				$InPath = $strInput
 			}else{
-				$InPath = (resolve-path $strInput).Path
+#				$InPath = (resolve-path $strInput).Path
+				$InPath = psabspath $strInput
 			}
 			if ($strOutput -eq ""){
 				if ($tabSw -eq "on"){
@@ -1029,7 +1033,8 @@ function psabspath ($path){
 	}
 	end{
 		if ($helpSw -eq $false){
-			(get-location).tostring() + "\" + $path
+#			(get-location).tostring() + "\" + $path
+			(get-location).ProviderPath + "\" + $path
 		}
 	}
 }
@@ -1765,7 +1770,8 @@ Function psprov(){
 				$i++
 				$format_path = $args[$i]
 			}else{
-				$files[$filesIndex] = (resolve-path $args[$i]).Path
+#				$files[$filesIndex] = (resolve-path $args[$i]).Path
+				$files[$filesIndex] = psabspath $args[$i]
 				$filesIndex++
 			}
 		}
