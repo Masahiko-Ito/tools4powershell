@@ -279,6 +279,12 @@ Usage: psexcel_copyCell excel_object source_sheet source_range dest_sheet dest_c
 Copy range of cell to another cell.
 ```
 
+## psexcel_replaceString - Replace string to another string
+```
+Usage: psexcel_replaceString excel_object sheet range before_string after_string
+Replace string to another string.
+```
+
 ## psexcel_preview - Print preview sheet
 ```
 Usage: psexcel_preview excel_object sheet

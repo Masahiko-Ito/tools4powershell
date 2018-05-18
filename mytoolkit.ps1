@@ -1267,7 +1267,7 @@ function psexcel_update($objExcel) {
 		return
 	}
 
-	$objExcel.Save() | out-null
+	$objExcel.Workbooks.item(1).Save() | out-null
 }
 
 #
@@ -1615,6 +1615,24 @@ function psexcel_copyCell($objExcel, $srcSheet, $srcRange, $destSheet, $destCell
 	}
 
 	$objExcel.Worksheets.Item($srcSheet).Range($srcRange).copy($objExcel.Worksheets.Item($destSheet).Range($destCell)) | out-null
+}
+
+#
+# psexcel_replaceString - Replace string to another string
+#
+function psexcel_replaceString($objExcel, $Sheet, $Range, $beforeString, $afterString) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+		write-output "Usage: psexcel_replaceString excel_object sheet range before_string after_string"
+		write-output 'Replace string to another string.'
+		write-output "ex."
+		write-output '    psexcel_replaceString $xls "Sheet1" "A1:C3" "#1#" "Hoge"'
+		write-output '    psexcel_replaceString $xls 1 "A1:C3" "#1#" "Hoge"'
+		write-output ""
+		return
+	}
+
+	$xlPart = 2
+	$objExcel.Worksheets.Item($Sheet).Range($Range).replace($beforeString, $afterString, $xlPart) | out-null
 }
 
 #
