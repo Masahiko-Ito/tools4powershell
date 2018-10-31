@@ -334,3 +334,75 @@ Print formatted data with overlay
                         each line should have like "A1=1"
                         "A1=1" means "A1" cell in OVERLAY.XLS should be setted to "1st column" in INPUT.CSV
 ```
+
+## psoracle_open - Connect to oracle
+```
+Usage: psoracle_open oracle_ip_address username password
+Connect to oracle.
+```
+
+## psoracle_close - Disconnect from oracle
+```
+Usage: psoracle_close oracle_connection
+Disconnect from oracle.
+```
+
+## psoracle_createsql - Create SQL object with bind parameter
+```
+Usage: psoracle_createsql oracle_connection sql_command
+Create SQL object with bind parameter.
+```
+
+## psoracle_bindsql - Bind real value to bind variable
+```
+Usage: psoracle_bindsql oracle_command name value
+Bind real value to bind variable.
+```
+
+## psoracle_unbindsql - Unbind bind variable
+```
+Usage: psoracle_unbindsql oracle_command bind_object
+Unbind bind variable.
+```
+
+## psoracle_execupdatesql - Exuceute SQL with update
+```
+Usage: psoracle_execupdatesql oracle_command
+Exuceute SQL with update.
+```
+
+## psoracle_execsql - Exuceute SQL without update
+```
+Usage: psoracle_execsql oracle_command
+Exuceute SQL without update.
+```
+
+## psoracle_fetch - Fetch row
+```
+Usage: psoracle_fetch ([Ref]oracle_reader)
+Fetch row.
+```
+
+## psoracle_free - Free object for oracle access
+```
+Usage: psoracle_free oracle_object
+Free object for oracle access.
+```
+
+## psoracle_begin - Begin transaction
+```
+Usage: psoracle_begin oracle_connection
+Begin transaction.
+```
+
+## psoracle_rollback - rollback transaction
+```
+Usage: psoracle_rollback oracle_transaction
+Rollback transaction.
+```
+
+## psoracle_commit - commit transaction
+```
+Usage: psoracle_commit oracle_transaction
+Commit transaction.
+```

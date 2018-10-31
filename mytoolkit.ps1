@@ -2016,7 +2016,7 @@ function psoracle_free($obj){
 #
 function psoracle_begin($ocon){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psoracle_begini oracle_connection"
+		write-output "Usage: psoracle_begin oracle_connection"
 		write-output "Begin transaction."
 		write-output "ex."
 		write-output '    $otran = psoracle_begin $ocon'
