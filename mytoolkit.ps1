@@ -1833,3 +1833,229 @@ Function psprov(){
 		}
 	}
 }
+
+#
+# psoracle_open - Connect to oracle
+#
+function psoracle_open($ip, $user, $password){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_open oracle_ip_address username password"
+		write-output "Connect to oracle."
+		write-output "ex."
+		write-output '    $oc = poracle_open "127.0.0.1" "taro" "himitsu"'
+		write-output ""
+		return
+	}
+
+	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Data.OracleClient")
+	$ocon = New-Object System.Data.OracleClient.OracleConnection("Data Source=$ip;User ID=$user;Password=$password;Integrated Security=false;")
+	$ocon.open()
+	return $ocon
+}
+
+#
+# psoracle_close - Disconnect from oracle
+#
+function psoracle_close($ocon){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_close oracle_connection"
+		write-output "Disconnect from oracle."
+		write-output "ex."
+		write-output '    psoracle_close $ocon'
+		write-output ""
+		return
+	}
+
+	$ocon.Close()
+	$ocon.Dispose()
+}
+
+#
+# psoracle_createsql - Create SQL object with bind parameter
+#
+function psoracle_createsql($oc, $sql){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_createsql oracle_connection sql_command"
+		write-output "Create SQL object with bind parameter."
+		write-output "ex."
+		write-output '    $ocmd = psoracle_createsql $oc "select * from table where id=:id_value"'
+		write-output '    ... something to do ...'
+		write-output '    psoracle_free $ocmd'
+		write-output ""
+		return
+	}
+
+	$ocmd = New-Object System.Data.OracleClient.OracleCommand
+	$ocmd.Connection = $oc
+	$ocmd.CommandText = $sql
+
+	$otran = $oc.BeginTransaction()
+	$otran.Commit()
+	$ocmd.Transaction = $otran
+
+	return $ocmd
+}
+
+#
+# psoracle_bindsql - Bind real value to bind variable
+#
+function psoracle_bindsql($ocmd, $name, $value) {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_bindsql oracle_command name value"
+		write-output "Bind real value to bind variable."
+		write-output "ex."
+		write-output '    $id_value = psoracle_bindsql $ocmd "id_value" "12345"'
+		write-output ""
+		return
+	}
+
+	$bind = New-Object System.Data.OracleClient.OracleParameter($name, $value)
+	[void]$ocmd.Parameters.Add($bind)
+	return $bind
+}
+
+#
+# psoracle_unbindsql - Unbind bind variable
+#
+function psoracle_unbindsql($ocmd, $bind){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_unbindsql oracle_command bind_object"
+		write-output "Unbind bind variable."
+		write-output "ex."
+		write-output '    psoracle_unbindsql $ocmd $id_value'
+		write-output ""
+		return
+	}
+
+	[void]$ocmd.Parameters.Remove($bind)
+}
+
+#
+# psoracle_execupdatesql - Exuceute SQL with update
+#
+function psoracle_execupdatesql($ocmd){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_execupdatesql oracle_command"
+		write-output "Exuceute SQL with update."
+		write-output "ex."
+		write-output '    $count = psoracle_execupdatesql $ocmd'
+		write-output '    if ($count -lt 0){'
+		write-output '        write-output "Error: update SQL"'
+		write-output '    }'
+		write-output ""
+		return
+	}
+
+	try{
+		$effected_row = $ocmd.ExecuteNonQuery()
+	}catch{
+		$effected_row = -1
+	}
+	return $effected_row
+}
+
+#
+# psoracle_execsql - Exuceute SQL without update
+#
+function psoracle_execsql($ocmd){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_execsql oracle_command"
+		write-output "Exuceute SQL without update."
+		write-output "ex."
+		write-output '    $ocr = psoracle_execsql $ocmd'
+		write-output '    ... something to do ...'
+		write-output '    psoracle_close $ocr'
+		write-output ""
+		return
+	}
+
+	try{
+		$ord = $ocmd.ExecuteReader()
+	}catch{
+		$ord = $null
+	}
+	return , $ord
+}
+
+#
+# psoracle_fetch - Fetch row
+#
+function psoracle_fetch([Ref]$ocr){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_fetch ([Ref]oracle_reader)"
+		write-output "Fetch row."
+		write-output "ex."
+		write-output '    while (psoracle_fetch ([Ref]$ocr)){'
+		write-output '        write-output $ocr["id"]'
+		write-output '    }'
+		write-output ""
+		return
+	}
+
+	($ocr.value).Read()
+}
+
+#
+# psoracle_free - Free object for oracle access
+#
+function psoracle_free($obj){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_free oracle_object"
+		write-output "Free object for oracle access."
+		write-output "ex."
+		write-output '    psoracle_free $ocmd'
+		write-output ""
+		return
+	}
+
+	$obj.Dispose()
+}
+
+#
+# psoracle_begin - Begin transaction
+#
+function psoracle_begin($ocon){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_begini oracle_connection"
+		write-output "Begin transaction."
+		write-output "ex."
+		write-output '    $otran = psoracle_begin $ocon'
+		write-output ""
+		return
+	}
+
+	$otran = $ocon.BeginTransaction()
+	return $otran
+}
+
+#
+# psoracle_rollback - rollback transaction
+#
+function psoracle_rollback($otran){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_rollback oracle_transaction"
+		write-output "Rollback transaction."
+		write-output "ex."
+		write-output '    psoracle_rollback $otran'
+		write-output ""
+		return
+	}
+
+	$otran.Rollback()
+}
+
+#
+# psoracle_commit - commit transaction
+#
+function psoracle_commit($otran){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_commit oracle_transaction"
+		write-output "Commit transaction."
+		write-output "ex."
+		write-output '    psoracle_commit $otran'
+		write-output ""
+		return
+	}
+
+	$otran.Commit()
+}
