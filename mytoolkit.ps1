@@ -903,11 +903,11 @@ function psxls2csv {
 				}
 				$objExcel.Workbooks.Close()
 				$objExcel.Quit()
-				if ($tabSw -eq "on"){
-					$TmpOutPath = [System.IO.Path]::GetTempFileName()
-					Get-Content $OutPath | Out-File -Encoding default $TmpOutPath 
-					Move-Item -Force -path $TmpOutPath -destination $OutPath
-				}
+#				if ($tabSw -eq "on"){
+#					$TmpOutPath = [System.IO.Path]::GetTempFileName()
+#					Get-Content $OutPath | Out-File -Encoding default $TmpOutPath 
+#					Move-Item -Force -path $TmpOutPath -destination $OutPath
+#				}
 				if ($strOutput -eq "-"){
 					get-content $OutPath
 					remove-item $OutPath
@@ -947,11 +947,11 @@ function psxls2csv {
 			}
 			$objExcel.Workbooks.Close()
 			$objExcel.Quit()
-			if ($tabSw -eq "on"){
-				$TmpOutPath = [System.IO.Path]::GetTempFileName()
-				Get-Content $OutPath | Out-File -Encoding default $TmpOutPath 
-				Move-Item -Force -path $TmpOutPath -destination $OutPath
-			}
+#			if ($tabSw -eq "on"){
+#				$TmpOutPath = [System.IO.Path]::GetTempFileName()
+#				Get-Content $OutPath | Out-File -Encoding default $TmpOutPath 
+#				Move-Item -Force -path $TmpOutPath -destination $OutPath
+#			}
 			if ($strOutput -eq "-"){
 				get-content $OutPath
 				remove-item $OutPath
@@ -1620,9 +1620,9 @@ function psexcel_copyCell($objExcel, $srcSheet, $srcRange, $destSheet, $destCell
 #
 # psexcel_replaceString - Replace string to another string
 #
-function psexcel_replaceString($objExcel, $Sheet, $Range, $beforeString, $afterString) {
+function psexcel_replaceString($objExcel, $srcSheet, $srcRange, $beforeString, $afterString) {
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
-		write-output "Usage: psexcel_replaceString excel_object sheet range before_string after_string"
+		write-output "Usage: psexcel_replaceString excel_object source_sheet source_range before_string after_string"
 		write-output 'Replace string to another string.'
 		write-output "ex."
 		write-output '    psexcel_replaceString $xls "Sheet1" "A1:C3" "#1#" "Hoge"'
@@ -1631,8 +1631,8 @@ function psexcel_replaceString($objExcel, $Sheet, $Range, $beforeString, $afterS
 		return
 	}
 
-	$xlPart = 2
-	$objExcel.Worksheets.Item($Sheet).Range($Range).replace($beforeString, $afterString, $xlPart) | out-null
+	$aPartOfString = 2
+	$objExcel.Worksheets.Item($srcSheet).Range($srcRange).replace($beforeString, $afterString, $aPartOfString) | out-null
 }
 
 #
