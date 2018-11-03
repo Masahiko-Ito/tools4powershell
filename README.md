@@ -406,3 +406,51 @@ Rollback transaction.
 Usage: psoracle_commit oracle_transaction
 Commit transaction.
 ```
+
+## pssock_open - Open socket for client
+```
+Usage: pssock_open server_ip server_port
+Open socket for client.
+```
+
+## pssock_close - Close socket for client
+```
+Usage: pssock_close socket_param
+Close socket for client.
+```
+
+## pssock_readline - Read a line from socket
+```
+Usage: pssock_readline socket_param
+Read a line from socket.
+```
+
+## pssock_writeline - Write a line to socket
+```
+Usage: pssock_writeline socket_param $string
+Write a line to socket.
+```
+
+## pssock_start - Start server
+```
+Usage: pssock_start server_port
+Start server.
+```
+
+## pssock_stop - Stop server
+```
+Usage: pssock_stop server
+Stop server.
+```
+
+## pssock_accept - Accept connection from client
+```
+Usage: pssock_accept server
+Accept connection from client.
+```
+
+## pssock_accept - Unaccept(disconnect) connection from client
+```
+Usage: pssock_unaccept socket_param
+Unaccept(disconnect) connection from client.
+```
