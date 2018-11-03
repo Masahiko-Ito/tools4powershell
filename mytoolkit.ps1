@@ -1842,7 +1842,7 @@ function psoracle_open($ip, $user, $password){
 		write-output "Usage: psoracle_open oracle_ip_address username password"
 		write-output "Connect to oracle."
 		write-output "ex."
-		write-output '    $oc = poracle_open "127.0.0.1" "taro" "himitsu"'
+		write-output '    $ocon = poracle_open "127.0.0.1" "taro" "himitsu"'
 		write-output ""
 		return
 	}
@@ -1878,7 +1878,7 @@ function psoracle_createsql($oc, $sql){
 		write-output "Usage: psoracle_createsql oracle_connection sql_command"
 		write-output "Create SQL object with bind parameter."
 		write-output "ex."
-		write-output '    $ocmd = psoracle_createsql $oc "select * from table where id=:id_value"'
+		write-output '    $ocmd = psoracle_createsql $ocon "select * from table where id=:id_value"'
 		write-output '    ... something to do ...'
 		write-output '    psoracle_free $ocmd'
 		write-output ""
@@ -1964,7 +1964,7 @@ function psoracle_execsql($ocmd){
 		write-output "ex."
 		write-output '    $ocr = psoracle_execsql $ocmd'
 		write-output '    ... something to do ...'
-		write-output '    psoracle_close $ocr'
+		write-output '    psoracle_free $ocr'
 		write-output ""
 		return
 	}
@@ -2003,6 +2003,7 @@ function psoracle_free($obj){
 		write-output "Usage: psoracle_free oracle_object"
 		write-output "Free object for oracle access."
 		write-output "ex."
+		write-output '    psoracle_free $ocr'
 		write-output '    psoracle_free $ocmd'
 		write-output ""
 		return
