@@ -2060,3 +2060,162 @@ function psoracle_commit($otran){
 
 	$otran.Commit()
 }
+
+#
+# pssock_open - Open socket for client
+#
+Function pssock_open($addr, $port){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_open server_ip server_port"
+		write-output "Open socket for client."
+		write-output "ex."
+		write-output '    $param = pssock_open "127.0.0.1" "12345"'
+		write-output ""
+		return
+	}
+
+	$client = New-Object System.Net.Sockets.TcpClient ($addr, $port)
+	$stream = $client.GetStream()
+	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
+	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
+	$param = @{"client" = $client; "stream" = $stream; "writer" = $writer; "reader" = $reader}
+	return $param
+}
+
+#
+# pssock_close - Close socket for client
+#
+Function pssock_close($param){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_close socket_param"
+		write-output "Close socket for client."
+		write-output "ex."
+		write-output '    pssock_close $param'
+		write-output ""
+		return
+	}
+
+	$param["writer"].Close()
+	$param["reader"].Close()
+	$param["stream"].Close()
+	$param["client"].Close()
+}
+
+#
+# pssock_readline - Read a line from socket
+#
+Function pssock_readline($param){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_readline socket_param"
+		write-output "Read a line from socket."
+		write-output "ex."
+		write-output '    $line = pssock_readline $param'
+		write-output ""
+		return
+	}
+
+	try {
+		$line = $param["reader"].readLine()
+	}catch{
+		$line = $null
+	}
+	return $line
+}
+
+#
+# pssock_writeline - Write a line to socket
+#
+Function pssock_writeline($param, $line){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_writeline socket_param $string"
+		write-output "Write a line to socket."
+		write-output "ex."
+		write-output '    $stat = pssock_writeline $param $line'
+		write-output ""
+		return
+	}
+
+	$stat = $true
+	try {
+		$param["writer"].writeLine($line)
+		$param["writer"].Flush()
+	}catch{
+		$stat = $false
+	}
+	return $stat
+}
+
+#
+# pssock_start - Start server
+#
+Function pssock_start($port){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_start server_port"
+		write-output "Start server."
+		write-output "ex."
+		write-output '    $server = pssock_start "12345"'
+		write-output ""
+		return
+	}
+
+	$endpoint = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Any, $port)
+	$server = New-Object System.Net.Sockets.TcpListener $endpoint
+	$server.start()
+	return $server
+}
+
+#
+# pssock_stop - Stop server
+#
+Function pssock_stop($server){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_stop server"
+		write-output "Stop server."
+		write-output "ex."
+		write-output '    pssock_stop $server'
+		write-output ""
+		return
+	}
+
+	$server.stop()
+}
+
+#
+# pssock_accept - Accept connection from client
+#
+Function pssock_accept($server){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_accept server"
+		write-output "Accept connection from client."
+		write-output "ex."
+		write-output '    $param = pssock_accept $server'
+		write-output ""
+		return
+	}
+
+	$client = $server.AcceptTcpClient()
+	$stream = $client.GetStream()
+	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
+	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
+	$param = @{"client" = $client; "stream" = $stream; "reader" = $reader; "writer" = $writer}
+	return $param
+}
+
+#
+# pssock_accept - Unaccept(disconnect) connection from client
+#
+Function pssock_unaccept($param){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_unaccept socket_param"
+		write-output "Unaccept(disconnect) connection from client."
+		write-output "ex."
+		write-output '    pssock_unaccept $param'
+		write-output ""
+		return
+	}
+
+	$param["writer"].Close()
+	$param["reader"].Close()
+	$param["stream"].Close()
+	$param["client"].Close()
+}
