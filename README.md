@@ -454,3 +454,51 @@ Accept connection from client.
 Usage: pssock_unaccept socket_param
 Unaccept(disconnect) connection from client.
 ```
+
+## psrunspc_getarraylist - Get System.Collections.ArrayList
+```
+Usage: psrunspc_getarraylist
+Get System.Collections.ArrayList.
+```
+
+## psrunspc_open - Create and Open RunSpacePool
+```
+Usage: psrunspc_open max_runspace
+Create and Open RunSpacePool.
+```
+
+## psrunspc_close - Close RunSpacePool
+```
+Usage: psrunspc_close run_space_pool
+Close RunSpacePool.
+```
+
+## psrunspc_createthread - Create thread of powershell and add script to it
+```
+Usage: psrunspc_createthread run_space_pool script_block
+Create thread of powershell and add script to it.
+```
+
+## psrunspc_addargument - Add argument to thread of powershell
+```
+Usage: psrunspc_addargument thread_of_powershellargument
+Add argument to thread of powershell.
+```
+
+## psrunspc_begin - Begin script in thread
+```
+Usage: psrunspc_begin thread_of_powershell arraylist_of_powershell arraylist_of_child
+Begin script in thread.
+```
+
+## psrunspc_wait - Wait terminate of all child thread
+```
+Usage: psrunspc_wait arraylist_of_powershell arraylist_of_child
+Wait terminate of all child thread.
+```
+
+## psrunspc_waitasync - Wait asynchronously terminate of all child thread
+```
+Usage: psrunspc_waitasync arraylist_of_powershell arraylist_of_child
+Wait asynchronously terminate of all child thread.
+```

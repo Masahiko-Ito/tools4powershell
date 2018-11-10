@@ -2202,7 +2202,7 @@ Function pssock_accept($server){
 }
 
 #
-# pssock_accept - Unaccept(disconnect) connection from client
+# pssock_unaccept - Unaccept(disconnect) connection from client
 #
 Function pssock_unaccept($param){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
@@ -2218,4 +2218,156 @@ Function pssock_unaccept($param){
 	$param["reader"].Close()
 	$param["stream"].Close()
 	$param["client"].Close()
+}
+
+#
+# psrunspc_getarraylist - Get System.Collections.ArrayList
+#
+Function psrunspc_getarraylist(){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrunspc_getarraylist"
+		write-output "Get System.Collections.ArrayList."
+		write-output "ex."
+		write-output '    $refArray = psrunspc_getarraylist'
+		write-output '    $Array0 = $ref.Array.value[0]'
+		write-output ""
+		return
+	}
+	$al = New-Object System.Collections.ArrayList
+	return [Ref]$al
+}
+
+#
+# psrunspc_open - Create and Open RunSpacePool
+#
+Function psrunspc_open($max_runspace){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrunspc_open max_runspace"
+		write-output "Create and Open RunSpacePool."
+		write-output "ex."
+		write-output '    $rsp = psrunspc_open 10'
+		write-output '    ... something to do ...'
+		write-output '    psrunspc_close $rsp'
+		write-output ""
+		return
+	}
+	$rsp = [RunspaceFactory]::CreateRunspacePool(1, $max_runspace)
+	$rsp.Open()
+	return $rsp
+}
+
+#
+# psrunspc_close - Close RunSpacePool
+#
+Function psrunspc_close($rsp){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrunspc_close run_space_pool"
+		write-output "Close RunSpacePool."
+		write-output "ex."
+		write-output '    $rsp = psrunspc_open 10'
+		write-output '    ... something to do ...'
+		write-output '    psrunspc_close $rsp'
+		write-output ""
+		return
+	}
+	$rsp.Close()
+}
+
+#
+# psrunspc_createthread - Create thread of powershell and add script to it
+#
+Function psrunspc_createthread($rsp, $script){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrunspc_createthread run_space_pool script_block"
+		write-output "Create thread of powershell and add script to it."
+		write-output "ex."
+		write-output '    $ps = psrunspc_createthread $rsp $script'
+		write-output ""
+		return
+	}
+	$ps = [PowerShell]::Create()
+	$ps.RunspacePool = $rsp
+	$ps.AddScript($script) | out-null
+	return $ps
+}
+
+#
+# psrunspc_addargument - Add argument to thread of powershell
+#
+Function psrunspc_addargument($ps, $arg){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrunspc_addargument thread_of_powershellargument"
+		write-output "Add argument to thread of powershell."
+		write-output "ex."
+		write-output '    psrunspc_addargument $argument'
+		write-output ""
+		return
+	}
+	$ps.AddArgument($arg) | out-null
+}
+
+#
+# psrunspc_begin - Begin script in thread
+#
+Function psrunspc_begin($ps, $aryps, $arych){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrunspc_begin thread_of_powershell arraylist_of_powershell arraylist_of_child"
+		write-output "Begin script in thread."
+		write-output "ex."
+		write-output '    $refAryps = psrunspc_getarraylist'
+		write-output '    $refArych = psrunspc_getarraylist'
+		write-output '    ... something to do ...'
+		write-output '    psrunspc_begin $ps $refAryps.value $refArych.value'
+		write-output ""
+		return
+	}
+	$ch = $ps.BeginInvoke()
+	$aryps.Add($ps) | Out-Null
+	$arych.Add($ch) | Out-Null
+}
+
+#
+# psrunspc_wait - Wait terminate of all child thread
+#
+Function psrunspc_wait($aryps, $arych){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrunspc_wait arraylist_of_powershell arraylist_of_child"
+		write-output "Wait terminate of all child thread."
+		write-output "ex."
+		write-output '    psrunspc_wait $refAryps.value $refArych.value'
+		write-output ""
+		return
+	}
+	for ($i = 0; $i -lt $aryps.Count; $i++){
+		$ps = $aryps[$i]
+		$ch = $arych[$i]
+		$result = $ps.EndInvoke($ch)
+		$ps.Dispose()
+		$aryps.removeAt($i)
+		$arych.removeAt($i)
+	}
+}
+
+#
+# psrunspc_waitasync - Wait asynchronously terminate of all child thread
+#
+Function psrunspc_waitasync($aryps, $arych){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrunspc_waitasync arraylist_of_powershell arraylist_of_child"
+		write-output "Wait asynchronously terminate of all child thread."
+		write-output "ex."
+		write-output '    psrunspc_waitasync $refAryps.value $refArych.value'
+		write-output ""
+		return
+	}
+	for ($i = 0; $i -lt $aryps.Count; $i++){
+		$ps = $aryps[$i]
+		$ch = $arych[$i]
+		if ($ch.isCompleted){
+			$result = $ps.EndInvoke($ch)
+			$ps.Dispose()
+			$aryps.removeAt($i)
+			$arych.removeAt($i)
+		}
+	}
 }
