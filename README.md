@@ -72,19 +72,21 @@ With no options, matching lines are merged to the first occurrence.
 
 ## psjoin - join lines of two files on a common field
 ```
-Usage: psjoin [-h|--help] [-d "delimiter"] [-1 "index,..."] [-2 "index,..."] [-a [m|1|2|12|21]] [-m [1|2]] input1 input2
+Usage: psjoin [-h|--help] [-d "delimiter"] [-1 "index,..."] [-2 "index,..."] [-a [m|1|2|12|21]] [-m [1|2]] [-e1 encoding] [-e2 encoding] input1 input2
 For each pair of input lines with identical join fields, write a line to
 standard output.  The default join field is the first, delimited by ",".
 
   -d "delimiter"        use "delimiter" as input and output field separator instead of ","
   -1 "index,..."        join on this index(s) of file 1 (default 0)
   -2 "index,..."        join on this index(s) of file 2 (default 0)
-  -a m                    write only matching lines (default)
-     1                    write only unpairable lines from input1
-     2                    write only unpairable lines from input2
-     12                   write all lines from input1 and matching lines from input2
-     21                   write all lines from input2 and matching lines from input1
-  -m [1|2]                specify input which has multiple join fields
+  -a m                  write only matching lines (default)
+     1                  write only unpairable lines from input1
+     2                  write only unpairable lines from input2
+     12                 write all lines from input1 and matching lines from input2
+     21                 write all lines from input2 and matching lines from input1
+  -m [1|2]              specify input which has multiple join fields
+  -e1 encoding          encoding for file 1(default 0 means Default)
+  -e2 encoding          encoding for file 2(default 0 means Default)
 ```
 
 ## psxls2csv - convert excel to csv
@@ -409,7 +411,7 @@ Commit transaction.
 
 ## pssock_open - Open socket for client
 ```
-Usage: pssock_open server_ip server_port
+Usage: pssock_open server_ip server_port [encoding]
 Open socket for client.
 ```
 
@@ -445,7 +447,7 @@ Stop server.
 
 ## pssock_accept - Accept connection from client
 ```
-Usage: pssock_accept server
+Usage: pssock_accept server [encoding]
 Accept connection from client.
 ```
 
