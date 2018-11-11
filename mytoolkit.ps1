@@ -623,10 +623,12 @@ function psjoin {
 		$multikey = ""
 		$files = @{}
 		$filesIndex = 0
+		$encoding1 = 0
+		$encoding2 = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "Usage: psjoin [-h|--help] [-d ""delimiter""] [-1 ""index,...""] [-2 ""index,...""] [-a [m|1|2|12|21]] [-m [1|2]] input1 input2"
+				write-output "Usage: psjoin [-h|--help] [-d ""delimiter""] [-1 ""index,...""] [-2 ""index,...""] [-a [m|1|2|12|21]] [-m [1|2]] [-e1 encoding] [-e2 encoding] input1 input2"
 				write-output "For each pair of input lines with identical join fields, write a line to"
 				write-output "standard output.  The default join field is the first, delimited by "",""."
 				write-output ""
@@ -639,6 +641,8 @@ function psjoin {
 				write-output "     12                   write all lines from input1 and matching lines from input2"
 				write-output "     21                   write all lines from input2 and matching lines from input1"
 				write-output "  -m [1|2]                specify input which has multiple join fields"
+				write-output "  -e1 encoding            encoding for file 1(default 0 means Default)"
+				write-output "  -e2 encoding            encoding for file 2(default 0 means Default)"
 				return
 			}elseif ($args[$i] -eq "-d"){
 				$i++
@@ -655,15 +659,22 @@ function psjoin {
 			}elseif ($args[$i] -eq "-m"){
 				$i++
 				$multikey = $args[$i]
+			}elseif ($args[$i] -eq "-e1"){
+				$i++
+				$encoding1 = $args[$i]
+			}elseif ($args[$i] -eq "-e2"){
+				$i++
+				$encoding2 = $args[$i]
 			}else{
 #				$files[$filesIndex] = (resolve-path $args[$i]).Path
 				$files[$filesIndex] = psabspath $args[$i]
 				$filesIndex++
 			}
 		}
-#		$oIn1 = New-Object System.IO.StreamReader($files[0],[Text.Encoding]::GetEncoding("Shift_JIS"))
-		$oIn1 = New-Object System.IO.StreamReader($files[0],[Text.Encoding]::Default)
-		$oIn2 = New-Object System.IO.StreamReader($files[1],[Text.Encoding]::Default)
+#		$oIn1 = New-Object System.IO.StreamReader($files[0],[Text.Encoding]::Default)
+#		$oIn2 = New-Object System.IO.StreamReader($files[1],[Text.Encoding]::Default)
+		$oIn1 = New-Object System.IO.StreamReader($files[0],[Text.Encoding]::GetEncoding($encoding1))
+		$oIn2 = New-Object System.IO.StreamReader($files[1],[Text.Encoding]::GetEncoding($encoding2))
 	}
 	process{
 		if ($helpSw -eq $false){
@@ -2064,20 +2075,22 @@ function psoracle_commit($otran){
 #
 # pssock_open - Open socket for client
 #
-Function pssock_open($addr, $port){
+Function pssock_open($addr, $port, $encoding = 0){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: pssock_open server_ip server_port"
+		write-output "Usage: pssock_open server_ip server_port [encoding]"
 		write-output "Open socket for client."
 		write-output "ex."
-		write-output '    $param = pssock_open "127.0.0.1" "12345"'
+		write-output '    $param = pssock_open "127.0.0.1" "12345" "UTF-8"'
 		write-output ""
 		return
 	}
 
 	$client = New-Object System.Net.Sockets.TcpClient ($addr, $port)
 	$stream = $client.GetStream()
-	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
-	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
+#	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
+#	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
+	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::GetEncoding($encoding))
+	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::GetEncoding($encoding))
 	$param = @{"client" = $client; "stream" = $stream; "writer" = $writer; "reader" = $reader}
 	return $param
 }
@@ -2183,20 +2196,22 @@ Function pssock_stop($server){
 #
 # pssock_accept - Accept connection from client
 #
-Function pssock_accept($server){
+Function pssock_accept($server, $encoding = 0){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: pssock_accept server"
+		write-output "Usage: pssock_accept server [encoding]"
 		write-output "Accept connection from client."
 		write-output "ex."
-		write-output '    $param = pssock_accept $server'
+		write-output '    $param = pssock_accept $server "UTF-8"'
 		write-output ""
 		return
 	}
 
 	$client = $server.AcceptTcpClient()
 	$stream = $client.GetStream()
-	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
-	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
+#	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
+#	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
+	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::GetEncoding($encoding))
+	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::GetEncoding($encoding))
 	$param = @{"client" = $client; "stream" = $stream; "reader" = $reader; "writer" = $writer}
 	return $param
 }
