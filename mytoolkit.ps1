@@ -1153,10 +1153,23 @@ function psconreadline(){
 #
 # psopen - Open IO.Stream
 #
-# ex. $inObj = psopen -r "input.txt"
+# ex. Handle data as text
+#     $inObj = psopen -r "input.txt"
 #     $outObj = psopen -w "output.txt"
 #     while (($rec = $inObj.readLine()) -ne $null){
 #         $outObj.writeLine($rec)
+#     }
+#     $inObj.close()
+#     $outObj.close()
+#
+# ex. Handle data as binary
+#     $arrayByte = New-Object byte[] (1024)
+#     $inObj = psopen -r "input.txt"
+#     $outObj = psopen -w "output.txt"
+#     $read_length = $inObj.BaseStream.Read($arrayByte, 0, $arrayByte.length)
+#     while ($read_length > 0){
+#         $outObj.BaseStream.Write($arrayByte, 0, $read_length)
+#         $read_length = $inObj.BaseStream.Read($arrayByte, 0, $arrayByte.length)
 #     }
 #     $inObj.close()
 #     $outObj.close()
@@ -1170,11 +1183,23 @@ function psopen(){
 				$helpSw = $true
 				write-output "Usage: psopen [-h|--help] [[-r|-w|-a] [inputfile|output]] [-e encoding]"
 				write-output "Open IO.Stream and get object."
-				write-output "ex."
+				write-output "ex. Handle as text"
 				write-output '  $inObj = psopen -r "input.txt"'
 				write-output '  $outObj = psopen -w "output.txt"'
 				write-output '  while (($rec = $inObj.readLine()) -ne $null){'
 				write-output '      $outObj.writeLine($rec)'
+				write-output '  }'
+				write-output '  $inObj.close()'
+				write-output '  $outObj.close()'
+				write-output ""
+				write-output "ex. Handle data as binary"
+				write-output '  $arrayByte = New-Object byte[] (1024)'
+				write-output '  $inObj = psopen -r "input.txt"'
+				write-output '  $outObj = psopen -w "output.txt"'
+				write-output '  $read_length = $inObj.BaseStream.Read($arrayByte, 0, $arrayByte.length)'
+				write-output '  while ($read_length > 0){'
+				write-output '      $outObj.BaseStream.Write($arrayByte, 0, $read_length)'
+				write-output '      $read_length = $inObj.BaseStream.Read($arrayByte, 0, $arrayByte.length)'
 				write-output '  }'
 				write-output '  $inObj.close()'
 				write-output '  $outObj.close()'
@@ -2140,7 +2165,7 @@ Function pssock_readline($param){
 #
 Function pssock_writeline($param, $line){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: pssock_writeline socket_param $string"
+		write-output "Usage: pssock_writeline socket_param string"
 		write-output "Write a line to socket."
 		write-output "ex."
 		write-output '    $stat = pssock_writeline $param $line'
@@ -2152,6 +2177,52 @@ Function pssock_writeline($param, $line){
 	try {
 		$param["writer"].writeLine($line)
 		$param["writer"].Flush()
+	}catch{
+		$stat = $false
+	}
+	return $stat
+}
+
+#
+# pssock_read - Read data as binary from socket
+#
+Function pssock_read($param, $bufBytes, $length){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_read socket_param array_byte length"
+		write-output "Read data as binary from socket."
+		write-output "ex."
+		write-output '    $arrayByte = New-Object byte[] (1024)'
+		write-output '    $read_length = pssock_read $param $arrayByte $arrayByte.length'
+		write-output ""
+		return
+	}
+
+	try {
+		$read_len = $param["reader"].BaseStream.Read($bufBytes, 0, $length)
+	}catch{
+		$read_len = -1
+	}
+	return $read_len
+}
+
+#
+# pssock_write - Write data as binary to socket
+#
+Function pssock_write($param, $bufBytes, $length){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_write socket_param array_byte length"
+		write-output "Write data as binary to socket."
+		write-output "ex."
+		write-output '    $arrayByte = New-Object byte[] (1024)'
+		write-output '    $stat = pssock_write $param $arrayByte $arrayByte.length'
+		write-output ""
+		return
+	}
+
+	$stat = $true
+	try {
+		$param["writer"].BaseStream.Write($bufBytes, 0, $length)
+		$param["writer"].BaseStream.Flush()
 	}catch{
 		$stat = $false
 	}

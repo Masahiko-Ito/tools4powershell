@@ -429,8 +429,20 @@ Read a line from socket.
 
 ## pssock_writeline - Write a line to socket
 ```
-Usage: pssock_writeline socket_param $string
+Usage: pssock_writeline socket_param string
 Write a line to socket.
+```
+
+## pssock_read - Read data as binary from socket
+```
+Usage: pssock_read socket_param array_byte length
+Read data as binary from socket.
+```
+
+## pssock_write - Write data as binary to socket
+```
+Usage: pssock_write socket_param array_byte length
+Write data as binary to socket.
 ```
 
 ## pssock_start - Start server
