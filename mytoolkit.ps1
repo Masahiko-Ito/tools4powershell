@@ -1925,10 +1925,6 @@ function psoracle_createsql($oc, $sql){
 	$ocmd.Connection = $oc
 	$ocmd.CommandText = $sql
 
-	$otran = $oc.BeginTransaction()
-	$otran.Commit()
-	$ocmd.Transaction = $otran
-
 	return $ocmd
 }
 
@@ -1974,19 +1970,16 @@ function psoracle_execupdatesql($ocmd){
 		write-output "Usage: psoracle_execupdatesql oracle_command"
 		write-output "Exuceute SQL with update."
 		write-output "ex."
-		write-output '    $count = psoracle_execupdatesql $ocmd'
-		write-output '    if ($count -lt 0){'
-		write-output '        write-output "Error: update SQL"'
+		write-output '    try{'
+		write-output '        $count = psoracle_execupdatesql $ocmd'
+		write-output '    }catch{'
+		write-output '        write-output $Error[0]'
 		write-output '    }'
 		write-output ""
 		return
 	}
 
-	try{
-		$effected_row = $ocmd.ExecuteNonQuery()
-	}catch{
-		$effected_row = -1
-	}
+	$effected_row = $ocmd.ExecuteNonQuery()
 	return $effected_row
 }
 
@@ -1998,19 +1991,19 @@ function psoracle_execsql($ocmd){
 		write-output "Usage: psoracle_execsql oracle_command"
 		write-output "Exuceute SQL without update."
 		write-output "ex."
-		write-output '    $ocr = psoracle_execsql $ocmd'
+		write-output '    try{'
+		write-output '        $ocr = psoracle_execsql $ocmd'
+		write-output '    }catch{'
+		write-output '        write-output $Error[0]'
+		write-output '    }'
 		write-output '    ... something to do ...'
 		write-output '    psoracle_free $ocr'
 		write-output ""
 		return
 	}
 
-	try{
-		$ord = $ocmd.ExecuteReader()
-	}catch{
-		$ord = $null
-	}
-	return , $ord
+	$ord = $ocmd.ExecuteReader()
+	return ,$ord
 }
 
 #
@@ -2063,6 +2056,22 @@ function psoracle_begin($ocon){
 
 	$otran = $ocon.BeginTransaction()
 	return $otran
+}
+
+#
+# psoracle_settran - Set transaction for oracle command
+#
+function psoracle_settran($ocmd, $otran){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_settran oracle_command oracle_transaction"
+		write-output "Set transaction for oracle command."
+		write-output "ex."
+		write-output '    psoracle_settran $ocmd $otran'
+		write-output ""
+		return
+	}
+
+	$ocmd.Transaction = $otran
 }
 
 #

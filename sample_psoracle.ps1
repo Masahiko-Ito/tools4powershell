@@ -10,45 +10,51 @@ $oracleCommand_select = psoracle_createsql $oracleConnection "select * from tb_s
 #============================================================
 # Start transaction
 $oracleTransaction = psoracle_begin $oracleConnection
+psoracle_settran $oracleCommand_droptable $oracleTransaction
 
-# Execute SQL for update
-$oracleCount = psoracle_execupdatesql $oracleCommand_droptable
-if ($oracleCount -lt 0){
-	write-output "Error: drop table"
-	# Rollback
-	psoracle_rollback $oracleTransaction
-}else{
+try{
+	# Execute SQL for update
+	$oracleCount = psoracle_execupdatesql $oracleCommand_droptable
 	# Commit
 	psoracle_commit $oracleTransaction
+}catch{
+	write-output ("Error: drop table " + $Error[0])
+	# Rollback
+	psoracle_rollback $oracleTransaction
 }
 
 #============================================================
 # Start transaction
 $oracleTransaction = psoracle_begin $oracleConnection
+psoracle_settran $oracleCommand_createtable $oracleTransaction
 
-# Execute SQL for update
-$oracleCount = psoracle_execupdatesql $oracleCommand_createtable
-if ($oracleCount -lt 0){
-	write-output "Error: create table"
-	# Rollback
-	psoracle_rollback $oracleTransaction
-}else{
+try{
+	# Execute SQL for update
+	$oracleCount = psoracle_execupdatesql $oracleCommand_createtable
 	# Commit
 	psoracle_commit $oracleTransaction
+}catch{
+	write-output ("Error: create table " + $Error[0])
+	# Rollback
+	psoracle_rollback $oracleTransaction
 }
 
 #============================================================
 # Start transaction
 $oracleTransaction = psoracle_begin $oracleConnection
+# Set Transaction
+psoracle_settran $oracleCommand_insert $oracleTransaction
 
 # Bind real value
 $id_value = psoracle_bindsql $oracleCommand_insert "id_value" "0001"
 $name_value = psoracle_bindsql $oracleCommand_insert "name_value" "Oracle Ichiro"
 
-# Execute SQL for update
-$oracleCount1 = psoracle_execupdatesql $oracleCommand_insert
-if ($oracleCount1 -lt 0){
-	write-output "Error: insert"
+try{
+	# Execute SQL for update
+	$oracleCount1 = psoracle_execupdatesql $oracleCommand_insert
+}catch{
+	write-output ("Error: insert " + $Error[0])
+	$oracleCount1 = -1
 }
 
 # Free bind
@@ -60,10 +66,12 @@ psoracle_unbindsql $oracleCommand_insert $name_value
 $id_value = psoracle_bindsql $oracleCommand_insert "id_value" "0002"
 $name_value = psoracle_bindsql $oracleCommand_insert "name_value" "Oracle Jiro"
 
-# Execute SQL for update
-$oracleCount2 = psoracle_execupdatesql $oracleCommand_insert
-if ($oracleCount2 -lt 0){
-	write-output "Error: insert"
+try{
+	# Execute SQL for update
+	$oracleCount2 = psoracle_execupdatesql $oracleCommand_insert
+}catch{
+	write-output ("Error: insert " + $Error[0])
+	$oracleCount2 = -1
 }
 
 # Free bind
@@ -75,10 +83,12 @@ psoracle_unbindsql $oracleCommand_insert $name_value
 $id_value = psoracle_bindsql $oracleCommand_insert "id_value" "0003"
 $name_value = psoracle_bindsql $oracleCommand_insert "name_value" "Oracle Hanako"
 
-# Execute SQL for update
-$oracleCount3 = psoracle_execupdatesql $oracleCommand_insert
-if ($oracleCount3 -lt 0){
-	write-output "Error: insert"
+try{
+	# Execute SQL for update
+	$oracleCount3 = psoracle_execupdatesql $oracleCommand_insert
+}catch{
+	write-output ("Error: insert " + $Error[0])
+	$oracleCount3 = -1
 }
 
 # Free bind
@@ -96,12 +106,17 @@ if ($oracleCount1 -lt 0 -or $oracleCount2 -lt 0 -or $oracleCount3 -lt 0){
 #============================================================
 # Start transaction
 $oracleTransaction = psoracle_begin $oracleConnection
+psoracle_settran $oracleCommand_select $oracleTransaction
 
 # Bind read value
 $id_value = psoracle_bindsql $oracleCommand_select "id_value" "000%"
 
-# Execute SQL for query
-$oracleReader = psoracle_execsql $oracleCommand_select
+try{
+	# Execute SQL for query
+	$oracleReader = psoracle_execsql $oracleCommand_select
+}catch{
+	write-output ("Error: select " + $Error[0])
+}
 
 # Free bind
 psoracle_unbindsql $oracleCommand_select $id_value

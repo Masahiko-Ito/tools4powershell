@@ -397,6 +397,12 @@ Usage: psoracle_begin oracle_connection
 Begin transaction.
 ```
 
+## psoracle_settran - Set transaction for oracle command
+```
+Usage: psoracle_settran oracle_command oracle_transaction
+Set transaction for oracle command.
+```
+
 ## psoracle_rollback - rollback transaction
 ```
 Usage: psoracle_rollback oracle_transaction
