@@ -673,8 +673,24 @@ function psjoin {
 		}
 #		$oIn1 = New-Object System.IO.StreamReader($files[0],[Text.Encoding]::Default)
 #		$oIn2 = New-Object System.IO.StreamReader($files[1],[Text.Encoding]::Default)
-		$oIn1 = New-Object System.IO.StreamReader($files[0],[Text.Encoding]::GetEncoding($encoding1))
-		$oIn2 = New-Object System.IO.StreamReader($files[1],[Text.Encoding]::GetEncoding($encoding2))
+		if ($encoding1 -eq "utf8n" -or 
+		    $encoding1 -eq "UTF8N" -or 
+		    $encoding1 -eq "utf-8n" -or 
+		    $encoding1 -eq "UTF-8N"){
+			$enc1 = New-Object System.Text.UTF8Encoding $False
+		}else{
+			$enc1 = [Text.Encoding]::GetEncoding($encoding1)
+		}
+		$oIn1 = New-Object System.IO.StreamReader($files[0],$enc1)
+		if ($encoding2 -eq "utf8n" -or 
+		    $encoding2 -eq "UTF8N" -or 
+		    $encoding2 -eq "utf-8n" -or 
+		    $encoding2 -eq "UTF-8N"){
+			$enc2 = New-Object System.Text.UTF8Encoding $False
+		}else{
+			$enc2 = [Text.Encoding]::GetEncoding($encoding1)
+		}
+		$oIn2 = New-Object System.IO.StreamReader($files[1],$enc2)
 	}
 	process{
 		if ($helpSw -eq $false){
@@ -1212,6 +1228,7 @@ function psopen(){
 					$inputfile = $args[$i]
 				}else{
 					$inputfile = (get-location).tostring() + "\" + $args[$i]
+					$inputfile = $inputfile -replace "^.*::", ""
 				}
 			}elseif ($args[$i] -eq "-w"){
 				$iomode = "w"
@@ -1220,6 +1237,7 @@ function psopen(){
 					$outputfile = $args[$i]
 				}else{
 					$outputfile = (get-location).tostring() + "\" + $args[$i]
+					$outputfile = $outputfile -replace "^.*::", ""
 				}
 			}elseif ($args[$i] -eq "-a"){
 				$iomode = "a"
@@ -1228,6 +1246,7 @@ function psopen(){
 					$outputfile = $args[$i]
 				}else{
 					$outputfile = (get-location).tostring() + "\" + $args[$i]
+					$outputfile = $outputfile -replace "^.*::", ""
 				}
 			}elseif ($args[$i] -eq "-e"){
 				$i++
@@ -1239,12 +1258,20 @@ function psopen(){
 	}
 	end{
 		if ($helpSw -eq $false){
-			if ($iomode -eq "r"){
-				$objIO = New-Object System.IO.StreamReader($inputfile, [Text.Encoding]::GetEncoding($encoding))
-			}elseif ($iomode -eq "w"){
-				$objIO = New-Object System.IO.StreamWriter($outputfile, $false, [Text.Encoding]::GetEncoding($encoding))
+			if ($encoding -eq "utf8n" -or 
+			    $encoding -eq "UTF8N" -or 
+			    $encoding -eq "utf-8n" -or 
+			    $encoding -eq "UTF-8N"){
+				$enc = New-Object System.Text.UTF8Encoding $False
 			}else{
-				$objIO = New-Object System.IO.StreamWriter($outputfile, $true, [Text.Encoding]::GetEncoding($encoding))
+				$enc = [Text.Encoding]::GetEncoding($encoding)
+			}
+			if ($iomode -eq "r"){
+				$objIO = New-Object System.IO.StreamReader($inputfile, $enc)
+			}elseif ($iomode -eq "w"){
+				$objIO = New-Object System.IO.StreamWriter($outputfile, $false, $enc)
+			}else{
+				$objIO = New-Object System.IO.StreamWriter($outputfile, $true, $enc)
 			}
 			return $objIO
 		}
@@ -1925,6 +1952,10 @@ function psoracle_createsql($oc, $sql){
 	$ocmd.Connection = $oc
 	$ocmd.CommandText = $sql
 
+#	$otran = $oc.BeginTransaction()
+#	$otran.Commit()
+#	$ocmd.Transaction = $otran
+
 	return $ocmd
 }
 
@@ -1970,10 +2001,9 @@ function psoracle_execupdatesql($ocmd){
 		write-output "Usage: psoracle_execupdatesql oracle_command"
 		write-output "Exuceute SQL with update."
 		write-output "ex."
-		write-output '    try{'
-		write-output '        $count = psoracle_execupdatesql $ocmd'
-		write-output '    }catch{'
-		write-output '        write-output $Error[0]'
+		write-output '    $count = psoracle_execupdatesql $ocmd'
+		write-output '    if ($count -lt 0){'
+		write-output '        write-output "Error: update SQL"'
 		write-output '    }'
 		write-output ""
 		return
@@ -1991,11 +2021,7 @@ function psoracle_execsql($ocmd){
 		write-output "Usage: psoracle_execsql oracle_command"
 		write-output "Exuceute SQL without update."
 		write-output "ex."
-		write-output '    try{'
-		write-output '        $ocr = psoracle_execsql $ocmd'
-		write-output '    }catch{'
-		write-output '        write-output $Error[0]'
-		write-output '    }'
+		write-output '    $ocr = psoracle_execsql $ocmd'
 		write-output '    ... something to do ...'
 		write-output '    psoracle_free $ocr'
 		write-output ""
@@ -2121,10 +2147,18 @@ Function pssock_open($addr, $port, $encoding = 0){
 
 	$client = New-Object System.Net.Sockets.TcpClient ($addr, $port)
 	$stream = $client.GetStream()
+	if ($encoding -eq "utf8n" -or 
+	    $encoding -eq "UTF8N" -or 
+	    $encoding -eq "utf-8n" -or 
+	    $encoding -eq "UTF-8N"){
+		$enc = New-Object System.Text.UTF8Encoding $False
+	}else{
+		$enc = [Text.Encoding]::GetEncoding($encoding)
+	}
 #	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
 #	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
-	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::GetEncoding($encoding))
-	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::GetEncoding($encoding))
+	$reader = New-Object IO.StreamReader($stream,$enc)
+	$writer = New-Object IO.StreamWriter($stream,$enc)
 	$param = @{"client" = $client; "stream" = $stream; "writer" = $writer; "reader" = $reader}
 	return $param
 }
@@ -2288,10 +2322,18 @@ Function pssock_accept($server, $encoding = 0){
 
 	$client = $server.AcceptTcpClient()
 	$stream = $client.GetStream()
+	if ($encoding -eq "utf8n" -or 
+	    $encoding -eq "UTF8N" -or 
+	    $encoding -eq "utf-8n" -or 
+	    $encoding -eq "UTF-8N"){
+		$enc = New-Object System.Text.UTF8Encoding $False
+	}else{
+		$enc = [Text.Encoding]::GetEncoding($encoding)
+	}
 #	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
 #	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
-	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::GetEncoding($encoding))
-	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::GetEncoding($encoding))
+	$reader = New-Object IO.StreamReader($stream,$enc)
+	$writer = New-Object IO.StreamWriter($stream,$enc)
 	$param = @{"client" = $client; "stream" = $stream; "reader" = $reader; "writer" = $writer}
 	return $param
 }
