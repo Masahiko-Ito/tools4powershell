@@ -25,6 +25,12 @@ Usage: pswcl [-h|--help] [input ...]
 Print newline counts for each input, and a total line if more than one input is specified.
 ```
 
+## pssed - stream editor for filtering and transforming text
+```
+Usage: pssed [-h|--help] regex string [input ...]
+For each substring matching regex in each lines from input, substitute the string.
+```
+
 ## pshead - output the first part of files
 ```
 Usage: pshead [-h|--help] [-l line_number] [input ...]
@@ -99,6 +105,12 @@ If "-" is specified for "-o" option, input will be converted into stdout.
 
 BUGS
   If input is not specified and output is specified, only last excel sheet in current directory will remain in output file.
+```
+
+## psxls2sheetname - get sheetname from excel book
+```
+Usage: psxls2sheetname [-h|--help] [-i input] [-s sheet]
+Print sheet name identified by sheet.
 ```
 
 ## psprint - print arguments to standard output
@@ -475,6 +487,30 @@ Usage: pssock_unaccept socket_param
 Unaccept(disconnect) connection from client.
 ```
 
+## pssock_getip - Get ip-address of client
+```
+Usage: pssock_getip socket_param
+Get ip-address of client.
+```
+
+## pssock_getipstr - Get ip-address string of client
+```
+Usage: pssock_getipstr socket_param
+Get ip-address string of client.
+```
+
+## pssock_getport - Get port of client
+```
+Usage: pssock_getport socket_param
+Get port of client.
+```
+
+## pssock_getportstr - Get port string of client
+```
+Usage: pssock_getportstr socket_param
+Get port string of client.
+```
+
 ## psrunspc_getarraylist - Get System.Collections.ArrayList
 ```
 Usage: psrunspc_getarraylist
@@ -521,4 +557,70 @@ Wait terminate of all child thread.
 ```
 Usage: psrunspc_waitasync arraylist_of_powershell arraylist_of_child
 Wait asynchronously terminate of all child thread.
+```
+
+## psrpa_init - Initialize rpa environment
+```
+Usage: psrpa_init
+Initialize rpa environment.
+```
+
+## psrpa_show_mouse_position - Show current mouse position for debug purpose
+```
+Usage: psrpa_show_mouse_position
+Show current mouse position for debug purpose.
+```
+
+## psrpa_set_mouse - Set mouse position
+```
+Usage: psrpa_set_mouse x_position y_position
+Set mouse position.
+```
+
+## psrpa_click - Click mouse button
+```
+Usage: psrpa_click mouse_button click_action rpa_object
+Click mouse button.
+```
+
+## psrpa_position_click - Set mouse position and click mouse button
+```
+Usage: psrpa_position_click x_position y_position mouse_button click_action rpa_object
+Set mouse position and click mouse button.
+```
+
+## psrpa_show_apptitle - Show application and title
+```
+Usage: psrpa_show_apptitle
+Show application and title.
+```
+
+## psrpa_activate_window - Activate specified window
+```
+Usage: psrpa_activate_window application title
+Activate specified window
+```
+
+## psrpa_set_window - Set window position and size
+```
+Usage: psrpa_set_window application title x_position y_position width height
+Set window position and size
+```
+
+## psrpa_sendkeys - Send keys(string, function, special keys etc)
+```
+Usage: psrpa_sendkeys string
+Send keys(string, function, special keys etc)
+```
+
+## psrpa_set_clipboard - Set clipboard to string
+```
+Usage: psrpa_set_clipboard string
+Set clipboard to string.
+```
+
+## psrpa_get_clipboard - Get string from clipboard
+```
+Usage: psrpa_get_clipboard
+Get string from clipboard.
 ```

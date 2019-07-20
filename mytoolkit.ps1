@@ -2678,7 +2678,7 @@ function psrpa_set_mouse($x, $y){
 #
 function psrpa_click($button, $action, $rpa){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_click mouse_button click_action"
+		write-output "Usage: psrpa_click mouse_button click_action rpa_object"
 		write-output "Click mouse button."
 		write-output "    mouse_button left, LEFT, l, L"
 		write-output "                 middle, MIDDLE, m, M"
@@ -2757,9 +2757,9 @@ function psrpa_click($button, $action, $rpa){
 #
 # psrpa_position_click - Set mouse position and click mouse button
 #
-function psrpa_position_click($x, $y, $button, $action){
+function psrpa_position_click($x, $y, $button, $action, $rpa){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_position_click x_position y_position mouse_button click_action"
+		write-output "Usage: psrpa_position_click x_position y_position mouse_button click_action rpa_object"
 		write-output "Set mouse position and click mouse button."
 		write-output "    mouse_button left, LEFT, l, L"
 		write-output "                 middle, MIDDLE, m, M"
@@ -2770,20 +2770,27 @@ function psrpa_position_click($x, $y, $button, $action){
 		write-output "                 down, DOWN, d, D"
 		write-output "                 up, UP, u, U"
 		write-output "ex."
+		write-output '    $rpa = psrpa_init'
 		write-output '    $x = 10'
 		write-output '    $y = 20'
-		write-output '    psrpa_position_click $x $y "left" "click"'
+		write-output '    psrpa_position_click $x $y "left" "click" $rpa'
 		write-output ""
 		return
 	}
 	psrpa_set_mouse $x $y
-	psrpa_click $button $action
+	psrpa_click $button $action $rpa
 }
 
 #
 # psrpa_show_apptitle - Show application and title
 #
 function psrpa_show_apptitle{
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_show_apptitle"
+		write-output "Show application and title."
+		write-output ""
+		return
+	}
 	$ps = get-process
 	foreach ($process in $ps){
 		write-output ($process.Name + ":" + $process.MainWindowTitle)
