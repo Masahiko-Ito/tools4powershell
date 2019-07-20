@@ -694,119 +694,6 @@ function psjoin {
 	}
 	process{
 		if ($helpSw -eq $false){
-			function sub_start {
-				$global:endSw = "off"
-				$global:rec1 = $oIn1.readLine()
-				$global:rec2 = $oIn2.readLine()
-				$global:matchkey = $null
-			}
-			function sub_main {
-				$key1 = mkkey $global:rec1 $keyidx1
-				$key2 = mkkey $global:rec2 $keyidx2
-				if ($action -eq "1"){
-					if (islt $key1 $key2){
-						if ($global:matchkey -eq $null -or $global:matchkey -cne $key1){
-							write-output $global:rec1
-						}
-						$global:rec1 = $oIn1.readLine()
-					}elseif (islt $key2 $key1){
-						$global:rec2 = $oIn2.readLine()
-					}else{
-						$global:matchkey = $key1
-						if ($multikey -eq 1){
-							$global:rec1 = $oIn1.readLine()
-						}elseif ($multikey -eq 2){
-							$global:rec2 = $oIn2.readLine()
-						}else{
-							$global:rec1 = $oIn1.readLine()
-							$global:rec2 = $oIn2.readLine()
-						}
-					}
-				}elseif ($action -eq "2"){
-					if (islt $key2 $key1){
-						if ($global:matchkey -eq $null -or $global:matchkey -cne $key2){
-							write-output $global:rec2
-						}
-						$global:rec2 = $oIn2.readLine()
-					}elseif (islt $key1 $key2){
-						$global:rec1 = $oIn1.readLine()
-					}else{
-						$global:matchkey = $key2
-						if ($multikey -eq 1){
-							$global:rec1 = $oIn1.readLine()
-						}elseif ($multikey -eq 2){
-							$global:rec2 = $oIn2.readLine()
-						}else{
-							$global:rec1 = $oIn1.readLine()
-							$global:rec2 = $oIn2.readLine()
-						}
-					}
-				}elseif ($action -eq "12"){
-					if (islt $key1 $key2){
-						if ($global:matchkey -eq $null -or $global:matchkey -cne $key1){
-							write-output $global:rec1
-						}
-						$global:rec1 = $oIn1.readLine()
-					}elseif (islt $key2 $key1){
-						$global:rec2 = $oIn2.readLine()
-					}else{
-						$out = $global:rec1 + $delimiter + $global:rec2
-						write-output $out
-						$global:matchkey = $key1
-						if ($multikey -eq 1){
-							$global:rec1 = $oIn1.readLine()
-						}elseif ($multikey -eq 2){
-							$global:rec2 = $oIn2.readLine()
-						}else{
-							$global:rec1 = $oIn1.readLine()
-							$global:rec2 = $oIn2.readLine()
-						}
-					}
-				}elseif ($action -eq "21"){
-					if (islt $key2 $key1){
-						if ($global:matchkey -eq $null -or $global:matchkey -cne $key2){
-							write-output $global:rec2
-						}
-						$global:rec2 = $oIn2.readLine()
-					}elseif (islt $key1 $key2){
-						$global:rec1 = $oIn1.readLine()
-					}else{
-						$out = $global:rec2 + $delimiter + $global:rec1
-						write-output $out
-						$global:matchkey = $key2
-						if ($multikey -eq 1){
-							$global:rec1 = $oIn1.readLine()
-						}elseif ($multikey -eq 2){
-							$global:rec2 = $oIn2.readLine()
-						}else{
-							$global:rec1 = $oIn1.readLine()
-							$global:rec2 = $oIn2.readLine()
-						}
-					}
-				}else{
-					if (islt $key1 $key2){
-						$global:rec1 = $oIn1.readLine()
-					}elseif (islt $key2 $key1){
-						$global:rec2 = $oIn2.readLine()
-					}else{
-						$out = $global:rec1 + $delimiter + $global:rec2
-						write-output $out
-						if ($multikey -eq 1){
-							$global:rec1 = $oIn1.readLine()
-						}elseif ($multikey -eq 2){
-							$global:rec2 = $oIn2.readLine()
-						}else{
-							$global:rec1 = $oIn1.readLine()
-							$global:rec2 = $oIn2.readLine()
-						}
-					}
-				}
-				if ($global:rec1 -eq $null -and $global:rec2 -eq $null){
-					$global:endSw = "on"
-				}
-			}
-			function sub_end {
-			}
 			function mkkey($rec, $key){
 				if ($rec -eq $null){
 					$ret = $null
@@ -837,11 +724,115 @@ function psjoin {
 				return $ret
 			}
 	
-			sub_start
-			while ($global:endSw -eq "off"){
-				sub_main
+			$endSw = "off"
+			$rec1 = $oIn1.readLine()
+			$rec2 = $oIn2.readLine()
+			$matchkey = $null
+			while ($endSw -eq "off"){
+				$key1 = mkkey $rec1 $keyidx1
+				$key2 = mkkey $rec2 $keyidx2
+				if ($action -eq "1"){
+					if (islt $key1 $key2){
+						if ($matchkey -eq $null -or $matchkey -cne $key1){
+							write-output $rec1
+						}
+						$rec1 = $oIn1.readLine()
+					}elseif (islt $key2 $key1){
+						$rec2 = $oIn2.readLine()
+					}else{
+						$matchkey = $key1
+						if ($multikey -eq 1){
+							$rec1 = $oIn1.readLine()
+						}elseif ($multikey -eq 2){
+							$rec2 = $oIn2.readLine()
+						}else{
+							$rec1 = $oIn1.readLine()
+							$rec2 = $oIn2.readLine()
+						}
+					}
+				}elseif ($action -eq "2"){
+					if (islt $key2 $key1){
+						if ($matchkey -eq $null -or $matchkey -cne $key2){
+							write-output $rec2
+						}
+						$rec2 = $oIn2.readLine()
+					}elseif (islt $key1 $key2){
+						$rec1 = $oIn1.readLine()
+					}else{
+						$matchkey = $key2
+						if ($multikey -eq 1){
+							$rec1 = $oIn1.readLine()
+						}elseif ($multikey -eq 2){
+							$rec2 = $oIn2.readLine()
+						}else{
+							$rec1 = $oIn1.readLine()
+							$rec2 = $oIn2.readLine()
+						}
+					}
+				}elseif ($action -eq "12"){
+					if (islt $key1 $key2){
+						if ($matchkey -eq $null -or $matchkey -cne $key1){
+							write-output $rec1
+						}
+						$rec1 = $oIn1.readLine()
+					}elseif (islt $key2 $key1){
+						$rec2 = $oIn2.readLine()
+					}else{
+						$out = $rec1 + $delimiter + $rec2
+						write-output $out
+						$matchkey = $key1
+						if ($multikey -eq 1){
+							$rec1 = $oIn1.readLine()
+						}elseif ($multikey -eq 2){
+							$rec2 = $oIn2.readLine()
+						}else{
+							$rec1 = $oIn1.readLine()
+							$rec2 = $oIn2.readLine()
+						}
+					}
+				}elseif ($action -eq "21"){
+					if (islt $key2 $key1){
+						if ($matchkey -eq $null -or $matchkey -cne $key2){
+							write-output $rec2
+						}
+						$rec2 = $oIn2.readLine()
+					}elseif (islt $key1 $key2){
+						$rec1 = $oIn1.readLine()
+					}else{
+						$out = $rec2 + $delimiter + $rec1
+						write-output $out
+						$matchkey = $key2
+						if ($multikey -eq 1){
+							$rec1 = $oIn1.readLine()
+						}elseif ($multikey -eq 2){
+							$rec2 = $oIn2.readLine()
+						}else{
+							$rec1 = $oIn1.readLine()
+							$rec2 = $oIn2.readLine()
+						}
+					}
+				}else{
+					if (islt $key1 $key2){
+						$rec1 = $oIn1.readLine()
+					}elseif (islt $key2 $key1){
+						$rec2 = $oIn2.readLine()
+					}else{
+						$out = $rec1 + $delimiter + $rec2
+						write-output $out
+						if ($multikey -eq 1){
+							$rec1 = $oIn1.readLine()
+						}elseif ($multikey -eq 2){
+							$rec2 = $oIn2.readLine()
+						}else{
+							$rec1 = $oIn1.readLine()
+							$rec2 = $oIn2.readLine()
+						}
+					}
+				}
+				if ($rec1 -eq $null -and $rec2 -eq $null){
+					$endSw = "on"
+				}
 			}
-			sub_end
 		}
 	}
 	end{
@@ -941,7 +932,7 @@ function psxls2csv {
 				}
 			}
 		}else{
-			if ($strInput -match '^\\'){
+			if ($strInput -match '^[A-Za-z]:' -or $strInput -match '^\\'){
 				$InPath = $strInput
 			}else{
 #				$InPath = (resolve-path $strInput).Path
@@ -991,6 +982,42 @@ function psxls2csv {
 			[System.Runtime.Interopservices.Marshal]::ReleaseComObject($objExcel) | out-null
 			[System.GC]::Collect() | out-null
 		}
+	}
+}
+
+#
+# psxls2sheetname - get sheetname from excel book
+#
+function psxls2sheetname (){
+	$input = ""
+	$sheet = ""
+	$helpSw = $false
+	for ($i = 0; $i -lt $args.length; $i++){
+		if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
+			$helpSw = $true
+			write-output "Usage: psxls2sheetname [-h|--help] [-i input] [-s sheet]"
+			write-output "Print sheet name identified by sheet."
+			write-output "If sheet is omitted, print all sheet names."
+			write-output ""
+			return
+		}elseif ($args[$i] -eq "-i"){
+			$i++
+			$input = $args[$i]
+		}elseif ($args[$i] -eq "-s"){
+			$i++
+			$sheet = $args[$i]
+		}
+	}
+	if ($helpSw -eq $false){
+		$xls = psexcel_open $input
+		if ($sheet -eq ""){
+			for ($i = 1; $i -le (psexcel_getSheetCount $xls); $i++){
+				psexcel_getSheetName $xls $i
+			}
+		}else{
+			psexcel_getSheetName $xls $sheet
+		}
+		psexcel_close $xls
 	}
 }
 
@@ -1059,8 +1086,12 @@ function psabspath ($path){
 	}
 	end{
 		if ($helpSw -eq $false){
-#			(get-location).tostring() + "\" + $path
-			(get-location).ProviderPath + "\" + $path
+			if ($path -match '^[A-Za-z]:' -or $path -match '^\\'){
+				$path
+			}else{
+#				(get-location).tostring() + "\" + $path
+				(get-location).ProviderPath + "\" + $path
+			}
 		}
 	}
 }
@@ -2358,6 +2389,70 @@ Function pssock_unaccept($param){
 }
 
 #
+# pssock_getip - Get ip-address of client
+#
+Function pssock_getip($param){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_getip socket_param"
+		write-output "Get ip-address of client."
+		write-output "ex."
+		write-output '    $ip = pssock_getip $param'
+		write-output ""
+		return
+	}
+
+	return $param["client"].client.RemoteEndPoint.Address
+}
+
+#
+# pssock_getipstr - Get ip-address string of client
+#
+Function pssock_getipstr($param){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_getipstr socket_param"
+		write-output "Get ip-address string of client."
+		write-output "ex."
+		write-output '    $ip = pssock_getipstr $param'
+		write-output ""
+		return
+	}
+
+	return $param["client"].client.RemoteEndPoint.Address.toString()
+}
+
+#
+# pssock_getport - Get port of client
+#
+Function pssock_getport($param){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_getport socket_param"
+		write-output "Get port of client."
+		write-output "ex."
+		write-output '    $ip = pssock_getport $param'
+		write-output ""
+		return
+	}
+
+	return $param["client"].client.RemoteEndPoint.Port
+}
+
+#
+# pssock_getportstr - Get port string of client
+#
+Function pssock_getportstr($param){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pssock_getportstr socket_param"
+		write-output "Get port string of client."
+		write-output "ex."
+		write-output '    $ip = pssock_getportstr $param'
+		write-output ""
+		return
+	}
+
+	return $param["client"].client.RemoteEndPoint.Port.toString()
+}
+
+#
 # psrunspc_getarraylist - Get System.Collections.ArrayList
 #
 Function psrunspc_getarraylist(){
@@ -2507,4 +2602,310 @@ Function psrunspc_waitasync($aryps, $arych){
 			$arych.removeAt($i)
 		}
 	}
+}
+
+#
+# psrpa_init - Initialize rpa environment
+#
+function psrpa_init {
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_init"
+		write-output "Initialize rpa environment."
+		write-output "ex."
+		write-output '    $rpa = psrpa_init'
+		write-output ""
+		return
+	}
+	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
+	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+	$signature = '
+		[DllImport("user32.dll",CharSet=CharSet.Auto,CallingConvention=CallingConvention.StdCall)]
+		public static extern void mouse_event(long dwFlags, long dx, long dy, long cButtons, long dwExtraInfo);
+	'
+	$SendMouseClick = Add-Type -memberDefinition $signature -name "Win32MouseEventNew" -namespace Win32Functions -passThru
+	add-type -assemblyname microsoft.visualbasic
+	add-type -assemblyname system.windows.forms
+	add-type '
+		using System;
+		using System.Runtime.InteropServices;
+		public class Win32 {
+			[DllImport("user32.dll")]
+			[return: MarshalAs(UnmanagedType.Bool)]
+			public static extern bool MoveWindow(IntPtr hWnd,int X, int Y, int nWidth, int nHeight, bool bRepaint);
+		}
+	'
+	$param = @{"SendMouseClick" = $SendMouseClick}
+	return $param
+}
+
+#
+# psrpa_show_mouse_position - Show current mouse position for debug purpose
+#
+function psrpa_show_mouse_position{
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_show_mouse_position"
+		write-output "Show current mouse position for debug purpose."
+		write-output ""
+		return
+	}
+	while ($true){
+		$X = [System.Windows.Forms.Cursor]::Position.X
+		$Y = [System.Windows.Forms.Cursor]::Position.Y
+		write-output "$X $Y"
+		sleep -Second 1
+	}
+}
+
+#
+# psrpa_set_mouse - Set mouse position
+#
+function psrpa_set_mouse($x, $y){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_set_mouse x_position y_position"
+		write-output "Set mouse position."
+		write-output "ex."
+		write-output '    $x = 10'
+		write-output '    $y = 20'
+		write-output '    psrpa_set_mouse $x $y'
+		write-output ""
+		return
+	}
+	[system.windows.forms.cursor]::position = new-object system.drawing.point($x,$y)
+}
+
+#
+# psrpa_click - Click mouse button
+#
+function psrpa_click($button, $action, $rpa){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_click mouse_button click_action"
+		write-output "Click mouse button."
+		write-output "    mouse_button left, LEFT, l, L"
+		write-output "                 middle, MIDDLE, m, M"
+		write-output "                 right, RIGHT, r, R"
+		write-output "    click_action click, CLICK, 1"
+		write-output "                 2click, 2CLICK, 2"
+		write-output "                 3click, 3CLICK, 3"
+		write-output "                 down, DOWN, d, D"
+		write-output "                 up, UP, u, U"
+		write-output "ex."
+		write-output '    $rpa = psrpa_init'
+		write-output '    psrpa_click "left" "click" $rpa'
+		write-output ""
+		return
+	}
+	if ($button -eq "left" -or 
+		$button -eq "LEFT" -or
+		$button -eq "l" -or
+		$button -eq "L"){
+		$down = 0x0000002
+		$up = 0x0000004
+	}elseif ($button -eq "middle" -or 
+		$button -eq "MIDDLE" -or
+		$button -eq "m" -or
+		$button -eq "M"){
+		$down = 0x0000020
+		$up = 0x0000040
+	}elseif ($button -eq "right" -or 
+		$button -eq "RIGHT" -or
+		$button -eq "r" -or
+		$button -eq "R"){
+		$down = 0x0000008
+		$up = 0x0000010
+	}else{
+		$down = 0x0000002
+		$up = 0x0000004
+	}
+
+	if ($action -eq "click" -or
+		$action -eq "CLICK" -or
+		$action -eq "1"){
+		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+	}elseif ($action -eq "2click" -or
+		$action -eq "2CLICK" -or
+		$action -eq "2"){
+		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+	}elseif ($action -eq "3click" -or
+		$action -eq "3CLICK" -or
+		$action -eq "3"){
+		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+	}elseif ($action -eq "down" -or
+		$action -eq "DOWN" -or
+		$action -eq "d" -or
+		$action -eq "D"){
+		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
+	}elseif ($action -eq "up" -or
+		$action -eq "UP" -or
+		$action -eq "u" -or
+		$action -eq "U"){
+		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+	}else{
+		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
+		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+	}
+}
+
+#
+# psrpa_position_click - Set mouse position and click mouse button
+#
+function psrpa_position_click($x, $y, $button, $action){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_position_click x_position y_position mouse_button click_action"
+		write-output "Set mouse position and click mouse button."
+		write-output "    mouse_button left, LEFT, l, L"
+		write-output "                 middle, MIDDLE, m, M"
+		write-output "                 right, RIGHT, r, R"
+		write-output "    click_action click, CLICK, 1"
+		write-output "                 2click, 2CLICK, 2"
+		write-output "                 3click, 3CLICK, 3"
+		write-output "                 down, DOWN, d, D"
+		write-output "                 up, UP, u, U"
+		write-output "ex."
+		write-output '    $x = 10'
+		write-output '    $y = 20'
+		write-output '    psrpa_position_click $x $y "left" "click"'
+		write-output ""
+		return
+	}
+	psrpa_set_mouse $x $y
+	psrpa_click $button $action
+}
+
+#
+# psrpa_show_apptitle - Show application and title
+#
+function psrpa_show_apptitle{
+	$ps = get-process
+	foreach ($process in $ps){
+		write-output ($process.Name + ":" + $process.MainWindowTitle)
+	}
+}
+
+#
+# psrpa_activate_window - Activate specified window
+#
+function psrpa_activate_window ($application, $title){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_activate_window application title"
+		write-output "Activate specified window"
+		write-output "ex."
+		write-output '    $application = "notepad"'
+		write-output '    $title = "no title - memo pad"'
+		write-output '    psrpa_activate_window $application $title'
+		write-output ""
+		return
+	}
+	$ps = get-process | where-object {$_.Name -eq $application}
+	foreach ($process in $ps){
+		if ($process.MainWindowTitle -ne ""){
+			if ($process.MainWindowTitle -match $title){
+				[Microsoft.Visualbasic.Interaction]::AppActivate($process.ID)
+			}
+		}
+	}
+}
+
+#
+# psrpa_set_window - Set window position and size
+#
+#function psrpa_set_window($application, $title, $x, $y, $width, $height){
+function psrpa_set_window{
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_set_window application title x_position y_position width height"
+		write-output "Set window position and size"
+		write-output "ex."
+		write-output '    $application = "notepad"'
+		write-output '    $title = "no title - memo pad"'
+		write-output '    $x = 10'
+		write-output '    $y = 20'
+		write-output '    $width = 300'
+		write-output '    $height = 400'
+		write-output '    psrpa_set_window $application $title $x $y $width $height'
+		write-output ""
+		return
+	}
+	$application = $args[0]
+	$title = $args[1]
+	$x = $args[2]
+	$y = $args[3]
+	$width = $args[4]
+	$height = $args[5]
+	$ps = get-process | where-object {$_.Name -eq $application}
+	foreach ($process in $ps){
+		if ($process.MainWindowTitle -ne ""){
+			if ($process.MainWindowTitle -match $title){
+				[Win32]::MoveWindow($process.MainWindowHandle, $x, $y, $width, $height, $true) | out-null
+			}
+		}
+	}
+}
+
+#
+# psrpa_sendkeys - Send keys(string, function, special keys etc)
+#
+function psrpa_sendkeys ($string){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_sendkeys string"
+		write-output "Send keys(string, function, special keys etc)"
+		write-output "    string any-string"
+		write-output "           {BS} for backspace"
+		write-output "           {DEL} for delete"
+		write-output "           {enter} for enter"
+		write-output "           {LEFT} for left arrow"
+		write-output "           {F1} for F1"
+		write-output "           ^a for CTRL-a"
+		write-output "           +a for SHIFT-a"
+		write-output "           %a for ALT-a"
+		write-output "           other keys - search by google :P"
+		write-output "ex."
+		write-output '    psrpa_sendkeys "any string"'
+		write-output '    psrpa_sendkeys "{BS}"'
+		write-output '    psrpa_sendkeys "^a"'
+		write-output ""
+		return
+	}
+	[system.windows.forms.sendkeys]::sendwait($string)
+}
+
+#
+# psrpa_set_clipboard - Set clipboard to string
+#
+function psrpa_set_clipboard($string){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_set_clipboard string"
+		write-output "Set clipboard to string."
+		write-output "Caution!"
+		write-output "    powershell.exe have to be invoked with -sta option."
+		write-output "ex."
+		write-output '    psrpa_set_clipboard "any string"'
+		write-output ""
+		return
+	}
+	[Windows.Forms.Clipboard]::SetText($string)
+}
+
+#
+# psrpa_get_clipboard - Get string from clipboard
+#
+function psrpa_get_clipboard(){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_get_clipboard"
+		write-output "Get string from clipboard."
+		write-output "Caution!"
+		write-output "    powershell.exe have to be invoked with -sta option."
+		write-output "ex."
+		write-output '    $str = psrpa_get_clipboard'
+		write-output ""
+		return
+	}
+	return [Windows.Forms.Clipboard]::GetText()
 }
