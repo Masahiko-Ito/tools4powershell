@@ -2877,7 +2877,7 @@ function psrpa_activate_window ($application, $title){
 		write-output ""
 		return
 	}
-	$ps = get-process | where-object {$_.Name -eq $application}
+	$ps = get-process | where-object {$_.Name -match $application}
 	foreach ($process in $ps){
 		if ($process.MainWindowTitle -ne ""){
 			if ($process.MainWindowTitle -match $title){
@@ -2912,7 +2912,7 @@ function psrpa_set_window{
 	$y = $args[3]
 	$width = $args[4]
 	$height = $args[5]
-	$ps = get-process | where-object {$_.Name -eq $application}
+	$ps = get-process | where-object {$_.Name -match $application}
 	foreach ($process in $ps){
 		if ($process.MainWindowTitle -ne ""){
 			if ($process.MainWindowTitle -match $title){
