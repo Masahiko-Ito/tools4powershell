@@ -2607,7 +2607,7 @@ Function psrunspc_waitasync($aryps, $arych){
 #
 # psrpa_init - Initialize rpa environment
 #
-function psrpa_init {
+function psrpa_init{
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrpa_init"
 		write-output "Initialize rpa environment."
@@ -2632,6 +2632,72 @@ function psrpa_init {
 			[DllImport("user32.dll")]
 			[return: MarshalAs(UnmanagedType.Bool)]
 			public static extern bool MoveWindow(IntPtr hWnd,int X, int Y, int nWidth, int nHeight, bool bRepaint);
+		}
+	'
+	add-type '
+		using System;
+		//using System.Windows.Forms;
+		using System.Runtime.InteropServices;
+		public class SendKey{
+			[StructLayout(LayoutKind.Sequential)]
+			public struct MOUSEINPUT {
+				public int dx;
+				public int dy;
+				public int mouseData;
+				public int dwFlags;
+				public int time;
+				public int dwExtraInfo;
+			};
+			[StructLayout(LayoutKind.Sequential)]
+			public struct KEYBDINPUT {
+				public short wVk;
+				public short wScan;
+				public int dwFlags;
+				public int time;
+				public int dwExtraInfo;
+			};
+			[StructLayout(LayoutKind.Sequential)]
+			public struct HARDWAREINPUT {
+				public int uMsg;
+				public short wParamL;
+				public short wParamH;
+			};
+			[StructLayout(LayoutKind.Explicit)]
+			public struct INPUT {
+				[FieldOffset(0)]
+				public int type;
+				[FieldOffset(4)]
+				public MOUSEINPUT no;
+				[FieldOffset(4)]
+				public KEYBDINPUT ki;
+				[FieldOffset(4)]
+				public HARDWAREINPUT hi;
+			};
+
+			[DllImport("user32.dll")]
+			public extern static void SendInput(int nInputs, ref INPUT pInputs, int cbsize);
+			[DllImport("user32.dll", EntryPoint = "MapVirtualKeyA")]
+			public extern static int MapVirtualKey(int wCode, int wMapType);
+			public const int INPUT_KEYBOARD = 1;
+			public const int KEYEVENTF_KEYDOWN = 0x0;
+			public const int KEYEVENTF_KEYUP = 0x2;
+			public const int KEYEVENTF_EXTENDEDKEY = 0x1;
+			// public void Send(Keys key, bool isEXTEND){
+			public static void Send(short key, bool isDown, bool isEXTEND){
+				INPUT inp = new INPUT();
+
+				inp.type = INPUT_KEYBOARD;
+				inp.ki.wVk = (short)key;
+				inp.ki.wScan = (short)MapVirtualKey(inp.ki.wVk, 0);
+				inp.ki.time = 0;
+				inp.ki.dwExtraInfo = 0;
+				if (isDown){
+					inp.ki.dwFlags = ((isEXTEND)?(KEYEVENTF_EXTENDEDKEY):0x0)|KEYEVENTF_KEYDOWN;
+				}else{
+					inp.ki.dwFlags = ((isEXTEND)?(KEYEVENTF_EXTENDEDKEY):0x0)|KEYEVENTF_KEYUP;
+				}
+				SendInput(1, ref inp, Marshal.SizeOf(inp));
+			}
 		}
 	'
 	$param = @{"SendMouseClick" = $SendMouseClick}
@@ -2866,7 +2932,8 @@ function psrpa_sendkeys ($string){
 		write-output "    string any-string"
 		write-output "           {BS} for backspace"
 		write-output "           {DEL} for delete"
-		write-output "           {enter} for enter"
+		write-output "           {PRTSC} for print screen"
+		write-output "           {ENTER} for enter"
 		write-output "           {LEFT} for left arrow"
 		write-output "           {F1} for F1"
 		write-output "           ^a for CTRL-a"
@@ -2883,6 +2950,50 @@ function psrpa_sendkeys ($string){
 	[system.windows.forms.sendkeys]::sendwait($string)
 }
 
+
+#
+# psrpa_sendkeyEX - Send a key(Both of normal key and extended key are acceptable)
+#
+function psrpa_sendkeyEX ($virtual_keycode, $action, $isExtended){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_sendkeyEX virtual_keycode action isExtended"
+		write-output "Send a key(Both of normal key and extended key are acceptable)"
+		write-output '    virtual_keycode see https://msdn.microsoft.com/ja-jp/windows/desktop/dd375731'
+		write-output '    action "down", "DOWN", "d", "D"'
+		write-output '           "up", "UP", "u", "U"'
+		write-output '           "send", "SEND", "downup", "DOWNUP"'
+		write-output '    isExtended $true or $false'
+		write-output '               see https://docs.microsoft.com/en-us/windows/win32/inputdev/about-keyboard-input'
+		write-output '                   https://kazhat.at.webry.info/201809/article_4.html'
+		write-output "ex."
+		write-output '    $right_ctrl = 0xa3'
+		write-output '    psrpa_sendkeyEX $right_ctrl "send" $true'
+		write-output ""
+		return
+	}
+	if ($action -eq "down" -or
+		$action -eq "DOWN" -or
+		$action -eq "d" -or
+		$action -eq "D"){
+		[SendKey]::Send($virtual_keycode, $true, $isExtended)
+	}elseif ($action -eq "up" -or
+		$action -eq "UP" -or
+		$action -eq "u" -or
+		$action -eq "U"){
+		[SendKey]::Send($virtual_keycode, $false, $isExtended)
+	}elseif ($action -eq "send" -or
+		$action -eq "SEND" -or
+		$action -eq "downup" -or
+		$action -eq "DOWNUP"){
+		[SendKey]::Send($virtual_keycode, $true, $isExtended)
+		Start-Sleep -Milliseconds 100
+		[SendKey]::Send($virtual_keycode, $false, $isExtended)
+	}else{
+		[SendKey]::Send($virtual_keycode, $true, $isExtended)
+		Start-Sleep -Milliseconds 100
+		[SendKey]::Send($virtual_keycode, $false, $isExtended)
+	}
+}
 #
 # psrpa_set_clipboard - Set clipboard to string
 #
@@ -2903,7 +3014,7 @@ function psrpa_set_clipboard($string){
 #
 # psrpa_get_clipboard - Get string from clipboard
 #
-function psrpa_get_clipboard(){
+function psrpa_get_clipboard{
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrpa_get_clipboard"
 		write-output "Get string from clipboard."

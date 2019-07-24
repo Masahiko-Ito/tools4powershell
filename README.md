@@ -613,6 +613,12 @@ Usage: psrpa_sendkeys string
 Send keys(string, function, special keys etc)
 ```
 
+## psrpa_sendkeyEX - Send a key(Both of normal key and extended key are acceptable)
+```
+Usage: psrpa_sendkeyEX virtual_keycode action isExtended
+Send a key(Both of normal key and extended key are acceptable)
+```
+
 ## psrpa_set_clipboard - Set clipboard to string
 ```
 Usage: psrpa_set_clipboard string
