@@ -2618,14 +2618,14 @@ function psrpa_init{
 	}
 	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
 	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
-	$signature = '
+	$signature = @"
 		[DllImport("user32.dll",CharSet=CharSet.Auto,CallingConvention=CallingConvention.StdCall)]
 		public static extern void mouse_event(long dwFlags, long dx, long dy, long cButtons, long dwExtraInfo);
-	'
+"@
 	$SendMouseClick = Add-Type -memberDefinition $signature -name "Win32MouseEventNew" -namespace Win32Functions -passThru
 	add-type -assemblyname microsoft.visualbasic
 	add-type -assemblyname system.windows.forms
-	add-type '
+	add-type @"
 		using System;
 		using System.Runtime.InteropServices;
 		public class Win32 {
@@ -2633,8 +2633,8 @@ function psrpa_init{
 			[return: MarshalAs(UnmanagedType.Bool)]
 			public static extern bool MoveWindow(IntPtr hWnd,int X, int Y, int nWidth, int nHeight, bool bRepaint);
 		}
-	'
-	add-type '
+"@
+	add-type @"
 		using System;
 		//using System.Windows.Forms;
 		using System.Runtime.InteropServices;
@@ -2699,7 +2699,7 @@ function psrpa_init{
 				SendInput(1, ref inp, Marshal.SizeOf(inp));
 			}
 		}
-	'
+"@
 	$param = @{"SendMouseClick" = $SendMouseClick}
 	return $param
 }
