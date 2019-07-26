@@ -2859,7 +2859,7 @@ function psrpa_show_apptitle{
 	}
 	$ps = get-process
 	foreach ($process in $ps){
-		write-output ($process.Name + ":" + $process.MainWindowTitle)
+		write-output ('"' + $process.Name + '" "' + $process.MainWindowTitle + '"')
 	}
 }
 
@@ -3026,4 +3026,100 @@ function psrpa_get_clipboard{
 		return
 	}
 	return [Windows.Forms.Clipboard]::GetText()
+}
+
+#
+# psrpa_get_bmp - Get image into file(BMP) 
+#
+function psrpa_get_bmp($x1, $y1, $x2, $y2, $bmpfile){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_get_bmp left_x top_x right_x bottom_y output.bmp"
+		write-output "Get image into file(BMP)."
+		write-output "ex."
+		write-output '    psrpa_get_bmp 10 10 200 100 "icon.bmp"'
+		write-output ""
+		return
+	}
+	
+	$outputfile = "$x1" + "_" + "$y1" + "_" + "$x2" + "_" + "$y2" + "_" + $bmpfile
+	$dstimg = psrpa_get_bmp_from_innerfunction $x1 $y1 $x2 $y2 $bmpfile
+	$dstimg.Save((psabspath $outputfile), [System.Drawing.Imaging.ImageFormat]::Bmp)
+	$dstimg.Dispose()
+}
+
+#
+# psrpa_compare_bmp - Compare specifoed rectangle and bmpfile 
+#
+function psrpa_compare_bmp($x1, $y1, $x2, $y2, $bmpfile){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_compare_bmp left_x top_x right_x bottom_y input.bmp"
+		write-output "Compare specifoed rectangle and bmpfile."
+		write-output "ex."
+		write-output '    psrpa_compare_bmp 10 10 200 100 "icon.bmp"'
+		write-output ""
+		return
+	}
+	$dstimg = psrpa_get_bmp_from_innerfunction $x1 $y1 $x2 $y2 $bmpfile
+	$fileimg = [System.Drawing.Image]::FromFile((psabspath $bmpfile))
+	$isSame = $true
+	for ($x = 0; $isSame -and $x -lt $dstimg.Size.Width; $x++){
+		for ($y = 0; $isSame -and $y -lt $dstimg.Size.Height; $y++){
+			if ($dstimg.GetPixel($x, $y).A -ne $fileimg.GetPixel($x, $y).A){
+				$isSame = $false
+			}
+			if ($dstimg.GetPixel($x, $y).R -ne $fileimg.GetPixel($x, $y).R){
+				$isSame = $false
+			}
+			if ($dstimg.GetPixel($x, $y).G -ne $fileimg.GetPixel($x, $y).G){
+				$isSame = $false
+			}
+			if ($dstimg.GetPixel($x, $y).B -ne $fileimg.GetPixel($x, $y).B){
+				$isSame = $false
+			}
+		}
+	}
+	$dstimg.Dispose()
+	$fileimg.Dispose()
+	return $isSame
+}
+#
+# Called from psrpa_get_bmp and psrpa_compare_bmp
+#
+function psrpa_get_bmp_from_innerfunction($x1, $y1, $x2, $y2, $bmpfile){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Sorry, inner usage only."
+		return
+	}
+	$width = $x2 - $x1
+	$height = $y2 - $y1
+	$pwidth = (
+		gwmi win32_videocontroller | 
+		out-string -stream | 
+		select-string "CurrentHorizontalResolution" | 
+		foreach{$_ -replace "^.*: *",""} | 
+		sort | 
+		select-object -Last 1
+	)
+	$pheight = (
+		gwmi win32_videocontroller | 
+		out-string -stream | 
+		select-string "CurrentVerticalResolution" | 
+		foreach{$_ -replace "^.*: *",""} | 
+		sort | 
+		select-object -Last 1
+	)
+	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
+	$gr = [System.Drawing.Graphics]::FromImage($img)
+	$gr.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+	$gr.CopyFromScreen(
+		(New-Object System.Drawing.Point(0,0)), 
+		(New-Object System.Drawing.Point(0,0)), 
+		$img.Size
+	)
+	$rect = New-Object System.Drawing.Rectangle($x1, $y1, $width, $height)
+	$dstimg = $img.Clone($rect, $img.PixelFormat)
+	$img.Dispose()
+	$gr.Dispose()
+	$rect = $null
+	return $dstimg
 }

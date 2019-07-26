@@ -630,3 +630,15 @@ Set clipboard to string.
 Usage: psrpa_get_clipboard
 Get string from clipboard.
 ```
+
+## psrpa_get_bmp - Get image into file(BMP)
+```
+Usage: psrpa_get_bmp left_x top_x right_x bottom_y output.bmp
+Get image into file(BMP).
+```
+
+## psrpa_compare_bmp - Compare specifoed rectangle and bmpfile
+```
+Usage: psrpa_compare_bmp left_x top_x right_x bottom_y input.bmp
+Compare specifoed rectangle and bmpfile.
+```
