@@ -1,4 +1,4 @@
-#
+﻿#
 # pscat - concatenate files and print on the standard output
 #
 function pscat {
@@ -2610,7 +2610,7 @@ Function psrunspc_waitasync($aryps, $arych){
 function psrpa_init{
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrpa_init"
-		write-output "Initialize rpa environment."
+		write-output "Initialize rpa environment and get rpa_object."
 		write-output "ex."
 		write-output '    $rpa = psrpa_init'
 		write-output ""
@@ -2700,51 +2700,102 @@ function psrpa_init{
 			}
 		}
 "@
-	$param = @{"SendMouseClick" = $SendMouseClick}
+
+	$source = @" 
+		using System.Windows.Automation;
+		namespace UIAutomationHelper{ 
+			public class UIAElement{ 
+				public static AutomationElement GetRootWindow(){ 
+					return AutomationElement.RootElement; 
+				}
+				public static AutomationElement GetMainWindowByTitle(string title) {
+					PropertyCondition cond = new System.Windows.Automation.PropertyCondition(System.Windows.Automation.AutomationElement.NameProperty, title);
+					return AutomationElement.RootElement.FindFirst(TreeScope.Element | TreeScope.Children, cond);
+				}
+			} 
+		}  
+"@ 
+    # 参照設定("UIAutomationClient", "UIAutomationTypes")でC#コードの$sourceをコンパイル
+	Add-Type -Language CSharp -TypeDefinition $source -ReferencedAssemblies("UIAutomationClient", "UIAutomationTypes")
+
+	$param = @{"SendMouseClick" = $SendMouseClick;
+		"BeforeWait" = 100;
+		"AfterWait" = 100
+	}
 	return $param
+}
+
+#
+# psrpa_set_beforewait - Set a time(ms) for waiting before functions(psrpa_*)
+#
+function psrpa_set_beforewait($rpa, $timems){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_set_beforewait rpa_object wait_time_ms"
+		write-output 'Set a time(ms) for waiting before functions(psrpa_*).'
+		write-output ""
+		return
+	}
+	$rpa["BeforeWait"] = $timems
+}
+
+#
+# psrpa_set_afterwait - Set a time(ms) for waiting after functions(psrpa_*)
+#
+function psrpa_set_afterwait($rpa, $timems){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_set_afterwait rpa_object wait_time_ms"
+		write-output 'Set a time(ms) for waiting after functions(psrpa_*).'
+		write-output ""
+		return
+	}
+	$rpa["AfterWait"] = $timems
 }
 
 #
 # psrpa_show_mouse_position - Show current mouse position for debug purpose
 #
-function psrpa_show_mouse_position{
+function psrpa_show_mouse_position($rpa){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_show_mouse_position"
+		write-output "Usage: psrpa_show_mouse_position rpa_object"
 		write-output "Show current mouse position for debug purpose."
 		write-output ""
 		return
 	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	while ($true){
-		$X = [System.Windows.Forms.Cursor]::Position.X
-		$Y = [System.Windows.Forms.Cursor]::Position.Y
-		write-output "$X $Y"
+		$x = [System.Windows.Forms.Cursor]::Position.X
+		$y = [System.Windows.Forms.Cursor]::Position.Y
+		write-output "$x $y"
 		sleep -Second 1
 	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_set_mouse - Set mouse position
 #
-function psrpa_set_mouse($x, $y){
+function psrpa_set_mouse($rpa, $x, $y){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_set_mouse x_position y_position"
+		write-output "Usage: psrpa_set_mouse rpa_object x_position y_position"
 		write-output "Set mouse position."
 		write-output "ex."
 		write-output '    $x = 10'
 		write-output '    $y = 20'
-		write-output '    psrpa_set_mouse $x $y'
+		write-output '    psrpa_set_mouse $rpa $x $y'
 		write-output ""
 		return
 	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	[system.windows.forms.cursor]::position = new-object system.drawing.point($x,$y)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_click - Click mouse button
 #
-function psrpa_click($button, $action, $rpa){
+function psrpa_click($rpa, $button, $action){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_click mouse_button click_action rpa_object"
+		write-output "Usage: psrpa_click rpa_object mouse_button click_action"
 		write-output "Click mouse button."
 		write-output "    mouse_button left, LEFT, l, L"
 		write-output "                 middle, MIDDLE, m, M"
@@ -2755,11 +2806,11 @@ function psrpa_click($button, $action, $rpa){
 		write-output "                 down, DOWN, d, D"
 		write-output "                 up, UP, u, U"
 		write-output "ex."
-		write-output '    $rpa = psrpa_init'
-		write-output '    psrpa_click "left" "click" $rpa'
+		write-output '    psrpa_click $rpa "left" "click"'
 		write-output ""
 		return
 	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	if ($button -eq "left" -or 
 		$button -eq "LEFT" -or
 		$button -eq "l" -or
@@ -2818,14 +2869,15 @@ function psrpa_click($button, $action, $rpa){
 		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
 		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
 	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_position_click - Set mouse position and click mouse button
 #
-function psrpa_position_click($x, $y, $button, $action, $rpa){
+function psrpa_position_click($rpa, $x, $y, $button, $action){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_position_click x_position y_position mouse_button click_action rpa_object"
+		write-output "Usage: psrpa_position_click rpa_object x_position y_position mouse_button click_action"
 		write-output "Set mouse position and click mouse button."
 		write-output "    mouse_button left, LEFT, l, L"
 		write-output "                 middle, MIDDLE, m, M"
@@ -2836,46 +2888,62 @@ function psrpa_position_click($x, $y, $button, $action, $rpa){
 		write-output "                 down, DOWN, d, D"
 		write-output "                 up, UP, u, U"
 		write-output "ex."
-		write-output '    $rpa = psrpa_init'
 		write-output '    $x = 10'
 		write-output '    $y = 20'
-		write-output '    psrpa_position_click $x $y "left" "click" $rpa'
+		write-output '    psrpa_position_click $rpa $x $y "left" "click"'
 		write-output ""
 		return
 	}
-	psrpa_set_mouse $x $y
-	psrpa_click $button $action $rpa
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	psrpa_set_mouse $rpa $x $y
+	psrpa_click $rpa $button $action
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_show_apptitle - Show application and title
 #
-function psrpa_show_apptitle{
+function psrpa_show_apptitle($rpa){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_show_apptitle"
+		write-output "Usage: psrpa_show_apptitle rpa_object"
 		write-output "Show application and title."
 		write-output ""
 		return
 	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$ps = get-process
 	foreach ($process in $ps){
 		write-output ('"' + $process.Name + '" "' + $process.MainWindowTitle + '"')
 	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_activate_window - Activate specified window
 #
-function psrpa_activate_window ($application, $title){
+function psrpa_activate_window ($rpa, $application, $title){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_activate_window application title"
+		write-output "Usage: psrpa_activate_window rpa_object application title"
 		write-output "Activate specified window"
+		write-output '    application    "" means "^$", $null means "^.*$"'
+		write-output '    title          "" means "^$", $null means "^.*$"'
 		write-output "ex."
 		write-output '    $application = "notepad"'
 		write-output '    $title = "no title - memo pad"'
-		write-output '    psrpa_activate_window $application $title'
+		write-output '    psrpa_activate_window $rpa $application $title'
 		write-output ""
 		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	if ($application -eq $null){
+		$application = "^.*$"
+	}elseif ($application -eq ""){
+		$application = "^$"
+	}
+	if ($title -eq $null){
+		$title = "^.*$"
+	}elseif ($title -eq ""){
+		$title = "^$"
 	}
 	$ps = get-process | where-object {$_.Name -match $application}
 	foreach ($process in $ps){
@@ -2885,16 +2953,19 @@ function psrpa_activate_window ($application, $title){
 			}
 		}
 	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_set_window - Set window position and size
 #
-#function psrpa_set_window($application, $title, $x, $y, $width, $height){
+#function psrpa_set_window($rpa, $application, $title, $x, $y, $width, $height){
 function psrpa_set_window{
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_set_window application title x_position y_position width height"
+		write-output "Usage: psrpa_set_window rpa_object application title x_position y_position width height"
 		write-output "Set window position and size"
+		write-output '    application    "" means "^$", $null means "^.*$"'
+		write-output '    title          "" means "^$", $null means "^.*$"'
 		write-output "ex."
 		write-output '    $application = "notepad"'
 		write-output '    $title = "no title - memo pad"'
@@ -2902,16 +2973,28 @@ function psrpa_set_window{
 		write-output '    $y = 20'
 		write-output '    $width = 300'
 		write-output '    $height = 400'
-		write-output '    psrpa_set_window $application $title $x $y $width $height'
+		write-output '    psrpa_set_window $rpa $application $title $x $y $width $height'
 		write-output ""
 		return
 	}
-	$application = $args[0]
-	$title = $args[1]
-	$x = $args[2]
-	$y = $args[3]
-	$width = $args[4]
-	$height = $args[5]
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$rpa = $args[0]
+	$application = $args[1]
+	$title = $args[2]
+	$x = $args[3]
+	$y = $args[4]
+	$width = $args[5]
+	$height = $args[6]
+	if ($application -eq $null){
+		$application = "^.*$"
+	}elseif ($application -eq ""){
+		$application = "^$"
+	}
+	if ($title -eq $null){
+		$title = "^.*$"
+	}elseif ($title -eq ""){
+		$title = "^$"
+	}
 	$ps = get-process | where-object {$_.Name -match $application}
 	foreach ($process in $ps){
 		if ($process.MainWindowTitle -ne ""){
@@ -2920,14 +3003,15 @@ function psrpa_set_window{
 			}
 		}
 	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_sendkeys - Send keys(string, function, special keys etc)
 #
-function psrpa_sendkeys ($string){
+function psrpa_sendkeys ($rpa, $string){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_sendkeys string"
+		write-output "Usage: psrpa_sendkeys rpa_object string"
 		write-output "Send keys(string, function, special keys etc)"
 		write-output "    string any-string"
 		write-output "           {BS} for backspace"
@@ -2941,22 +3025,24 @@ function psrpa_sendkeys ($string){
 		write-output "           %a for ALT-a"
 		write-output "           other keys - search by google :P"
 		write-output "ex."
-		write-output '    psrpa_sendkeys "any string"'
-		write-output '    psrpa_sendkeys "{BS}"'
-		write-output '    psrpa_sendkeys "^a"'
+		write-output '    psrpa_sendkeys $rpa "any string"'
+		write-output '    psrpa_sendkeys $rpa "{BS}"'
+		write-output '    psrpa_sendkeys $rpa "^a"'
 		write-output ""
 		return
 	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	[system.windows.forms.sendkeys]::sendwait($string)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 
 #
 # psrpa_sendkeyEX - Send a key(Both of normal key and extended key are acceptable)
 #
-function psrpa_sendkeyEX ($virtual_keycode, $action, $isExtended){
+function psrpa_sendkeyEX ($rpa, $virtual_keycode, $action, $isExtended){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_sendkeyEX virtual_keycode action isExtended"
+		write-output "Usage: psrpa_sendkeyEX rpa_object virtual_keycode action isExtended"
 		write-output "Send a key(Both of normal key and extended key are acceptable)"
 		write-output '    virtual_keycode see https://msdn.microsoft.com/ja-jp/windows/desktop/dd375731'
 		write-output '    action "down", "DOWN", "d", "D"'
@@ -2967,10 +3053,11 @@ function psrpa_sendkeyEX ($virtual_keycode, $action, $isExtended){
 		write-output '                   https://kazhat.at.webry.info/201809/article_4.html'
 		write-output "ex."
 		write-output '    $right_ctrl = 0xa3'
-		write-output '    psrpa_sendkeyEX $right_ctrl "send" $true'
+		write-output '    psrpa_sendkeyEX $rpa $right_ctrl "send" $true'
 		write-output ""
 		return
 	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	if ($action -eq "down" -or
 		$action -eq "DOWN" -or
 		$action -eq "d" -or
@@ -2993,73 +3080,86 @@ function psrpa_sendkeyEX ($virtual_keycode, $action, $isExtended){
 		Start-Sleep -Milliseconds 100
 		[SendKey]::Send($virtual_keycode, $false, $isExtended)
 	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 #
 # psrpa_set_clipboard - Set clipboard to string
 #
-function psrpa_set_clipboard($string){
+function psrpa_set_clipboard($rpa, $string){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_set_clipboard string"
+		write-output "Usage: psrpa_set_clipboard rpa_object string"
 		write-output "Set clipboard to string."
 		write-output "Caution!"
 		write-output "    powershell.exe have to be invoked with -sta option."
 		write-output "ex."
-		write-output '    psrpa_set_clipboard "any string"'
+		write-output '    psrpa_set_clipboard $rpa "any string"'
 		write-output ""
 		return
 	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	[Windows.Forms.Clipboard]::SetText($string)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_get_clipboard - Get string from clipboard
 #
-function psrpa_get_clipboard{
+function psrpa_get_clipboard($rpa){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_get_clipboard"
+		write-output "Usage: psrpa_get_clipboard rpa_object"
 		write-output "Get string from clipboard."
 		write-output "Caution!"
 		write-output "    powershell.exe have to be invoked with -sta option."
 		write-output "ex."
-		write-output '    $str = psrpa_get_clipboard'
+		write-output '    $str = psrpa_get_clipboard $rpa'
 		write-output ""
 		return
 	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	return [Windows.Forms.Clipboard]::GetText()
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_get_bmp - Get image into file(BMP) 
 #
-function psrpa_get_bmp($x1, $y1, $x2, $y2, $bmpfile){
+function psrpa_get_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_get_bmp left_x top_x right_x bottom_y output.bmp"
+		write-output "Usage: psrpa_get_bmp rpa_object left_x top_x right_x bottom_y output.bmp"
 		write-output "Get image into file(BMP)."
 		write-output "ex."
-		write-output '    psrpa_get_bmp 10 10 200 100 "icon.bmp"'
+		write-output '    psrpa_get_bmp $rpa 10 10 200 100 "icon.bmp"'
 		write-output ""
 		return
 	}
-	
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$outputfile = "$x1" + "_" + "$y1" + "_" + "$x2" + "_" + "$y2" + "_" + $bmpfile
-	$dstimg = psrpa_get_bmp_from_innerfunction $x1 $y1 $x2 $y2 $bmpfile
+	$dstimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2 $bmpfile
 	$dstimg.Save((psabspath $outputfile), [System.Drawing.Imaging.ImageFormat]::Bmp)
 	$dstimg.Dispose()
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
 # psrpa_compare_bmp - Compare specifoed rectangle and bmpfile 
 #
-function psrpa_compare_bmp($x1, $y1, $x2, $y2, $bmpfile){
+function psrpa_compare_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_compare_bmp left_x top_x right_x bottom_y input.bmp"
+		write-output "Usage: psrpa_compare_bmp rpa_object left_x top_x right_x bottom_y input.bmp"
 		write-output "Compare specifoed rectangle and bmpfile."
+		write-output 'Return $true when specified rectangle and input.bmp are same.'
 		write-output "ex."
-		write-output '    psrpa_compare_bmp 10 10 200 100 "icon.bmp"'
+		write-output '    $bool = psrpa_compare_bmp $rpa 10 10 200 100 "icon.bmp"'
+		write-output '    if ($bool){'
+		write-output '        write-output "match"'
+		write-output '    }else{'
+		write-output '        write-output "not match"'
+		write-output '    }'
 		write-output ""
 		return
 	}
-	$dstimg = psrpa_get_bmp_from_innerfunction $x1 $y1 $x2 $y2 $bmpfile
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$dstimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2 $bmpfile
 	$fileimg = [System.Drawing.Image]::FromFile((psabspath $bmpfile))
 	$isSame = $true
 	for ($x = 0; $isSame -and $x -lt $dstimg.Size.Width; $x++){
@@ -3081,15 +3181,18 @@ function psrpa_compare_bmp($x1, $y1, $x2, $y2, $bmpfile){
 	$dstimg.Dispose()
 	$fileimg.Dispose()
 	return $isSame
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
+
 #
 # Called from psrpa_get_bmp and psrpa_compare_bmp
 #
-function psrpa_get_bmp_from_innerfunction($x1, $y1, $x2, $y2, $bmpfile){
+function psrpa_get_bmp_from_innerfunction($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Sorry, inner usage only."
+		write-output "Sorry, internal usage only."
 		return
 	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$width = $x2 - $x1
 	$height = $y2 - $y1
 	$pwidth = (
@@ -3122,4 +3225,495 @@ function psrpa_get_bmp_from_innerfunction($x1, $y1, $x2, $y2, $bmpfile){
 	$gr.Dispose()
 	$rect = $null
 	return $dstimg
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_show - Show all ui-automation element information
+#
+function psrpa_uia_show($rpa){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_show rpa_object"
+		write-output "Show all ui-automation element."
+		write-output "ex."
+		write-output '    psrpa_uia_show $rpa'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	[UIAutomationHelper.UIAElement]::GetRootWindow().FindAll(
+		[System.Windows.Automation.TreeScope]::Children,
+		[System.Windows.Automation.Condition]::TrueCondition) |
+	%{
+
+		"========================================================================="
+		$_.FindAll(
+			[System.Windows.Automation.TreeScope]::SubTree,
+			[System.Windows.Automation.Condition]::TrueCondition) |
+		%{
+			"ClassName = " + $_.Current.ClassName
+#			"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+			"LocalizedControlType = " + $_.Current.LocalizedControlType
+			"Name = " + $_.Current.Name
+#			"ProcessId = " + $_.Current.ProcessId.tostring()
+			$_.GetSupportedPatterns() |
+			%{
+				"SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+			}
+			"-------------------------------------------------------------------------"
+		}
+	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_get - Get ui-automation element
+#
+function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_get rpa_object parent_element class_name localized_controlname name"
+		write-output "Get ui-automation element."
+		write-output '    parent_element        "" or $null mean root-window'
+		write-output '    class_name            "" means "^$", $null means "^.*$"'
+		write-output '    localized_controlname'
+		write-output '    name'
+		write-output "ex."
+		write-output '    $app = psrpa_uia_get $rpa $null "Notepad" "ウィンドウ" "無題 - メモ帳"'
+		write-output '    $help = psrpa_uia_get $rpa $app "" "メニュー項目" "ヘルプ\(H\)"'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	if ($element -eq $null -or $element -eq ""){
+		$element = [UIAutomationHelper.UIAElement]::GetRootWindow()
+	}
+	if ($classname -eq $null){
+		$classname = "^.*$"
+	}elseif ($classname -eq ""){
+		$classname = "^$"
+	}
+	if ($localizedcontroltype -eq $null){
+		$localizedcontroltype = "^.*$"
+	}elseif ($localizedcontroltype -eq ""){
+		$localizedcontroltype = "^$"
+	}
+	if ($name -eq $null){
+		$name = "^.*$"
+	}elseif ($name -eq ""){
+		$name = "^$"
+	}
+	$element.FindAll(
+		[System.Windows.Automation.TreeScope]::SubTree,
+		[System.Windows.Automation.Condition]::TrueCondition) |
+	where-object{$_.Current.ClassName -match $classname -and 
+		$_.Current.LocalizedControlType -match $localizedcontroltype -and
+		$_.Current.Name -match $name}
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_invoke - Invoke ui-automation element(InvokePattern)
+#
+function psrpa_uia_invoke($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_invoke rpa_object element"
+		write-output "Invoke ui-automation element(InvokePattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_invoke $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_expand - Expand ui-automation element(ExpandCollapsePattern)
+#
+function psrpa_uia_expand($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_expand rpa_object element"
+		write-output "Expand ui-automation element(ExpandCollapsePattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_expand $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand()
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_close - Close ui-automation element(WindowPattern)
+#
+function psrpa_uia_close($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_close rpa_object element"
+		write-output "Close ui-automation element(WindowPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_close $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).Close()
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_setvalue - Set value into ui-automation element(ValuePattern)
+#
+function psrpa_uia_setvalue($rpa, $element, $value){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_setvalue rpa_object element value"
+		write-output "Set value into ui-automation element(ValuePattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_setvalue $rpa $elm "any-string"'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($value)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_gettext - Get text from ui-automation element(TextPattern)
+#
+function psrpa_uia_gettext($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_gettext rpa_object element"
+		write-output "Get text from ui-automation element(TextPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $text = psrpa_uia_gettext $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern).DocumentRange.getText(65535)
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_toggle - Toggle ui-automation element(TogglePattern)
+#
+function psrpa_uia_toggle($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_toggle rpa_object element"
+		write-output "Toggle ui-automation element(TogglePattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_toggle $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern).Toggle()
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_select - Select ui-automation element(SelectionItem)
+#
+function psrpa_uia_select($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_select rpa_object element"
+		write-output "Select ui-automation element(SelectionItem)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_select $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_move - Move ui-automation element(TransformPattern)
+#
+function psrpa_uia_move($rpa, $element, $x, $y){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_move rpa_object element x y"
+		write-output "Move ui-automation element(TransformPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $x = 10'
+		write-output '    $y = 20'
+		write-output '    psrpa_uia_move $rpa $elm $x $y'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.TransformPattern]::Pattern).Move($x, $y)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_resize - Resize ui-automation element(TransformPattern)
+#
+#function psrpa_uia_resize($rpa, $element, $width, $height){
+function psrpa_uia_resize{
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_resize rpa_object element width height"
+		write-output "Resize ui-automation element(TransformPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $width = 100'
+		write-output '    $height = 200'
+		write-output '    psrpa_uia_resize $rpa $elm $width $height'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$rpa = $args[0]
+	$element = $args[1]
+	$width = $args[2]
+	$height = $args[3]
+	$element.GetCurrentPattern([System.Windows.Automation.TransformPattern]::Pattern).Resize($width, $height)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getgrid_classname - Get grid classname of ui-automation element(GridPattern)
+#
+function psrpa_uia_getgrid_classname($rpa, $element, $row, $col){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getgrid_classname rpa_object element row col"
+		write-output "Get grid classname of ui-automation element(GridPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $row = 0'
+		write-output '    $col = 0'
+		write-output '    $classname = psrpa_uia_getgrid_classname $rpa $elm $row $col'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.ClassName
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getgrid_controltype - Get grid controltype of ui-automation element(GridPattern)
+#
+function psrpa_uia_getgrid_controltype($rpa, $element, $row, $col){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getgrid_controltype rpa_object element row col"
+		write-output "Get grid controltype of ui-automation element(GridPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $row = 0'
+		write-output '    $col = 0'
+		write-output '    $controltype = psrpa_uia_getgrid_controltype $rpa $elm $row $col'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.LocalizedControlType
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getgrid_name - Get grid name of ui-automation element(GridPattern)
+#
+function psrpa_uia_getgrid_name($rpa, $element, $row, $col){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getgrid_name rpa_object element row col"
+		write-output "Get grid name of ui-automation element(GridPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $row = 0'
+		write-output '    $col = 0'
+		write-output '    $name = psrpa_uia_getgrid_name $rpa $elm $row $col'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.Name
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getgrid_column - Get grid colmun of ui-automation element(GridPattern)
+#
+function psrpa_uia_getgrid_column($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getgrid_column rpa_object element"
+		write-output "Get grid column of ui-automation element(GridPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $col = psrpa_uia_getgrid_column $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.ColumnCount
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getgrid_row - Get grid row of ui-automation element(GridPattern)
+#
+function psrpa_uia_getgrid_row($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getgrid_row rpa_object element"
+		write-output "Get grid row of ui-automation element(GridPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $row = psrpa_uia_getgrid_row $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.RowCount
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getgriditem_column - Get griditem column of ui-automation element(GridItemPattern)
+#
+function psrpa_uia_getgriditem_column($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getgriditem_column rpa_object element"
+		write-output "Get griditem column of ui-automation element(GridItemPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $column = psrpa_uia_getgriditem_column $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Column
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getgriditem_columnspan - Get griditem column span of ui-automation element(GridItemPattern)
+#
+function psrpa_uia_getgriditem_columnspan($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getgriditem_columnspan rpa_object element"
+		write-output "Get griditem column span of ui-automation element(GridItemPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $columnspan = psrpa_uia_getgriditem_columnspan $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.ColumnSpan
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getgriditem_row - Get griditem row of ui-automation element(GridItemPattern)
+#
+function psrpa_uia_getgriditem_row($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getgriditem_row rpa_object element"
+		write-output "Get griditem row of ui-automation element(GridItemPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $row = psrpa_uia_getgriditem_row $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Row
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getgriditem_rowspan - Get griditem row span of ui-automation element(GridItemPattern)
+#
+function psrpa_uia_getgriditem_rowspan($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getgriditem_rowspan rpa_object element"
+		write-output "Get griditem row span of ui-automation element(GridItemPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $rowspan = psrpa_uia_getgriditem_rowspan $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.RowSpan
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getpattern - Get pattern from ui-automation element
+#
+function psrpa_uia_getpattern($rpa, $element, $pattern){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getpattern rpa_object element pattern"
+		write-output "Get pattern from ui-automation element."
+		write-output '    pattern "Invoke"'
+		write-output '            "ExpandCollapse"'
+		write-output '            "Window"'
+		write-output '            "Value"'
+		write-output '            "Text"'
+		write-output '            "Toggle"'
+		write-output '            "SelectionItem"'
+		write-output '            "Grid"'
+		write-output '            "GridItem"'
+		write-output '            "Selection"'
+		write-output '            "RangeValue"'
+		write-output '            "Scroll"'
+		write-output '            "MultipleView"'
+		write-output '            "Table"'
+		write-output '            "TableItem"'
+		write-output '            "ScrollItem"'
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $pattern = psrpa_uia_getpattern $rpa $elm "Invoke"'
+		write-output '    $pattern.Invoke()'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	if ($pattern -eq "Invoke"){
+		$element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+	}elseif ($pattern -eq "ExpandCollapse"){
+		$element.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern)
+	}elseif ($pattern -eq "Window"){
+		$element.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern)
+	}elseif ($pattern -eq "Value"){
+		$element.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+	}elseif ($pattern -eq "Text"){
+		$element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern)
+	}elseif ($pattern -eq "Toggle"){
+		$element.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+	}elseif ($pattern -eq "SelectionItem"){
+		$element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
+	}elseif ($pattern -eq "Grid"){
+		$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern)
+	}elseif ($pattern -eq "GridItem"){
+		$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern)
+#
+	}elseif ($pattern -eq "Selection"){
+		$element.GetCurrentPattern([System.Windows.Automation.SelectionPattern]::Pattern)
+	}elseif ($pattern -eq "RangeValue"){
+		$element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern)
+	}elseif ($pattern -eq "Scroll"){
+		$element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern)
+	}elseif ($pattern -eq "MultipleView"){
+		$element.GetCurrentPattern([System.Windows.Automation.MultipleViewPattern]::Pattern)
+	}elseif ($pattern -eq "Table"){
+		$element.GetCurrentPattern([System.Windows.Automation.TablePattern]::Pattern)
+	}elseif ($pattern -eq "TableItem"){
+		$element.GetCurrentPattern([System.Windows.Automation.TableItemPattern]::Pattern)
+	}elseif ($pattern -eq "ScrollItem"){
+		$element.GetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern)
+	}
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
