@@ -583,6 +583,12 @@ Usage: psrpa_show_mouse_position rpa_object
 Show current mouse position for debug purpose.
 ```
 
+## psrpa_show_mouse_position_byclick - Show current mouse position for psrpa_set_mouse and psrpa_position_click by click
+```
+Usage: psrpa_show_mouse_position_byclick rpa_object [wait_sec]
+Show current mouse position for psrpa_set_mouse and psrpa_position_click by click.
+```
+
 ## psrpa_set_mouse - Set mouse position
 ```
 Usage: psrpa_set_mouse rpa_object x_position y_position
@@ -647,6 +653,12 @@ Get string from clipboard.
 ```
 Usage: psrpa_get_bmp rpa_object left_x top_x right_x bottom_y output.bmp
 Get image into file(BMP).
+```
+
+## psrpa_get_bmp_byclick - Get image into file(BMP) by click
+```
+Usage: psrpa_get_bmp_byclick rpa_object output.bmp [wait_sec]
+Get image into file(BMP) by click.
 ```
 
 ## psrpa_compare_bmp - Compare specifoed rectangle and bmpfile

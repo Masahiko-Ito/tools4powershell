@@ -1,4 +1,4 @@
-Ôªø#
+#
 # pscat - concatenate files and print on the standard output
 #
 function pscat {
@@ -2715,7 +2715,7 @@ function psrpa_init{
 			} 
 		}  
 "@ 
-    # ÂèÇÁÖßË®≠ÂÆö("UIAutomationClient", "UIAutomationTypes")„ÅßC#„Ç≥„Éº„Éâ„ÅÆ$source„Çí„Ç≥„É≥„Éë„Ç§„É´
+    # éQè∆ê›íË("UIAutomationClient", "UIAutomationTypes")Ç≈C#ÉRÅ[ÉhÇÃ$sourceÇÉRÉìÉpÉCÉã
 	Add-Type -Language CSharp -TypeDefinition $source -ReferencedAssemblies("UIAutomationClient", "UIAutomationTypes")
 
 	$param = @{"SendMouseClick" = $SendMouseClick;
@@ -2761,15 +2761,101 @@ function psrpa_show_mouse_position($rpa){
 		write-output ""
 		return
 	}
-	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	while ($true){
 		$x = [System.Windows.Forms.Cursor]::Position.X
 		$y = [System.Windows.Forms.Cursor]::Position.Y
 		write-output "$x $y"
 		sleep -Second 1
 	}
-	Start-Sleep -Milliseconds $rpa["AfterWait"]
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
+
+#
+# psrpa_show_mouse_position_byclick - Show current mouse position for psrpa_set_mouse and psrpa_position_click by click
+#
+function psrpa_show_mouse_position_byclick($rpa, $wait = 5){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_show_mouse_position_byclick rpa_object [wait_sec]"
+		write-output "Show current mouse position for psrpa_set_mouse and psrpa_position_click by click."
+		write-output "Press any key to terminate."
+		write-output "    wait_sec    default 5"
+		write-output "ex."
+		write-output '    $wait_sec = 10'
+		write-output '    psrpa_show_mouse_position_byclick $rpa $wait_sec'
+		write-output ""
+		return
+	}
+#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	Start-Sleep $wait
+
+	$pwidth = (
+		gwmi win32_videocontroller | 
+		out-string -stream | 
+		select-string "CurrentHorizontalResolution" | 
+		foreach{$_ -replace "^.*: *",""} | 
+		sort | 
+		select-object -Last 1
+	)
+	$pheight = (
+		gwmi win32_videocontroller | 
+		out-string -stream | 
+		select-string "CurrentVerticalResolution" | 
+		foreach{$_ -replace "^.*: *",""} | 
+		sort | 
+		select-object -Last 1
+	)
+	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
+	$gr = [System.Drawing.Graphics]::FromImage($img)
+	$gr.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+	$gr.CopyFromScreen(
+		(New-Object System.Drawing.Point(0,0)), 
+		(New-Object System.Drawing.Point(0,0)), 
+		$img.Size
+	)
+	$lwidth = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width
+	$lheight = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height
+	$w = New-Object System.Windows.Forms.Form
+	$w.keyPreview = $true
+	$w.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
+	$pb = New-Object System.Windows.Forms.PictureBox
+	$w.ClientSize = $img.Size
+	$pb.ClientSize = $img.Size
+	$pb.Image = $img
+	$w.Controls.Add($pb)
+
+	$w_keydown = {
+		$w.Close()
+		$img.Dispose()
+		$gr.Dispose()
+		$pb.Dispose()
+	}
+	$w.Add_KeyDown($w_keydown)
+
+	$pb_click = {
+		$x = [System.Windows.Forms.Cursor]::Position.X
+		$y = [System.Windows.Forms.Cursor]::Position.Y
+		if ($_.Button -eq "Left"){
+			$button = "left"
+		}elseif ($_.Button -eq "Middle"){
+			$button = "middle"
+		}elseif ($_.Button -eq "Right"){
+			$button = "right"
+		}else{
+			$button = "left"
+		}
+		write-host ('psrpa_set_mouse $rpa ' + "$x $y")
+		write-host ('psrpa_position_click $rpa ' + "$x $y" + ' "' + $button + '" "click"')
+		write-host ('')
+	}
+	$pb.Add_Click($pb_click)
+
+	$pb.Cursor = [System.Windows.Forms.Cursors]::Cross
+	$stat = $w.ShowDialog()
+
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
 
 #
 # psrpa_set_mouse - Set mouse position
@@ -2910,12 +2996,12 @@ function psrpa_show_apptitle($rpa){
 		write-output ""
 		return
 	}
-	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$ps = get-process
 	foreach ($process in $ps){
 		write-output ('"' + $process.Name + '" "' + $process.MainWindowTitle + '"')
 	}
-	Start-Sleep -Milliseconds $rpa["AfterWait"]
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3125,8 +3211,9 @@ function psrpa_get_clipboard($rpa){
 #
 function psrpa_get_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_get_bmp rpa_object left_x top_x right_x bottom_y output.bmp"
+		write-output "Usage: psrpa_get_bmp rpa_object left_x top_y right_x bottom_y output.bmp"
 		write-output "Get image into file(BMP)."
+		write-output "Output file name will be (left_x)_(top_y)_(right_x)_(bottom_y)_output.bmp."
 		write-output "ex."
 		write-output '    psrpa_get_bmp $rpa 10 10 200 100 "icon.bmp"'
 		write-output ""
@@ -3139,6 +3226,105 @@ function psrpa_get_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	$dstimg.Dispose()
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
+
+#
+# psrpa_get_bmp_byclick - Get image into file(BMP) by click
+#
+function psrpa_get_bmp_byclick($rpa, $bmpfile, $wait = 5){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_get_bmp_byclick rpa_object output.bmp [wait_sec]"
+		write-output "Get image into file(BMP) by click."
+		write-output "Output file name will be (left_x)_(top_y)_(right_x)_(bottom_y)_output.bmp."
+		write-output "Mouse cursor is CROSS for pointing (left_x, top_y)."
+		write-output "                HAND  for pointing (right_x, bottom_y)."
+		write-output "Press any key to terminate."
+		write-output "    wait_sec    default 5"
+		write-output "ex."
+		write-output '    $wait_sec = 10'
+		write-output '    psrpa_get_bmp_byclick $rpa "icon.bmp" $wait_sec'
+		write-output ""
+		return
+	}
+#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	Start-Sleep $wait
+
+	$pwidth = (
+		gwmi win32_videocontroller | 
+		out-string -stream | 
+		select-string "CurrentHorizontalResolution" | 
+		foreach{$_ -replace "^.*: *",""} | 
+		sort | 
+		select-object -Last 1
+	)
+	$pheight = (
+		gwmi win32_videocontroller | 
+		out-string -stream | 
+		select-string "CurrentVerticalResolution" | 
+		foreach{$_ -replace "^.*: *",""} | 
+		sort | 
+		select-object -Last 1
+	)
+	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
+	$gr = [System.Drawing.Graphics]::FromImage($img)
+	$gr.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+	$gr.CopyFromScreen(
+		(New-Object System.Drawing.Point(0,0)), 
+		(New-Object System.Drawing.Point(0,0)), 
+		$img.Size
+	)
+	$lwidth = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width
+	$lheight = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height
+	$w = New-Object System.Windows.Forms.Form
+	$w.keyPreview = $true
+	$w.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
+	$pb = New-Object System.Windows.Forms.PictureBox
+	$w.ClientSize = $img.Size
+	$pb.ClientSize = $img.Size
+	$pb.Image = $img
+	$w.Controls.Add($pb)
+
+	$w_keydown = {
+		$w.Close()
+		$img.Dispose()
+		$gr.Dispose()
+		$pb.Dispose()
+	}
+	$w.Add_KeyDown($w_keydown)
+
+	$script:psrpa_get_bmp_byclick_click_seq = 0
+	$pb_click = {
+		if ($script:psrpa_get_bmp_byclick_click_seq -eq 0){
+			$script:psrpa_get_bmp_byclick_x1 = [System.Windows.Forms.Cursor]::Position.X
+			$script:psrpa_get_bmp_byclick_y1 = [System.Windows.Forms.Cursor]::Position.Y
+			$script:psrpa_get_bmp_byclick_click_seq = 1
+			$pb.Cursor = [System.Windows.Forms.Cursors]::Hand
+		}else{
+			$x1 = $script:psrpa_get_bmp_byclick_x1
+			$y1 = $script:psrpa_get_bmp_byclick_y1
+			$x2 = [System.Windows.Forms.Cursor]::Position.X
+			$y2 = [System.Windows.Forms.Cursor]::Position.Y
+
+			$width = $x2 - $x1
+			$height = $y2 - $y1
+			$rect = New-Object System.Drawing.Rectangle($x1, $y1, $width, $height)
+			$dstimg = $img.Clone($rect, $img.PixelFormat)
+			$outputfile = "$x1" + "_" + "$y1" + "_" + "$x2" + "_" + "$y2" + "_" + $bmpfile
+			$dstimg.Save((psabspath $outputfile), [System.Drawing.Imaging.ImageFormat]::Bmp)
+			write-host ('psrpa_compare_bmp $rpa ' + "$x1 $y1 $x2 $y2 $outputfile")
+			$dstimg.Dispose()
+			$rect = $null
+			$script:psrpa_get_bmp_byclick_click_seq = 0
+			$pb.Cursor = [System.Windows.Forms.Cursors]::Cross
+		}
+	}
+	$pb.Add_Click($pb_click)
+
+	$pb.Cursor = [System.Windows.Forms.Cursors]::Cross
+	$stat = $w.ShowDialog()
+
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
 
 #
 # psrpa_compare_bmp - Compare specifoed rectangle and bmpfile 
@@ -3240,7 +3426,7 @@ function psrpa_uia_show($rpa){
 		write-output ""
 		return
 	}
-	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	[UIAutomationHelper.UIAElement]::GetRootWindow().FindAll(
 		[System.Windows.Automation.TreeScope]::Children,
 		[System.Windows.Automation.Condition]::TrueCondition) |
@@ -3263,7 +3449,7 @@ function psrpa_uia_show($rpa){
 			"-------------------------------------------------------------------------"
 		}
 	}
-	Start-Sleep -Milliseconds $rpa["AfterWait"]
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3278,8 +3464,8 @@ function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name)
 		write-output '    localized_controlname'
 		write-output '    name'
 		write-output "ex."
-		write-output '    $app = psrpa_uia_get $rpa $null "Notepad" "„Ç¶„Ç£„É≥„Éâ„Ç¶" "ÁÑ°È°å - „É°„É¢Â∏≥"'
-		write-output '    $help = psrpa_uia_get $rpa $app "" "„É°„Éã„É•„ÉºÈ†ÖÁõÆ" "„Éò„É´„Éó\(H\)"'
+		write-output '    $app = psrpa_uia_get $rpa $null "Notepad" "ÉEÉBÉìÉhÉE" "ñ≥ëË - ÉÅÉÇí†"'
+		write-output '    $help = psrpa_uia_get $rpa $app "" "ÉÅÉjÉÖÅ[çÄñ⁄" "ÉwÉãÉv\(H\)"'
 		write-output ""
 		return
 	}
