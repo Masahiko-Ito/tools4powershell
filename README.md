@@ -667,6 +667,11 @@ Usage: psrpa_compare_bmp rpa_object left_x top_x right_x bottom_y input.bmp
 Compare specifoed rectangle and bmpfile.
 ```
 
+## psrpa_search_bmp - Search bmpfile in screen
+```
+Usage: psrpa_search_bmp rpa_object left_x top_x right_x bottom_y input.bmp
+```
+
 ## psrpa_uia_show - Show all ui-automation element information
 ```
 Usage: psrpa_uia_show rpa_object
