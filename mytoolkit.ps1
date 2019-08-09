@@ -2616,29 +2616,24 @@ function psrpa_init{
 		write-output ""
 		return
 	}
-	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
-	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
-	$signature = @"
-		[DllImport("user32.dll",CharSet=CharSet.Auto,CallingConvention=CallingConvention.StdCall)]
-		public static extern void mouse_event(long dwFlags, long dx, long dy, long cButtons, long dwExtraInfo);
-"@
-	$SendMouseClick = Add-Type -memberDefinition $signature -name "Win32MouseEventNew" -namespace Win32Functions -passThru
+#	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
+#	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+	add-type -assemblyname System.Drawing
+	add-type -assemblyname System.Windows.Forms
 	add-type -assemblyname microsoft.visualbasic
 	add-type -assemblyname system.windows.forms
-	add-type @"
+
+	$source = @" 
 		using System;
 		using System.Runtime.InteropServices;
-		public class Win32 {
+		using System.Windows.Automation;
+		using System.Drawing;
+		public class Psrpa {
 			[DllImport("user32.dll")]
 			[return: MarshalAs(UnmanagedType.Bool)]
 			public static extern bool MoveWindow(IntPtr hWnd,int X, int Y, int nWidth, int nHeight, bool bRepaint);
-		}
-"@
-	add-type @"
-		using System;
-		//using System.Windows.Forms;
-		using System.Runtime.InteropServices;
-		public class SendKey{
+			[DllImport("user32.dll",CharSet=CharSet.Auto,CallingConvention=CallingConvention.StdCall)]
+			public static extern void mouse_event(long dwFlags, long dx, long dy, long cButtons, long dwExtraInfo);
 			[StructLayout(LayoutKind.Sequential)]
 			public struct MOUSEINPUT {
 				public int dx;
@@ -2698,29 +2693,37 @@ function psrpa_init{
 				}
 				SendInput(1, ref inp, Marshal.SizeOf(inp));
 			}
-		}
-"@
-
-	$source = @" 
-		using System.Windows.Automation;
-		namespace UIAutomationHelper{ 
-			public class UIAElement{ 
-				public static AutomationElement GetRootWindow(){ 
-					return AutomationElement.RootElement; 
+			public static AutomationElement GetRootWindow(){ 
+				return AutomationElement.RootElement; 
+			}
+			public static AutomationElement GetMainWindowByTitle(string title) {
+				PropertyCondition cond = new System.Windows.Automation.PropertyCondition(System.Windows.Automation.AutomationElement.NameProperty, title);
+				return AutomationElement.RootElement.FindFirst(TreeScope.Element | TreeScope.Children, cond);
+			}
+			[System.Runtime.InteropServices.DllImport("msvcrt.dll",CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+			private static extern int memcmp(byte[] b1, byte[] b2, UIntPtr count);
+			public static bool CompareImage(Bitmap img1, Bitmap img2){
+				ImageConverter ic = new ImageConverter();
+				byte[] byte1 = (byte[])ic.ConvertTo(img1, typeof(byte[]));
+				byte[] byte2 = (byte[])ic.ConvertTo(img2, typeof(byte[]));
+				/* Console.WriteLine("{0} {1}", byte1.Length, byte2.Length); */
+				if (byte1.Length != byte2.Length){
+					return false;
 				}
-				public static AutomationElement GetMainWindowByTitle(string title) {
-					PropertyCondition cond = new System.Windows.Automation.PropertyCondition(System.Windows.Automation.AutomationElement.NameProperty, title);
-					return AutomationElement.RootElement.FindFirst(TreeScope.Element | TreeScope.Children, cond);
+				return memcmp(byte1, byte2, new UIntPtr((uint)byte1.Length)) == 0;
+			}
+			public static bool CompareByte(byte[] byte1, byte[] byte2){
+				if (byte1.Length != byte2.Length){
+					return false;
 				}
-			} 
-		}  
+				return memcmp(byte1, byte2, new UIntPtr((uint)byte1.Length)) == 0;
+			}
+		} 
 "@ 
-    # 参照設定("UIAutomationClient", "UIAutomationTypes")でC#コードの$sourceをコンパイル
-	Add-Type -Language CSharp -TypeDefinition $source -ReferencedAssemblies("UIAutomationClient", "UIAutomationTypes")
+	Add-Type -Language CSharp -TypeDefinition $source -ReferencedAssemblies("UIAutomationClient", "UIAutomationTypes", "System.Drawing")
 
-	$param = @{"SendMouseClick" = $SendMouseClick;
-		"BeforeWait" = 100;
-		"AfterWait" = 100
+	$param = @{"BeforeWait" = 300;
+		"AfterWait" = 300
 	}
 	return $param
 }
@@ -2772,12 +2775,12 @@ function psrpa_show_mouse_position($rpa){
 }
 
 #
-# psrpa_show_mouse_position_byclick - Show current mouse position for psrpa_set_mouse and psrpa_position_click by click
+# psrpa_show_mouse_position_byclick - Show current mouse position for psrpa_set_mouse and psrpa_click_position by click
 #
 function psrpa_show_mouse_position_byclick($rpa, $wait = 5){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrpa_show_mouse_position_byclick rpa_object [wait_sec]"
-		write-output "Show current mouse position for psrpa_set_mouse and psrpa_position_click by click."
+		write-output "Show current mouse position for psrpa_set_mouse and psrpa_click_position by click."
 		write-output "Press any key to terminate."
 		write-output "    wait_sec    default 5"
 		write-output "ex."
@@ -2846,7 +2849,7 @@ function psrpa_show_mouse_position_byclick($rpa, $wait = 5){
 			$button = "left"
 		}
 		write-host ('psrpa_set_mouse $rpa ' + "$x $y")
-		write-host ('psrpa_position_click $rpa ' + "$x $y" + ' "' + $button + '" "click"')
+		write-host ('psrpa_click_position $rpa ' + "$x $y" + ' "' + $button + '" "click"')
 		write-host ('')
 	}
 	$pb.Add_Click($pb_click)
@@ -2924,47 +2927,47 @@ function psrpa_click($rpa, $button, $action){
 	if ($action -eq "click" -or
 		$action -eq "CLICK" -or
 		$action -eq "1"){
-		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+		[Psrpa]::mouse_event($down,0,0,0,0)
+		[Psrpa]::mouse_event($up,0,0,0,0)
 	}elseif ($action -eq "2click" -or
 		$action -eq "2CLICK" -or
 		$action -eq "2"){
-		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+		[Psrpa]::mouse_event($down,0,0,0,0)
+		[Psrpa]::mouse_event($up,0,0,0,0)
+		[Psrpa]::mouse_event($down,0,0,0,0)
+		[Psrpa]::mouse_event($up,0,0,0,0)
 	}elseif ($action -eq "3click" -or
 		$action -eq "3CLICK" -or
 		$action -eq "3"){
-		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+		[Psrpa]::mouse_event($down,0,0,0,0)
+		[Psrpa]::mouse_event($up,0,0,0,0)
+		[Psrpa]::mouse_event($down,0,0,0,0)
+		[Psrpa]::mouse_event($up,0,0,0,0)
+		[Psrpa]::mouse_event($down,0,0,0,0)
+		[Psrpa]::mouse_event($up,0,0,0,0)
 	}elseif ($action -eq "down" -or
 		$action -eq "DOWN" -or
 		$action -eq "d" -or
 		$action -eq "D"){
-		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
+		[Psrpa]::mouse_event($down,0,0,0,0)
 	}elseif ($action -eq "up" -or
 		$action -eq "UP" -or
 		$action -eq "u" -or
 		$action -eq "U"){
-		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+		[Psrpa]::mouse_event($up,0,0,0,0)
 	}else{
-		$rpa["SendMouseClick"]::mouse_event($down,0,0,0,0)
-		$rpa["SendMouseClick"]::mouse_event($up,0,0,0,0)
+		[Psrpa]::mouse_event($down,0,0,0,0)
+		[Psrpa]::mouse_event($up,0,0,0,0)
 	}
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
-# psrpa_position_click - Set mouse position and click mouse button
+# psrpa_click_position - Set mouse position and click mouse button
 #
-function psrpa_position_click($rpa, $x, $y, $button, $action){
+function psrpa_click_position($rpa, $x, $y, $button, $action){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_position_click rpa_object x_position y_position mouse_button click_action"
+		write-output "Usage: psrpa_click_position rpa_object x_position y_position mouse_button click_action"
 		write-output "Set mouse position and click mouse button."
 		write-output "    mouse_button left, LEFT, l, L"
 		write-output "                 middle, MIDDLE, m, M"
@@ -2977,7 +2980,7 @@ function psrpa_position_click($rpa, $x, $y, $button, $action){
 		write-output "ex."
 		write-output '    $x = 10'
 		write-output '    $y = 20'
-		write-output '    psrpa_position_click $rpa $x $y "left" "click"'
+		write-output '    psrpa_click_position $rpa $x $y "left" "click"'
 		write-output ""
 		return
 	}
@@ -3086,7 +3089,7 @@ function psrpa_set_window{
 	foreach ($process in $ps){
 		if ($process.MainWindowTitle -ne ""){
 			if ($process.MainWindowTitle -match $title){
-				[Win32]::MoveWindow($process.MainWindowHandle, $x, $y, $width, $height, $true) | out-null
+				[Psrpa]::MoveWindow($process.MainWindowHandle, $x, $y, $width, $height, $true) | out-null
 			}
 		}
 	}
@@ -3149,23 +3152,23 @@ function psrpa_sendkeyEX ($rpa, $virtual_keycode, $action, $isExtended){
 		$action -eq "DOWN" -or
 		$action -eq "d" -or
 		$action -eq "D"){
-		[SendKey]::Send($virtual_keycode, $true, $isExtended)
+		[Psrpa]::Send($virtual_keycode, $true, $isExtended)
 	}elseif ($action -eq "up" -or
 		$action -eq "UP" -or
 		$action -eq "u" -or
 		$action -eq "U"){
-		[SendKey]::Send($virtual_keycode, $false, $isExtended)
+		[Psrpa]::Send($virtual_keycode, $false, $isExtended)
 	}elseif ($action -eq "send" -or
 		$action -eq "SEND" -or
 		$action -eq "downup" -or
 		$action -eq "DOWNUP"){
-		[SendKey]::Send($virtual_keycode, $true, $isExtended)
+		[Psrpa]::Send($virtual_keycode, $true, $isExtended)
 		Start-Sleep -Milliseconds 100
-		[SendKey]::Send($virtual_keycode, $false, $isExtended)
+		[Psrpa]::Send($virtual_keycode, $false, $isExtended)
 	}else{
-		[SendKey]::Send($virtual_keycode, $true, $isExtended)
+		[Psrpa]::Send($virtual_keycode, $true, $isExtended)
 		Start-Sleep -Milliseconds 100
-		[SendKey]::Send($virtual_keycode, $false, $isExtended)
+		[Psrpa]::Send($virtual_keycode, $false, $isExtended)
 	}
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
@@ -3222,7 +3225,7 @@ function psrpa_get_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$outputfile = "$x1" + "_" + "$y1" + "_" + "$x2" + "_" + "$y2" + "_" + $bmpfile
-	$dstimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2 $bmpfile
+	$dstimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2
 	$dstimg.Save((psabspath $outputfile), [System.Drawing.Imaging.ImageFormat]::Bmp)
 	$dstimg.Dispose()
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
@@ -3327,7 +3330,6 @@ function psrpa_get_bmp_byclick($rpa, $bmpfile, $wait = 5){
 #	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
-
 #
 # psrpa_compare_bmp - Compare specifoed rectangle and bmpfile 
 #
@@ -3347,40 +3349,325 @@ function psrpa_compare_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$dstimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2 $bmpfile
-	$fileimg = [System.Drawing.Image]::FromFile((psabspath $bmpfile))
-	$isSame = $true
-	for ($x = 0; $isSame -and $x -lt $dstimg.Size.Width; $x++){
-		for ($y = 0; $isSame -and $y -lt $dstimg.Size.Height; $y++){
-			if ($dstimg.GetPixel($x, $y).A -ne $fileimg.GetPixel($x, $y).A){
-				$isSame = $false
-			}
-			if ($dstimg.GetPixel($x, $y).R -ne $fileimg.GetPixel($x, $y).R){
-				$isSame = $false
-			}
-			if ($dstimg.GetPixel($x, $y).G -ne $fileimg.GetPixel($x, $y).G){
-				$isSame = $false
-			}
-			if ($dstimg.GetPixel($x, $y).B -ne $fileimg.GetPixel($x, $y).B){
-				$isSame = $false
-			}
-		}
-	}
+	$dstimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2
+	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
+
+	$img1 = New-Object System.Drawing.Bitmap($dstimg.Size.Width, $dstimg.Size.Height)
+	$gr1 = [System.Drawing.Graphics]::FromImage($img1)
+	$gr1.DrawImage($dstimg, 0, 0, $dstimg.Size.Width, $dstimg.Size.Height)
+	$img2 = New-Object System.Drawing.Bitmap($dstimg.Size.Width, $dstimg.Size.Height)
+	$gr2 = [System.Drawing.Graphics]::FromImage($img2)
+	$gr2.DrawImage($fileimg, 0, 0, $dstimg.Size.Width, $dstimg.Size.Height)
+
+	$isSame = [Psrpa]::CompareImage($img1, $img2)
+
 	$dstimg.Dispose()
 	$fileimg.Dispose()
+	$img1.Dispose()
+	$img2.Dispose()
+	$gr1.Dispose()
+	$gr2.Dispose()
+
 	return $isSame
 #	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
+# psrpa_search_bmp - Search bmpfile in screen
+#
+function psrpa_search_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_search_bmp rpa_object left_x top_x right_x bottom_y input.bmp"
+		write-output "Search bmpfile in screen."
+		write-output 'Return @(left,top,right,bottom) when bmpfile is found in screen.'
+		write-output "ex."
+		write-output '    $pos = psrpa_search_bmp $rpa $null $null $null $null "icon.bmp"'
+		write-output '    if ($pos[0] < 0){'
+		write-output '        write-output "not found"'
+		write-output '    }else{'
+		write-output '        write-output "found"'
+		write-output '        $left = $pos[0]'
+		write-output '        $top = $pos[1]'
+		write-output '        $right = $pos[2]'
+		write-output '        $bottom = $pos[3]'
+		write-output '    }'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$pwidth = (gwmi win32_videocontroller | 
+		out-string -stream | 
+		select-string "CurrentHorizontalResolution" | 
+		foreach{$_ -replace "^.*: *",""} | 
+		sort | 
+		select-object -Last 1
+	)
+	$pheight = (gwmi win32_videocontroller | 
+		out-string -stream | 
+		select-string "CurrentVerticalResolution" | 
+		foreach{$_ -replace "^.*: *",""} | 
+		sort | 
+		select-object -Last 1
+	)
+	if ($x1 -eq $null -or $x1 -eq ""){
+		$x1 = 0
+	}
+	if ($y1 -eq $null -or $y1 -eq ""){
+		$y1 = 0
+	}
+	if ($x2 -eq $null -or $x2 -eq ""){
+		$x2 = $pwidth
+	}
+	if ($y2 -eq $null -or $y2 -eq ""){
+		$y2 = $pheight
+	}
+	$rx1 = -1
+	$ry1 = -1
+	$rx2 = -1
+	$ry2 = -1
+	$dstimg = psrpa_get_bmp_from_innerfunction $rpa 0 0 $pwidth $pheight
+	$fileimg = [System.Drawing.Image]::FromFile((psabspath $bmpfile))
+	$filewidth = $fileimg.Size.Width
+	$fileheight = $fileimg.Size.Height
+	$x2 -= $filewidth
+	$y2 -= $fileheight
+	$isFound = $false
+	for ($x = $x1; $isFound -eq $false -and $x -le $x2; $x++){
+		for ($y = $y1; $isFound -eq $false -and $y -le $y2; $y++){
+			$isFound = $true
+			for ($fx = 0; $isFound -eq $true -and $fx -lt $filewidth; $fx++){
+				for ($fy = 0; $isFound -eq $true -and $fy -lt $fileheight; $fy++){
+					$dx = $x + $fx
+					$dy = $y + $fy
+					if ($dstimg.GetPixel($dx, $dy).A -ne $fileimg.GetPixel($fx, $fy).A){
+						$isFound = $false
+					}
+					if ($dstimg.GetPixel($dx, $dy).R -ne $fileimg.GetPixel($fx, $fy).R){
+						$isFound = $false
+					}
+					if ($dstimg.GetPixel($dx, $dy).G -ne $fileimg.GetPixel($fx, $fy).G){
+						$isFound = $false
+					}
+					if ($dstimg.GetPixel($dx, $dy).B -ne $fileimg.GetPixel($fx, $fy).B){
+						$isFound = $false
+					}
+				}
+			}
+			if ($isFound){
+				$rx1 = $x
+				$ry1 = $y
+				$rx2 = $x + $filewidth
+				$ry2 = $y + $fileheight
+			}
+		}
+	}
+	$dstimg.Dispose()
+	$fileimg.Dispose()
+	return @($rx1, $ry1, $rx2, $ry2)
+#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#DEL_#
+#DEL_# psrpa_search_bmp2 - Search bmpfile in screen
+#DEL_#
+#DEL_function psrpa_search_bmp2($rpa, $x1, $y1, $x2, $y2, $bmpfile){
+#DEL_	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+#DEL_		write-output "Usage: psrpa_search_bmp rpa_object left_x top_x right_x bottom_y input.bmp"
+#DEL_		write-output "Search bmpfile in screen."
+#DEL_		write-output 'Return @(left,top,right,bottom) when bmpfile is found in screen.'
+#DEL_		write-output "ex."
+#DEL_		write-output '    $pos = psrpa_search_bmp $rpa $null $null $null $null "icon.bmp"'
+#DEL_		write-output '    if ($pos[0] < 0){'
+#DEL_		write-output '        write-output "not found"'
+#DEL_		write-output '    }else{'
+#DEL_		write-output '        write-output "found"'
+#DEL_		write-output '        $left = $pos[0]'
+#DEL_		write-output '        $top = $pos[1]'
+#DEL_		write-output '        $right = $pos[2]'
+#DEL_		write-output '        $bottom = $pos[3]'
+#DEL_		write-output '    }'
+#DEL_		write-output ""
+#DEL_		return
+#DEL_	}
+#DEL_	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+#DEL_	$pwidth = (gwmi win32_videocontroller | 
+#DEL_		out-string -stream | 
+#DEL_		select-string "CurrentHorizontalResolution" | 
+#DEL_		foreach{$_ -replace "^.*: *",""} | 
+#DEL_		sort | 
+#DEL_		select-object -Last 1
+#DEL_	)
+#DEL_	$pheight = (gwmi win32_videocontroller | 
+#DEL_		out-string -stream | 
+#DEL_		select-string "CurrentVerticalResolution" | 
+#DEL_		foreach{$_ -replace "^.*: *",""} | 
+#DEL_		sort | 
+#DEL_		select-object -Last 1
+#DEL_	)
+#DEL_	if ($x1 -eq $null -or $x1 -eq ""){
+#DEL_		$x1 = 0
+#DEL_	}
+#DEL_	if ($y1 -eq $null -or $y1 -eq ""){
+#DEL_		$y1 = 0
+#DEL_	}
+#DEL_	if ($x2 -eq $null -or $x2 -eq ""){
+#DEL_		$x2 = $pwidth
+#DEL_	}
+#DEL_	if ($y2 -eq $null -or $y2 -eq ""){
+#DEL_		$y2 = $pheight
+#DEL_	}
+#DEL_	$rx1 = -1
+#DEL_	$ry1 = -1
+#DEL_	$rx2 = -1
+#DEL_	$ry2 = -1
+#DEL_	$scrimg = psrpa_get_bmp_from_innerfunction $rpa 0 0 $pwidth $pheight
+#DEL_	$scrimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2
+#DEL_	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
+#DEL_	$filewidth = $fileimg.Size.Width
+#DEL_	$fileheight = $fileimg.Size.Height
+#DEL_	$x2 -= $filewidth
+#DEL_	$y2 -= $fileheight
+#DEL_	$isFound = $false
+#DEL_	for ($x = $x1; $isFound -eq $false -and $x -le $x2; $x++){
+#DEL_		for ($y = $y1; $isFound -eq $false -and $y -le $y2; $y++){
+#DEL_			$rect = New-Object System.Drawing.Rectangle($x, $y, $filewidth, $fileheight)
+#DEL_			$dstimg = $scrimg.Clone($rect, $scrimg.PixelFormat)
+#DEL_
+#DEL_			$img1 = New-Object System.Drawing.Bitmap($filewidth, $fileheight)
+#DEL_			$gr1 = [System.Drawing.Graphics]::FromImage($img1)
+#DEL_			$gr1.DrawImage($dstimg, 0, 0, $filewidth, $fileheight)
+#DEL_
+#DEL_			$img2 = New-Object System.Drawing.Bitmap($filewidth, $fileheight)
+#DEL_			$gr2 = [System.Drawing.Graphics]::FromImage($img2)
+#DEL_			$gr2.DrawImage($fileimg, 0, 0, $filewidth, $fileheight)
+#DEL_
+#DEL_			$isFound = [Psrpa]::CompareImage($img1, $img2)
+#DEL_			if ($isFound){
+#DEL_				$rx1 = $x
+#DEL_				$ry1 = $y
+#DEL_				$rx2 = $x + $filewidth
+#DEL_				$ry2 = $y + $fileheight
+#DEL_			}
+#DEL_			$rect = $null
+#DEL_			$dstimg.Dispose()
+#DEL_			$img1.Dispose()
+#DEL_			$gr1.Dispose()
+#DEL_			$img2.Dispose()
+#DEL_			$gr2.Dispose()
+#DEL_		}
+#DEL_	}
+#DEL_	$scrimg.Dispose()
+#DEL_	$fileimg.Dispose()
+#DEL_	return @($rx1, $ry1, $rx2, $ry2)
+#DEL_#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+#DEL_}
+#DEL_
+#DEL_#
+#DEL_# psrpa_search_bmp3 - Search bmpfile in screen
+#DEL_#
+#DEL_function psrpa_search_bmp3($rpa, $x1, $y1, $x2, $y2, $bmpfile){
+#DEL_	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+#DEL_		write-output "Usage: psrpa_search_bmp rpa_object left_x top_x right_x bottom_y input.bmp"
+#DEL_		write-output "Search bmpfile in screen."
+#DEL_		write-output 'Return @(left,top,right,bottom) when bmpfile is found in screen.'
+#DEL_		write-output "ex."
+#DEL_		write-output '    $pos = psrpa_search_bmp $rpa $null $null $null $null "icon.bmp"'
+#DEL_		write-output '    if ($pos[0] < 0){'
+#DEL_		write-output '        write-output "not found"'
+#DEL_		write-output '    }else{'
+#DEL_		write-output '        write-output "found"'
+#DEL_		write-output '        $left = $pos[0]'
+#DEL_		write-output '        $top = $pos[1]'
+#DEL_		write-output '        $right = $pos[2]'
+#DEL_		write-output '        $bottom = $pos[3]'
+#DEL_		write-output '    }'
+#DEL_		write-output ""
+#DEL_		return
+#DEL_	}
+#DEL_	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+#DEL_	$pwidth = (gwmi win32_videocontroller | 
+#DEL_		out-string -stream | 
+#DEL_		select-string "CurrentHorizontalResolution" | 
+#DEL_		foreach{$_ -replace "^.*: *",""} | 
+#DEL_		sort | 
+#DEL_		select-object -Last 1
+#DEL_	)
+#DEL_	$pheight = (gwmi win32_videocontroller | 
+#DEL_		out-string -stream | 
+#DEL_		select-string "CurrentVerticalResolution" | 
+#DEL_		foreach{$_ -replace "^.*: *",""} | 
+#DEL_		sort | 
+#DEL_		select-object -Last 1
+#DEL_	)
+#DEL_	if ($x1 -eq $null -or $x1 -eq ""){
+#DEL_		$x1 = 0
+#DEL_	}
+#DEL_	if ($y1 -eq $null -or $y1 -eq ""){
+#DEL_		$y1 = 0
+#DEL_	}
+#DEL_	if ($x2 -eq $null -or $x2 -eq ""){
+#DEL_		$x2 = $pwidth
+#DEL_	}
+#DEL_	if ($y2 -eq $null -or $y2 -eq ""){
+#DEL_		$y2 = $pheight
+#DEL_	}
+#DEL_	$rx1 = -1
+#DEL_	$ry1 = -1
+#DEL_	$rx2 = -1
+#DEL_	$ry2 = -1
+#DEL_	$dstimg = psrpa_get_bmp_from_innerfunction $rpa 0 0 $pwidth $pheight
+#DEL_#	$fileimg = [System.Drawing.Image]::FromFile((psabspath $bmpfile))
+#DEL_	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
+#DEL_	$filewidth = $fileimg.Size.Width
+#DEL_	$fileheight = $fileimg.Size.Height
+#DEL_	$dstbytes = New-Object byte[] ($filewidth * $fileheight)
+#DEL_	$filebytes = New-Object byte[] ($filewidth * $fileheight)
+#DEL_	$x2 -= $filewidth
+#DEL_	$y2 -= $fileheight
+#DEL_	$isFound = $false
+#DEL_	for ($x = $x1; $isFound -eq $false -and $x -le $x2; $x++){
+#DEL_		for ($y = $y1; $isFound -eq $false -and $y -le $y2; $y++){
+#DEL_			$i = 0
+#DEL_			$isFound = $true
+#DEL_			for ($fx = 0; $isFound -eq $true -and $fx -lt $filewidth; $fx++){
+#DEL_				for ($fy = 0; $isFound -eq $true -and $fy -lt $fileheight; $fy++){
+#DEL_					$dx = $x + $fx
+#DEL_					$dy = $y + $fy
+#DEL_					$dstbytes[$i] = ($dstimg.GetPixel($dx, $dy).A + 
+#DEL_						$dstimg.GetPixel($dx, $dy).R +
+#DEL_						$dstimg.GetPixel($dx, $dy).G +
+#DEL_						$dstimg.GetPixel($dx, $dy).B) / 4
+#DEL_					$filebytes[$i] = ($fileimg.GetPixel($fx, $fy).A +
+#DEL_						$fileimg.GetPixel($fx, $fy).R +
+#DEL_						$fileimg.GetPixel($fx, $fy).G +
+#DEL_						$fileimg.GetPixel($fx, $fy).B) / 4
+#DEL_					$i++
+#DEL_				}
+#DEL_			}
+#DEL_			$isFound = [Psrpa]::CompareByte($dstbytes, $filebytes)
+#DEL_			if ($isFound){
+#DEL_				$rx1 = $x
+#DEL_				$ry1 = $y
+#DEL_				$rx2 = $x + $filewidth
+#DEL_				$ry2 = $y + $fileheight
+#DEL_			}
+#DEL_		}
+#DEL_	}
+#DEL_	$dstimg.Dispose()
+#DEL_	$fileimg.Dispose()
+#DEL_	return @($rx1, $ry1, $rx2, $ry2)
+#DEL_#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+#DEL_}
+
+#
 # Called from psrpa_get_bmp and psrpa_compare_bmp
 #
-function psrpa_get_bmp_from_innerfunction($rpa, $x1, $y1, $x2, $y2, $bmpfile){
+function psrpa_get_bmp_from_innerfunction($rpa, $x1, $y1, $x2, $y2){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Sorry, internal usage only."
 		return
 	}
-	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$width = $x2 - $x1
 	$height = $y2 - $y1
 	$pwidth = (
@@ -3429,7 +3716,7 @@ function psrpa_uia_show($rpa){
 		return
 	}
 #	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	[UIAutomationHelper.UIAElement]::GetRootWindow().FindAll(
+	[Psrpa]::GetRootWindow().FindAll(
 		[System.Windows.Automation.TreeScope]::Children,
 		[System.Windows.Automation.Condition]::TrueCondition) |
 	%{
@@ -3473,7 +3760,7 @@ function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name)
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	if ($element -eq $null -or $element -eq ""){
-		$element = [UIAutomationHelper.UIAElement]::GetRootWindow()
+		$element = [Psrpa]::GetRootWindow()
 	}
 	if ($classname -eq $null){
 		$classname = "^.*$"
