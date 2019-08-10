@@ -2628,6 +2628,7 @@ function psrpa_init{
 		using System.Runtime.InteropServices;
 		using System.Windows.Automation;
 		using System.Drawing;
+		using System.Drawing.Imaging;
 		public class Psrpa {
 			[DllImport("user32.dll")]
 			[return: MarshalAs(UnmanagedType.Bool)]
@@ -2711,6 +2712,72 @@ function psrpa_init{
 					return false;
 				}
 				return memcmp(byte1, byte2, new UIntPtr((uint)byte1.Length)) == 0;
+			}
+			public static int[] SearchImage(Bitmap scrimg, Bitmap fileimg){
+				BitmapData scrimgdata = scrimg.LockBits(
+					new Rectangle(0, 0, scrimg.Width, scrimg.Height),
+					ImageLockMode.ReadWrite,
+					PixelFormat.Format32bppArgb
+				);
+				BitmapData fileimgdata = fileimg.LockBits(
+					new Rectangle(0, 0, fileimg.Width, fileimg.Height),
+					ImageLockMode.ReadWrite,
+					PixelFormat.Format32bppArgb
+				);
+				int[] pos = new int[4];
+				byte[] scrimgbyte = new byte[scrimg.Width * scrimg.Height * 4];
+				byte[] fileimgbyte = new byte[fileimg.Width * fileimg.Height * 4];
+				Marshal.Copy(scrimgdata.Scan0, scrimgbyte, 0, scrimgbyte.Length);
+				Marshal.Copy(fileimgdata.Scan0, fileimgbyte, 0, fileimgbyte.Length);
+				byte[] scrimggraybyte = new byte[scrimg.Width * scrimg.Height];
+				byte[] fileimggraybyte = new byte[fileimg.Width * fileimg.Height];
+				int pixsize, j, x1, y1, x2, y2;
+				bool isFound;
+
+				pixsize = scrimg.Width * scrimg.Height * 4;
+				j = 0;
+				for (int i = 0; i < pixsize; i += 4){
+					scrimggraybyte[j] = (byte)((scrimgbyte[i] + scrimgbyte[i + 1] + scrimgbyte[i + 2] + scrimgbyte[i + 3]) >> 2);
+					j++;
+				}
+				pixsize = fileimg.Width * fileimg.Height * 4;
+				j = 0;
+				for (int i = 0; i < pixsize; i += 4){
+					fileimggraybyte[j] = (byte)((fileimgbyte[i] + fileimgbyte[i + 1] + fileimgbyte[i + 2] + fileimgbyte[i + 3]) >> 2);
+					j++;
+				}
+				x1 = 0;
+				y1 = 0;
+				x2 = scrimg.Width;
+				y2 = scrimg.Height;
+				pos[0] = -1;
+				pos[1] = -1;
+				pos[2] = -1;
+				pos[3] = -1;
+				x2 -= fileimg.Width;
+				y2 -= fileimg.Height;
+				isFound = false;
+				for (int x = x1; !isFound && x <= x2; x++){
+					for (int y = y1; !isFound && y <= y2; y++){
+						isFound = true;
+						for (int fx = 0; isFound && fx < fileimg.Width; fx++){
+							for (int fy = 0; isFound && fy < fileimg.Height; fy++){
+								int dx = x + fx;
+								int dy = y + fy;
+								if (scrimggraybyte[scrimg.Width * dy + dx] != fileimggraybyte[fileimg.Width * fy + fx]){
+									isFound = false;
+								}
+							}
+						}
+						if (isFound){
+							pos[0] = x;
+							pos[1] = y;
+							pos[2] = x + fileimg.Width;
+							pos[3] = y + fileimg.Height;
+						}
+					}
+				}
+				return pos;
 			}
 			public static bool CompareByte(byte[] byte1, byte[] byte2){
 				if (byte1.Length != byte2.Length){
@@ -3421,243 +3488,14 @@ function psrpa_search_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($y2 -eq $null -or $y2 -eq ""){
 		$y2 = $pheight
 	}
-	$rx1 = -1
-	$ry1 = -1
-	$rx2 = -1
-	$ry2 = -1
-	$dstimg = psrpa_get_bmp_from_innerfunction $rpa 0 0 $pwidth $pheight
-	$fileimg = [System.Drawing.Image]::FromFile((psabspath $bmpfile))
-	$filewidth = $fileimg.Size.Width
-	$fileheight = $fileimg.Size.Height
-	$x2 -= $filewidth
-	$y2 -= $fileheight
-	$isFound = $false
-	for ($x = $x1; $isFound -eq $false -and $x -le $x2; $x++){
-		for ($y = $y1; $isFound -eq $false -and $y -le $y2; $y++){
-			$isFound = $true
-			for ($fx = 0; $isFound -eq $true -and $fx -lt $filewidth; $fx++){
-				for ($fy = 0; $isFound -eq $true -and $fy -lt $fileheight; $fy++){
-					$dx = $x + $fx
-					$dy = $y + $fy
-					if ($dstimg.GetPixel($dx, $dy).A -ne $fileimg.GetPixel($fx, $fy).A){
-						$isFound = $false
-					}
-					if ($dstimg.GetPixel($dx, $dy).R -ne $fileimg.GetPixel($fx, $fy).R){
-						$isFound = $false
-					}
-					if ($dstimg.GetPixel($dx, $dy).G -ne $fileimg.GetPixel($fx, $fy).G){
-						$isFound = $false
-					}
-					if ($dstimg.GetPixel($dx, $dy).B -ne $fileimg.GetPixel($fx, $fy).B){
-						$isFound = $false
-					}
-				}
-			}
-			if ($isFound){
-				$rx1 = $x
-				$ry1 = $y
-				$rx2 = $x + $filewidth
-				$ry2 = $y + $fileheight
-			}
-		}
-	}
-	$dstimg.Dispose()
+	$scrimg = psrpa_get_bmp_from_innerfunction $rpa 0 0 $pwidth $pheight
+	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
+	$pos_array = [Psrpa]::SearchImage($scrimg, $fileimg)
+	$scrimg.Dispose()
 	$fileimg.Dispose()
-	return @($rx1, $ry1, $rx2, $ry2)
+	return $pos_array
 #	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
-
-#DEL_#
-#DEL_# psrpa_search_bmp2 - Search bmpfile in screen
-#DEL_#
-#DEL_function psrpa_search_bmp2($rpa, $x1, $y1, $x2, $y2, $bmpfile){
-#DEL_	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-#DEL_		write-output "Usage: psrpa_search_bmp rpa_object left_x top_x right_x bottom_y input.bmp"
-#DEL_		write-output "Search bmpfile in screen."
-#DEL_		write-output 'Return @(left,top,right,bottom) when bmpfile is found in screen.'
-#DEL_		write-output "ex."
-#DEL_		write-output '    $pos = psrpa_search_bmp $rpa $null $null $null $null "icon.bmp"'
-#DEL_		write-output '    if ($pos[0] < 0){'
-#DEL_		write-output '        write-output "not found"'
-#DEL_		write-output '    }else{'
-#DEL_		write-output '        write-output "found"'
-#DEL_		write-output '        $left = $pos[0]'
-#DEL_		write-output '        $top = $pos[1]'
-#DEL_		write-output '        $right = $pos[2]'
-#DEL_		write-output '        $bottom = $pos[3]'
-#DEL_		write-output '    }'
-#DEL_		write-output ""
-#DEL_		return
-#DEL_	}
-#DEL_	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-#DEL_	$pwidth = (gwmi win32_videocontroller | 
-#DEL_		out-string -stream | 
-#DEL_		select-string "CurrentHorizontalResolution" | 
-#DEL_		foreach{$_ -replace "^.*: *",""} | 
-#DEL_		sort | 
-#DEL_		select-object -Last 1
-#DEL_	)
-#DEL_	$pheight = (gwmi win32_videocontroller | 
-#DEL_		out-string -stream | 
-#DEL_		select-string "CurrentVerticalResolution" | 
-#DEL_		foreach{$_ -replace "^.*: *",""} | 
-#DEL_		sort | 
-#DEL_		select-object -Last 1
-#DEL_	)
-#DEL_	if ($x1 -eq $null -or $x1 -eq ""){
-#DEL_		$x1 = 0
-#DEL_	}
-#DEL_	if ($y1 -eq $null -or $y1 -eq ""){
-#DEL_		$y1 = 0
-#DEL_	}
-#DEL_	if ($x2 -eq $null -or $x2 -eq ""){
-#DEL_		$x2 = $pwidth
-#DEL_	}
-#DEL_	if ($y2 -eq $null -or $y2 -eq ""){
-#DEL_		$y2 = $pheight
-#DEL_	}
-#DEL_	$rx1 = -1
-#DEL_	$ry1 = -1
-#DEL_	$rx2 = -1
-#DEL_	$ry2 = -1
-#DEL_	$scrimg = psrpa_get_bmp_from_innerfunction $rpa 0 0 $pwidth $pheight
-#DEL_	$scrimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2
-#DEL_	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
-#DEL_	$filewidth = $fileimg.Size.Width
-#DEL_	$fileheight = $fileimg.Size.Height
-#DEL_	$x2 -= $filewidth
-#DEL_	$y2 -= $fileheight
-#DEL_	$isFound = $false
-#DEL_	for ($x = $x1; $isFound -eq $false -and $x -le $x2; $x++){
-#DEL_		for ($y = $y1; $isFound -eq $false -and $y -le $y2; $y++){
-#DEL_			$rect = New-Object System.Drawing.Rectangle($x, $y, $filewidth, $fileheight)
-#DEL_			$dstimg = $scrimg.Clone($rect, $scrimg.PixelFormat)
-#DEL_
-#DEL_			$img1 = New-Object System.Drawing.Bitmap($filewidth, $fileheight)
-#DEL_			$gr1 = [System.Drawing.Graphics]::FromImage($img1)
-#DEL_			$gr1.DrawImage($dstimg, 0, 0, $filewidth, $fileheight)
-#DEL_
-#DEL_			$img2 = New-Object System.Drawing.Bitmap($filewidth, $fileheight)
-#DEL_			$gr2 = [System.Drawing.Graphics]::FromImage($img2)
-#DEL_			$gr2.DrawImage($fileimg, 0, 0, $filewidth, $fileheight)
-#DEL_
-#DEL_			$isFound = [Psrpa]::CompareImage($img1, $img2)
-#DEL_			if ($isFound){
-#DEL_				$rx1 = $x
-#DEL_				$ry1 = $y
-#DEL_				$rx2 = $x + $filewidth
-#DEL_				$ry2 = $y + $fileheight
-#DEL_			}
-#DEL_			$rect = $null
-#DEL_			$dstimg.Dispose()
-#DEL_			$img1.Dispose()
-#DEL_			$gr1.Dispose()
-#DEL_			$img2.Dispose()
-#DEL_			$gr2.Dispose()
-#DEL_		}
-#DEL_	}
-#DEL_	$scrimg.Dispose()
-#DEL_	$fileimg.Dispose()
-#DEL_	return @($rx1, $ry1, $rx2, $ry2)
-#DEL_#	Start-Sleep -Milliseconds $rpa["AfterWait"]
-#DEL_}
-#DEL_
-#DEL_#
-#DEL_# psrpa_search_bmp3 - Search bmpfile in screen
-#DEL_#
-#DEL_function psrpa_search_bmp3($rpa, $x1, $y1, $x2, $y2, $bmpfile){
-#DEL_	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-#DEL_		write-output "Usage: psrpa_search_bmp rpa_object left_x top_x right_x bottom_y input.bmp"
-#DEL_		write-output "Search bmpfile in screen."
-#DEL_		write-output 'Return @(left,top,right,bottom) when bmpfile is found in screen.'
-#DEL_		write-output "ex."
-#DEL_		write-output '    $pos = psrpa_search_bmp $rpa $null $null $null $null "icon.bmp"'
-#DEL_		write-output '    if ($pos[0] < 0){'
-#DEL_		write-output '        write-output "not found"'
-#DEL_		write-output '    }else{'
-#DEL_		write-output '        write-output "found"'
-#DEL_		write-output '        $left = $pos[0]'
-#DEL_		write-output '        $top = $pos[1]'
-#DEL_		write-output '        $right = $pos[2]'
-#DEL_		write-output '        $bottom = $pos[3]'
-#DEL_		write-output '    }'
-#DEL_		write-output ""
-#DEL_		return
-#DEL_	}
-#DEL_	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-#DEL_	$pwidth = (gwmi win32_videocontroller | 
-#DEL_		out-string -stream | 
-#DEL_		select-string "CurrentHorizontalResolution" | 
-#DEL_		foreach{$_ -replace "^.*: *",""} | 
-#DEL_		sort | 
-#DEL_		select-object -Last 1
-#DEL_	)
-#DEL_	$pheight = (gwmi win32_videocontroller | 
-#DEL_		out-string -stream | 
-#DEL_		select-string "CurrentVerticalResolution" | 
-#DEL_		foreach{$_ -replace "^.*: *",""} | 
-#DEL_		sort | 
-#DEL_		select-object -Last 1
-#DEL_	)
-#DEL_	if ($x1 -eq $null -or $x1 -eq ""){
-#DEL_		$x1 = 0
-#DEL_	}
-#DEL_	if ($y1 -eq $null -or $y1 -eq ""){
-#DEL_		$y1 = 0
-#DEL_	}
-#DEL_	if ($x2 -eq $null -or $x2 -eq ""){
-#DEL_		$x2 = $pwidth
-#DEL_	}
-#DEL_	if ($y2 -eq $null -or $y2 -eq ""){
-#DEL_		$y2 = $pheight
-#DEL_	}
-#DEL_	$rx1 = -1
-#DEL_	$ry1 = -1
-#DEL_	$rx2 = -1
-#DEL_	$ry2 = -1
-#DEL_	$dstimg = psrpa_get_bmp_from_innerfunction $rpa 0 0 $pwidth $pheight
-#DEL_#	$fileimg = [System.Drawing.Image]::FromFile((psabspath $bmpfile))
-#DEL_	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
-#DEL_	$filewidth = $fileimg.Size.Width
-#DEL_	$fileheight = $fileimg.Size.Height
-#DEL_	$dstbytes = New-Object byte[] ($filewidth * $fileheight)
-#DEL_	$filebytes = New-Object byte[] ($filewidth * $fileheight)
-#DEL_	$x2 -= $filewidth
-#DEL_	$y2 -= $fileheight
-#DEL_	$isFound = $false
-#DEL_	for ($x = $x1; $isFound -eq $false -and $x -le $x2; $x++){
-#DEL_		for ($y = $y1; $isFound -eq $false -and $y -le $y2; $y++){
-#DEL_			$i = 0
-#DEL_			$isFound = $true
-#DEL_			for ($fx = 0; $isFound -eq $true -and $fx -lt $filewidth; $fx++){
-#DEL_				for ($fy = 0; $isFound -eq $true -and $fy -lt $fileheight; $fy++){
-#DEL_					$dx = $x + $fx
-#DEL_					$dy = $y + $fy
-#DEL_					$dstbytes[$i] = ($dstimg.GetPixel($dx, $dy).A + 
-#DEL_						$dstimg.GetPixel($dx, $dy).R +
-#DEL_						$dstimg.GetPixel($dx, $dy).G +
-#DEL_						$dstimg.GetPixel($dx, $dy).B) / 4
-#DEL_					$filebytes[$i] = ($fileimg.GetPixel($fx, $fy).A +
-#DEL_						$fileimg.GetPixel($fx, $fy).R +
-#DEL_						$fileimg.GetPixel($fx, $fy).G +
-#DEL_						$fileimg.GetPixel($fx, $fy).B) / 4
-#DEL_					$i++
-#DEL_				}
-#DEL_			}
-#DEL_			$isFound = [Psrpa]::CompareByte($dstbytes, $filebytes)
-#DEL_			if ($isFound){
-#DEL_				$rx1 = $x
-#DEL_				$ry1 = $y
-#DEL_				$rx2 = $x + $filewidth
-#DEL_				$ry2 = $y + $fileheight
-#DEL_			}
-#DEL_		}
-#DEL_	}
-#DEL_	$dstimg.Dispose()
-#DEL_	$fileimg.Dispose()
-#DEL_	return @($rx1, $ry1, $rx2, $ry2)
-#DEL_#	Start-Sleep -Milliseconds $rpa["AfterWait"]
-#DEL_}
 
 #
 # Called from psrpa_get_bmp and psrpa_compare_bmp
