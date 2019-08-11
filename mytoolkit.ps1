@@ -2711,6 +2711,12 @@ function psrpa_init{
 				if (byte1.Length != byte2.Length){
 					return false;
 				}
+				return CompareByte(byte1, byte2);
+			}
+			public static bool CompareByte(byte[] byte1, byte[] byte2){
+				if (byte1.Length != byte2.Length){
+					return false;
+				}
 				return memcmp(byte1, byte2, new UIntPtr((uint)byte1.Length)) == 0;
 			}
 			public static int[] SearchImage(Bitmap scrimg, Bitmap fileimg){
@@ -2724,7 +2730,7 @@ function psrpa_init{
 					ImageLockMode.ReadWrite,
 					PixelFormat.Format32bppArgb
 				);
-				int[] pos = new int[4];
+				int[] pos = new int[4] {-1, -1, -1, -1};
 				byte[] scrimgbyte = new byte[scrimg.Width * scrimg.Height * 4];
 				byte[] fileimgbyte = new byte[fileimg.Width * fileimg.Height * 4];
 				Marshal.Copy(scrimgdata.Scan0, scrimgbyte, 0, scrimgbyte.Length);
@@ -2748,23 +2754,19 @@ function psrpa_init{
 				}
 				x1 = 0;
 				y1 = 0;
-				x2 = scrimg.Width;
-				y2 = scrimg.Height;
-				pos[0] = -1;
-				pos[1] = -1;
-				pos[2] = -1;
-				pos[3] = -1;
-				x2 -= fileimg.Width;
-				y2 -= fileimg.Height;
+				x2 = scrimg.Width - fileimg.Width;
+				y2 = scrimg.Height - fileimg.Height;
 				isFound = false;
-				for (int x = x1; !isFound && x <= x2; x++){
-					for (int y = y1; !isFound && y <= y2; y++){
+				for (int y = y1; !isFound && y <= y2; y++){
+					for (int x = x1; !isFound && x <= x2; x++){
 						isFound = true;
-						for (int fx = 0; isFound && fx < fileimg.Width; fx++){
-							for (int fy = 0; isFound && fy < fileimg.Height; fy++){
+						for (int fy = 0; isFound && fy < fileimg.Height; fy++){
+							int dy = y + fy;
+							int swy = scrimg.Width * dy;
+							int fwy = fileimg.Width * fy;
+							for (int fx = 0; isFound && fx < fileimg.Width; fx++){
 								int dx = x + fx;
-								int dy = y + fy;
-								if (scrimggraybyte[scrimg.Width * dy + dx] != fileimggraybyte[fileimg.Width * fy + fx]){
+								if (scrimggraybyte[swy + dx] != fileimggraybyte[fwy + fx]){
 									isFound = false;
 								}
 							}
@@ -2778,12 +2780,6 @@ function psrpa_init{
 					}
 				}
 				return pos;
-			}
-			public static bool CompareByte(byte[] byte1, byte[] byte2){
-				if (byte1.Length != byte2.Length){
-					return false;
-				}
-				return memcmp(byte1, byte2, new UIntPtr((uint)byte1.Length)) == 0;
 			}
 		} 
 "@ 
