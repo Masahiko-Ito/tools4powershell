@@ -565,33 +565,33 @@ Usage: psrpa_init
 Initialize rpa environment.
 ```
 
-## psrpa_set_beforewait - Set a time(ms) for waiting before functions(psrpa_*)
+## psrpa_setBeforeWait - Set a time(ms) for waiting before functions(psrpa_*)
 ```
-Usage: psrpa_set_beforewait rpa_object wait_time_ms
+Usage: psrpa_setBeforeWait rpa_object wait_time_ms
 Set a time(ms) for waiting before functions(psrpa_*).
 ```
 
-## psrpa_set_afterwait - Set a time(ms) for waiting after functions(psrpa_*)
+## psrpa_setAfterWait - Set a time(ms) for waiting after functions(psrpa_*)
 ```
-Usage: psrpa_set_afterwait rpa_object wait_time_ms
+Usage: psrpa_setAfterWait rpa_object wait_time_ms
 Set a time(ms) for waiting after functions(psrpa_*).
 ```
 
-## psrpa_show_mouse_position - Show current mouse position for debug purpose
+## psrpa_showMouse - Show current mouse position for debug purpose
 ```
-Usage: psrpa_show_mouse_position rpa_object
+Usage: psrpa_showMouse rpa_object
 Show current mouse position for debug purpose.
 ```
 
-## psrpa_show_mouse_position_byclick - Show current mouse position for psrpa_set_mouse and psrpa_position_click by click
+## psrpa_showMouseByClick - Show current mouse position for psrpa_setMouse and psrpa_clickPoint by click
 ```
-Usage: psrpa_show_mouse_position_byclick rpa_object [wait_sec]
-Show current mouse position for psrpa_set_mouse and psrpa_position_click by click.
+Usage: psrpa_showMouseByClick rpa_object [wait_sec]
+Show current mouse position for psrpa_setMouse and psrpa_clickPoint by click.
 ```
 
-## psrpa_set_mouse - Set mouse position
+## psrpa_setMouse - Set mouse position
 ```
-Usage: psrpa_set_mouse rpa_object x_position y_position
+Usage: psrpa_setMouse rpa_object x_position y_position
 Set mouse position.
 ```
 
@@ -601,75 +601,75 @@ Usage: psrpa_click rpa_object mouse_button click_action
 Click mouse button.
 ```
 
-## psrpa_position_click - Set mouse position and click mouse button
+## psrpa_clickPoint - Set mouse position and click mouse button
 ```
-Usage: psrpa_position_click rpa_object x_position y_position mouse_button click_action
+Usage: psrpa_clickPoint rpa_object x_position y_position mouse_button click_action
 Set mouse position and click mouse button.
 ```
 
-## psrpa_show_apptitle - Show application and title
+## psrpa_showAppTitle - Show application and title
 ```
-Usage: psrpa_show_apptitle rpa_object
+Usage: psrpa_showAppTitle rpa_object
 Show application and title.
 ```
 
-## psrpa_activate_window - Activate specified window
+## psrpa_activateWindow - Activate specified window
 ```
-Usage: psrpa_activate_window rpa_object application title
+Usage: psrpa_activateWindow rpa_object application title
 Activate specified window
 ```
 
-## psrpa_set_window - Set window position and size
+## psrpa_setWindow - Set window position and size
 ```
-Usage: psrpa_set_window application rpa_object title x_position y_position width height
+Usage: psrpa_setWindow application rpa_object title x_position y_position width height
 Set window position and size
 ```
 
-## psrpa_sendkeys - Send keys(string, function, special keys etc)
+## psrpa_sendKeys - Send keys(string, function, special keys etc)
 ```
-Usage: psrpa_sendkeys rpa_object string
+Usage: psrpa_sendKeys rpa_object string
 Send keys(string, function, special keys etc)
 ```
 
-## psrpa_sendkeyEX - Send a key(Both of normal key and extended key are acceptable)
+## psrpa_sendKeyEx - Send a key(Both of normal key and extended key are acceptable)
 ```
-Usage: psrpa_sendkeyEX rpa_object virtual_keycode action isExtended
+Usage: psrpa_sendKeyEx rpa_object virtual_keycode action isExtended
 Send a key(Both of normal key and extended key are acceptable)
 ```
 
-## psrpa_set_clipboard - Set clipboard to string
+## psrpa_setClipboard - Set clipboard to string
 ```
-Usage: psrpa_set_clipboard rpa_object string
+Usage: psrpa_setClipboard rpa_object string
 Set clipboard to string.
 ```
 
-## psrpa_get_clipboard - Get string from clipboard
+## psrpa_getClipboard - Get string from clipboard
 ```
-Usage: psrpa_get_clipboard rpa_object
+Usage: psrpa_getClipboard rpa_object
 Get string from clipboard.
 ```
 
-## psrpa_get_bmp - Get image into file(BMP)
+## psrpa_getBmp - Get image into file(BMP)
 ```
-Usage: psrpa_get_bmp rpa_object left_x top_x right_x bottom_y output.bmp
+Usage: psrpa_getBmp rpa_object left_x top_x right_x bottom_y output.bmp
 Get image into file(BMP).
 ```
 
-## psrpa_get_bmp_byclick - Get image into file(BMP) by click
+## psrpa_getBmpByClick - Get image into file(BMP) by click
 ```
-Usage: psrpa_get_bmp_byclick rpa_object output.bmp [wait_sec]
+Usage: psrpa_getBmpByClick rpa_object output.bmp [wait_sec]
 Get image into file(BMP) by click.
 ```
 
-## psrpa_compare_bmp - Compare specifoed rectangle and bmpfile
+## psrpa_compareBmp - Compare specifoed rectangle and bmpfile
 ```
-Usage: psrpa_compare_bmp rpa_object left_x top_x right_x bottom_y input.bmp
+Usage: psrpa_compareBmp rpa_object left_x top_x right_x bottom_y input.bmp
 Compare specifoed rectangle and bmpfile.
 ```
 
-## psrpa_search_bmp - Search bmpfile in screen
+## psrpa_searchBmp - Search bmpfile in screen
 ```
-Usage: psrpa_search_bmp rpa_object left_x top_x right_x bottom_y input.bmp
+Usage: psrpa_searchBmp rpa_object left_x top_x right_x bottom_y input.bmp
 ```
 
 ## psrpa_uia_show - Show all ui-automation element information
@@ -702,15 +702,15 @@ Usage: psrpa_uia_close rpa_object element
 Close ui-automation element(WindowPattern).
 ```
 
-## psrpa_uia_setvalue - Set value into ui-automation element(ValuePattern)
+## psrpa_uia_setValue - Set value into ui-automation element(ValuePattern)
 ```
-Usage: psrpa_uia_setvalue rpa_object element value
+Usage: psrpa_uia_setValue rpa_object element value
 Set value into ui-automation element(ValuePattern).
 ```
 
-## psrpa_uia_gettext - Get text from ui-automation element(TextPattern)
+## psrpa_uia_getText - Get text from ui-automation element(TextPattern)
 ```
-Usage: psrpa_uia_gettext rpa_object element
+Usage: psrpa_uia_getText rpa_object element
 Get text from ui-automation element(TextPattern).
 ```
 
@@ -738,63 +738,63 @@ Usage: psrpa_uia_resize rpa_object element width height
 Resize ui-automation element(TransformPattern).
 ```
 
-## psrpa_uia_getgrid_classname - Get grid classname of ui-automation element(GridPattern)
+## psrpa_uia_getGridClassName - Get grid classname of ui-automation element(GridPattern)
 ```
-Usage: psrpa_uia_getgrid_classname rpa_object element row col
+Usage: psrpa_uia_getGridClassName rpa_object element row col
 Get grid classname of ui-automation element(GridPattern).
 ```
 
-## psrpa_uia_getgrid_controltype - Get grid controltype of ui-automation element(GridPattern)
+## psrpa_uia_getGridControlType - Get grid controltype of ui-automation element(GridPattern)
 ```
-Usage: psrpa_uia_getgrid_controltype rpa_object element row col
+Usage: psrpa_uia_getGridControlType rpa_object element row col
 Get grid controltype of ui-automation element(GridPattern).
 ```
 
-## psrpa_uia_getgrid_name - Get grid name of ui-automation element(GridPattern)
+## psrpa_uia_getGridName - Get grid name of ui-automation element(GridPattern)
 ```
-Usage: psrpa_uia_getgrid_name rpa_object element row col
+Usage: psrpa_uia_getGridName rpa_object element row col
 Get grid name of ui-automation element(GridPattern).
 ```
 
-## psrpa_uia_getgrid_column - Get grid colmun of ui-automation element(GridPattern)
+## psrpa_uia_getGridColumn - Get grid colmun of ui-automation element(GridPattern)
 ```
-Usage: psrpa_uia_getgrid_column rpa_object element
+Usage: psrpa_uia_getGridColumn rpa_object element
 Get grid column of ui-automation element(GridPattern).
 ```
 
-## psrpa_uia_getgrid_row - Get grid row of ui-automation element(GridPattern)
+## psrpa_uia_getGridRow - Get grid row of ui-automation element(GridPattern)
 ```
-Usage: psrpa_uia_getgrid_row rpa_object element
+Usage: psrpa_uia_getGridRow rpa_object element
 Get grid row of ui-automation element(GridPattern).
 ```
 
-## psrpa_uia_getgriditem_column - Get griditem column of ui-automation element(GridItemPattern)
+## psrpa_uia_getGridItemColumn - Get griditem column of ui-automation element(GridItemPattern)
 ```
-Usage: psrpa_uia_getgriditem_column rpa_object element
+Usage: psrpa_uia_getGridItemColumn rpa_object element
 Get griditem column of ui-automation element(GridItemPattern).
 ```
 
-## psrpa_uia_getgriditem_columnspan - Get griditem column span of ui-automation element(GridItemPattern)
+## psrpa_uia_getGridItemColumnSpan - Get griditem column span of ui-automation element(GridItemPattern)
 ```
-Usage: psrpa_uia_getgriditem_columnspan rpa_object element
+Usage: psrpa_uia_getGridItemColumnSpan rpa_object element
 Get griditem column span of ui-automation element(GridItemPattern).
 ```
 
-## psrpa_uia_getgriditem_row - Get griditem row of ui-automation element(GridItemPattern)
+## psrpa_uia_getGridItemRow - Get griditem row of ui-automation element(GridItemPattern)
 ```
-Usage: psrpa_uia_getgriditem_row rpa_object element
+Usage: psrpa_uia_getGridItemRow rpa_object element
 Get griditem row of ui-automation element(GridItemPattern).
 ```
 
-## psrpa_uia_getgriditem_rowspan - Get griditem row span of ui-automation element(GridItemPattern)
+## psrpa_uia_getGridItemRowSpan - Get griditem row span of ui-automation element(GridItemPattern)
 ```
-Usage: psrpa_uia_getgriditem_rowspan rpa_object element
+Usage: psrpa_uia_getGridItemRowSpan rpa_object element
 Get griditem row span of ui-automation element(GridItemPattern).
 ```
 
-## psrpa_uia_getpattern - Get pattern from ui-automation element
+## psrpa_uia_getPattern - Get pattern from ui-automation element
 ```
-Usage: psrpa_uia_getpattern rpa_object element pattern
+Usage: psrpa_uia_getPattern rpa_object element pattern
 Get pattern from ui-automation element.
 ```
 

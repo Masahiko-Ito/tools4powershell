@@ -2792,11 +2792,11 @@ function psrpa_init{
 }
 
 #
-# psrpa_set_beforewait - Set a time(ms) for waiting before functions(psrpa_*)
+# psrpa_setBeforeWait - Set a time(ms) for waiting before functions(psrpa_*)
 #
-function psrpa_set_beforewait($rpa, $timems){
+function psrpa_setBeforeWait($rpa, $timems){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_set_beforewait rpa_object wait_time_ms"
+		write-output "Usage: psrpa_setBeforeWait rpa_object wait_time_ms"
 		write-output 'Set a time(ms) for waiting before functions(psrpa_*).'
 		write-output ""
 		return
@@ -2805,11 +2805,11 @@ function psrpa_set_beforewait($rpa, $timems){
 }
 
 #
-# psrpa_set_afterwait - Set a time(ms) for waiting after functions(psrpa_*)
+# psrpa_setAfterWait - Set a time(ms) for waiting after functions(psrpa_*)
 #
-function psrpa_set_afterwait($rpa, $timems){
+function psrpa_setAfterWait($rpa, $timems){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_set_afterwait rpa_object wait_time_ms"
+		write-output "Usage: psrpa_setAfterWait rpa_object wait_time_ms"
 		write-output 'Set a time(ms) for waiting after functions(psrpa_*).'
 		write-output ""
 		return
@@ -2818,11 +2818,11 @@ function psrpa_set_afterwait($rpa, $timems){
 }
 
 #
-# psrpa_show_mouse_position - Show current mouse position for debug purpose
+# psrpa_showMouse - Show current mouse position for debug purpose
 #
-function psrpa_show_mouse_position($rpa){
+function psrpa_showMouse($rpa){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_show_mouse_position rpa_object"
+		write-output "Usage: psrpa_showMouse rpa_object"
 		write-output "Show current mouse position for debug purpose."
 		write-output ""
 		return
@@ -2838,17 +2838,17 @@ function psrpa_show_mouse_position($rpa){
 }
 
 #
-# psrpa_show_mouse_position_byclick - Show current mouse position for psrpa_set_mouse and psrpa_click_position by click
+# psrpa_showMouseByClick - Show current mouse position for psrpa_setMouse and psrpa_clickPoint by click
 #
-function psrpa_show_mouse_position_byclick($rpa, $wait = 5){
+function psrpa_showMouseByClick($rpa, $wait = 5){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_show_mouse_position_byclick rpa_object [wait_sec]"
-		write-output "Show current mouse position for psrpa_set_mouse and psrpa_click_position by click."
+		write-output "Usage: psrpa_showMouseByClick rpa_object [wait_sec]"
+		write-output "Show current mouse position for psrpa_setMouse and psrpa_clickPoint by click."
 		write-output "Press any key to terminate."
 		write-output "    wait_sec    default 5"
 		write-output "ex."
 		write-output '    $wait_sec = 10'
-		write-output '    psrpa_show_mouse_position_byclick $rpa $wait_sec'
+		write-output '    psrpa_showMouseByClick $rpa $wait_sec'
 		write-output ""
 		return
 	}
@@ -2882,7 +2882,7 @@ function psrpa_show_mouse_position_byclick($rpa, $wait = 5){
 	$lwidth = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width
 	$lheight = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height
 	$w = New-Object System.Windows.Forms.Form
-	$w.Text = "psrpa_show_mouse_position_byclick"
+	$w.Text = "psrpa_showMouseByClick"
 	$w.keyPreview = $true
 	$w.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
 	$pb = New-Object System.Windows.Forms.PictureBox
@@ -2911,8 +2911,8 @@ function psrpa_show_mouse_position_byclick($rpa, $wait = 5){
 		}else{
 			$button = "left"
 		}
-		write-host ('psrpa_set_mouse $rpa ' + "$x $y")
-		write-host ('psrpa_click_position $rpa ' + "$x $y" + ' "' + $button + '" "click"')
+		write-host ('psrpa_setMouse $rpa ' + "$x $y")
+		write-host ('psrpa_clickPoint $rpa ' + "$x $y" + ' "' + $button + '" "click"')
 		write-host ('')
 	}
 	$pb.Add_Click($pb_click)
@@ -2925,16 +2925,16 @@ function psrpa_show_mouse_position_byclick($rpa, $wait = 5){
 
 
 #
-# psrpa_set_mouse - Set mouse position
+# psrpa_setMouse - Set mouse position
 #
-function psrpa_set_mouse($rpa, $x, $y){
+function psrpa_setMouse($rpa, $x, $y){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_set_mouse rpa_object x_position y_position"
+		write-output "Usage: psrpa_setMouse rpa_object x_position y_position"
 		write-output "Set mouse position."
 		write-output "ex."
 		write-output '    $x = 10'
 		write-output '    $y = 20'
-		write-output '    psrpa_set_mouse $rpa $x $y'
+		write-output '    psrpa_setMouse $rpa $x $y'
 		write-output ""
 		return
 	}
@@ -3026,11 +3026,11 @@ function psrpa_click($rpa, $button, $action){
 }
 
 #
-# psrpa_click_position - Set mouse position and click mouse button
+# psrpa_clickPoint - Set mouse position and click mouse button
 #
-function psrpa_click_position($rpa, $x, $y, $button, $action){
+function psrpa_clickPoint($rpa, $x, $y, $button, $action){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_click_position rpa_object x_position y_position mouse_button click_action"
+		write-output "Usage: psrpa_clickPoint rpa_object x_position y_position mouse_button click_action"
 		write-output "Set mouse position and click mouse button."
 		write-output "    mouse_button left, LEFT, l, L"
 		write-output "                 middle, MIDDLE, m, M"
@@ -3043,22 +3043,22 @@ function psrpa_click_position($rpa, $x, $y, $button, $action){
 		write-output "ex."
 		write-output '    $x = 10'
 		write-output '    $y = 20'
-		write-output '    psrpa_click_position $rpa $x $y "left" "click"'
+		write-output '    psrpa_clickPoint $rpa $x $y "left" "click"'
 		write-output ""
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	psrpa_set_mouse $rpa $x $y
+	psrpa_setMouse $rpa $x $y
 	psrpa_click $rpa $button $action
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
-# psrpa_show_apptitle - Show application and title
+# psrpa_showAppTitle - Show application and title
 #
-function psrpa_show_apptitle($rpa){
+function psrpa_showAppTitle($rpa){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_show_apptitle rpa_object"
+		write-output "Usage: psrpa_showAppTitle rpa_object"
 		write-output "Show application and title."
 		write-output ""
 		return
@@ -3072,18 +3072,18 @@ function psrpa_show_apptitle($rpa){
 }
 
 #
-# psrpa_activate_window - Activate specified window
+# psrpa_activateWindow - Activate specified window
 #
-function psrpa_activate_window ($rpa, $application, $title){
+function psrpa_activateWindow ($rpa, $application, $title){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_activate_window rpa_object application title"
+		write-output "Usage: psrpa_activateWindow rpa_object application title"
 		write-output "Activate specified window"
 		write-output '    application    "" means "^$", $null means "^.*$"'
 		write-output '    title          "" means "^$", $null means "^.*$"'
 		write-output "ex."
 		write-output '    $application = "notepad"'
 		write-output '    $title = "no title - memo pad"'
-		write-output '    psrpa_activate_window $rpa $application $title'
+		write-output '    psrpa_activateWindow $rpa $application $title'
 		write-output ""
 		return
 	}
@@ -3110,12 +3110,12 @@ function psrpa_activate_window ($rpa, $application, $title){
 }
 
 #
-# psrpa_set_window - Set window position and size
+# psrpa_setWindow - Set window position and size
 #
-#function psrpa_set_window($rpa, $application, $title, $x, $y, $width, $height){
-function psrpa_set_window{
+#function psrpa_setWindow($rpa, $application, $title, $x, $y, $width, $height){
+function psrpa_setWindow{
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_set_window rpa_object application title x_position y_position width height"
+		write-output "Usage: psrpa_setWindow rpa_object application title x_position y_position width height"
 		write-output "Set window position and size"
 		write-output '    application    "" means "^$", $null means "^.*$"'
 		write-output '    title          "" means "^$", $null means "^.*$"'
@@ -3126,7 +3126,7 @@ function psrpa_set_window{
 		write-output '    $y = 20'
 		write-output '    $width = 300'
 		write-output '    $height = 400'
-		write-output '    psrpa_set_window $rpa $application $title $x $y $width $height'
+		write-output '    psrpa_setWindow $rpa $application $title $x $y $width $height'
 		write-output ""
 		return
 	}
@@ -3160,11 +3160,11 @@ function psrpa_set_window{
 }
 
 #
-# psrpa_sendkeys - Send keys(string, function, special keys etc)
+# psrpa_sendKeys - Send keys(string, function, special keys etc)
 #
-function psrpa_sendkeys ($rpa, $string){
+function psrpa_sendKeys ($rpa, $string){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_sendkeys rpa_object string"
+		write-output "Usage: psrpa_sendKeys rpa_object string"
 		write-output "Send keys(string, function, special keys etc)"
 		write-output "    string any-string"
 		write-output "           {BS} for backspace"
@@ -3178,9 +3178,9 @@ function psrpa_sendkeys ($rpa, $string){
 		write-output "           %a for ALT-a"
 		write-output "           other keys - search by google :P"
 		write-output "ex."
-		write-output '    psrpa_sendkeys $rpa "any string"'
-		write-output '    psrpa_sendkeys $rpa "{BS}"'
-		write-output '    psrpa_sendkeys $rpa "^a"'
+		write-output '    psrpa_sendKeys $rpa "any string"'
+		write-output '    psrpa_sendKeys $rpa "{BS}"'
+		write-output '    psrpa_sendKeys $rpa "^a"'
 		write-output ""
 		return
 	}
@@ -3191,11 +3191,11 @@ function psrpa_sendkeys ($rpa, $string){
 
 
 #
-# psrpa_sendkeyEX - Send a key(Both of normal key and extended key are acceptable)
+# psrpa_sendKeyEx - Send a key(Both of normal key and extended key are acceptable)
 #
-function psrpa_sendkeyEX ($rpa, $virtual_keycode, $action, $isExtended){
+function psrpa_sendKeyEx ($rpa, $virtual_keycode, $action, $isExtended){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_sendkeyEX rpa_object virtual_keycode action isExtended"
+		write-output "Usage: psrpa_sendKeyEx rpa_object virtual_keycode action isExtended"
 		write-output "Send a key(Both of normal key and extended key are acceptable)"
 		write-output '    virtual_keycode see https://msdn.microsoft.com/ja-jp/windows/desktop/dd375731'
 		write-output '    action "down", "DOWN", "d", "D"'
@@ -3206,7 +3206,7 @@ function psrpa_sendkeyEX ($rpa, $virtual_keycode, $action, $isExtended){
 		write-output '                   https://kazhat.at.webry.info/201809/article_4.html'
 		write-output "ex."
 		write-output '    $right_ctrl = 0xa3'
-		write-output '    psrpa_sendkeyEX $rpa $right_ctrl "send" $true'
+		write-output '    psrpa_sendKeyEx $rpa $right_ctrl "send" $true'
 		write-output ""
 		return
 	}
@@ -3236,16 +3236,16 @@ function psrpa_sendkeyEX ($rpa, $virtual_keycode, $action, $isExtended){
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 #
-# psrpa_set_clipboard - Set clipboard to string
+# psrpa_setClipboard - Set clipboard to string
 #
-function psrpa_set_clipboard($rpa, $string){
+function psrpa_setClipboard($rpa, $string){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_set_clipboard rpa_object string"
+		write-output "Usage: psrpa_setClipboard rpa_object string"
 		write-output "Set clipboard to string."
 		write-output "Caution!"
 		write-output "    powershell.exe have to be invoked with -sta option."
 		write-output "ex."
-		write-output '    psrpa_set_clipboard $rpa "any string"'
+		write-output '    psrpa_setClipboard $rpa "any string"'
 		write-output ""
 		return
 	}
@@ -3255,16 +3255,16 @@ function psrpa_set_clipboard($rpa, $string){
 }
 
 #
-# psrpa_get_clipboard - Get string from clipboard
+# psrpa_getClipboard - Get string from clipboard
 #
-function psrpa_get_clipboard($rpa){
+function psrpa_getClipboard($rpa){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_get_clipboard rpa_object"
+		write-output "Usage: psrpa_getClipboard rpa_object"
 		write-output "Get string from clipboard."
 		write-output "Caution!"
 		write-output "    powershell.exe have to be invoked with -sta option."
 		write-output "ex."
-		write-output '    $str = psrpa_get_clipboard $rpa'
+		write-output '    $str = psrpa_getClipboard $rpa'
 		write-output ""
 		return
 	}
@@ -3274,32 +3274,32 @@ function psrpa_get_clipboard($rpa){
 }
 
 #
-# psrpa_get_bmp - Get image into file(BMP) 
+# psrpa_getBmp - Get image into file(BMP) 
 #
-function psrpa_get_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
+function psrpa_getBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_get_bmp rpa_object left_x top_y right_x bottom_y output.bmp"
+		write-output "Usage: psrpa_getBmp rpa_object left_x top_y right_x bottom_y output.bmp"
 		write-output "Get image into file(BMP)."
 		write-output "Output file name will be (left_x)_(top_y)_(right_x)_(bottom_y)_output.bmp."
 		write-output "ex."
-		write-output '    psrpa_get_bmp $rpa 10 10 200 100 "icon.bmp"'
+		write-output '    psrpa_getBmp $rpa 10 10 200 100 "icon.bmp"'
 		write-output ""
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$outputfile = "$x1" + "_" + "$y1" + "_" + "$x2" + "_" + "$y2" + "_" + $bmpfile
-	$dstimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2
+	$dstimg = psrpa_getBmpFromInnerFunction $rpa $x1 $y1 $x2 $y2
 	$dstimg.Save((psabspath $outputfile), [System.Drawing.Imaging.ImageFormat]::Bmp)
 	$dstimg.Dispose()
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
-# psrpa_get_bmp_byclick - Get image into file(BMP) by click
+# psrpa_getBmpByClick - Get image into file(BMP) by click
 #
-function psrpa_get_bmp_byclick($rpa, $bmpfile, $wait = 5){
+function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_get_bmp_byclick rpa_object output.bmp [wait_sec]"
+		write-output "Usage: psrpa_getBmpByClick rpa_object output.bmp [wait_sec]"
 		write-output "Get image into file(BMP) by click."
 		write-output "Output file name will be (left_x)_(top_y)_(right_x)_(bottom_y)_output.bmp."
 		write-output "Mouse cursor is CROSS for pointing (left_x, top_y)."
@@ -3308,7 +3308,7 @@ function psrpa_get_bmp_byclick($rpa, $bmpfile, $wait = 5){
 		write-output "    wait_sec    default 5"
 		write-output "ex."
 		write-output '    $wait_sec = 10'
-		write-output '    psrpa_get_bmp_byclick $rpa "icon.bmp" $wait_sec'
+		write-output '    psrpa_getBmpByClick $rpa "icon.bmp" $wait_sec'
 		write-output ""
 		return
 	}
@@ -3342,7 +3342,7 @@ function psrpa_get_bmp_byclick($rpa, $bmpfile, $wait = 5){
 	$lwidth = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width
 	$lheight = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height
 	$w = New-Object System.Windows.Forms.Form
-	$w.Text = "psrpa_get_bmp_byclick"
+	$w.Text = "psrpa_getBmpByClick"
 	$w.keyPreview = $true
 	$w.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
 	$pb = New-Object System.Windows.Forms.PictureBox
@@ -3359,16 +3359,16 @@ function psrpa_get_bmp_byclick($rpa, $bmpfile, $wait = 5){
 	}
 	$w.Add_KeyDown($w_keydown)
 
-	$script:psrpa_get_bmp_byclick_click_seq = 0
+	$script:psrpa_getBmpByClick_click_seq = 0
 	$pb_click = {
-		if ($script:psrpa_get_bmp_byclick_click_seq -eq 0){
-			$script:psrpa_get_bmp_byclick_x1 = [System.Windows.Forms.Cursor]::Position.X
-			$script:psrpa_get_bmp_byclick_y1 = [System.Windows.Forms.Cursor]::Position.Y
-			$script:psrpa_get_bmp_byclick_click_seq = 1
+		if ($script:psrpa_getBmpByClick_click_seq -eq 0){
+			$script:psrpa_getBmpByClick_x1 = [System.Windows.Forms.Cursor]::Position.X
+			$script:psrpa_getBmpByClick_y1 = [System.Windows.Forms.Cursor]::Position.Y
+			$script:psrpa_getBmpByClick_click_seq = 1
 			$pb.Cursor = [System.Windows.Forms.Cursors]::Hand
 		}else{
-			$x1 = $script:psrpa_get_bmp_byclick_x1
-			$y1 = $script:psrpa_get_bmp_byclick_y1
+			$x1 = $script:psrpa_getBmpByClick_x1
+			$y1 = $script:psrpa_getBmpByClick_y1
 			$x2 = [System.Windows.Forms.Cursor]::Position.X
 			$y2 = [System.Windows.Forms.Cursor]::Position.Y
 
@@ -3378,10 +3378,10 @@ function psrpa_get_bmp_byclick($rpa, $bmpfile, $wait = 5){
 			$dstimg = $img.Clone($rect, $img.PixelFormat)
 			$outputfile = "$x1" + "_" + "$y1" + "_" + "$x2" + "_" + "$y2" + "_" + $bmpfile
 			$dstimg.Save((psabspath $outputfile), [System.Drawing.Imaging.ImageFormat]::Bmp)
-			write-host ('psrpa_compare_bmp $rpa ' + "$x1 $y1 $x2 $y2 $outputfile")
+			write-host ('psrpa_compareBmp $rpa ' + "$x1 $y1 $x2 $y2 $outputfile")
 			$dstimg.Dispose()
 			$rect = $null
-			$script:psrpa_get_bmp_byclick_click_seq = 0
+			$script:psrpa_getBmpByClick_click_seq = 0
 			$pb.Cursor = [System.Windows.Forms.Cursors]::Cross
 		}
 	}
@@ -3394,15 +3394,15 @@ function psrpa_get_bmp_byclick($rpa, $bmpfile, $wait = 5){
 }
 
 #
-# psrpa_compare_bmp - Compare specifoed rectangle and bmpfile 
+# psrpa_compareBmp - Compare specifoed rectangle and bmpfile 
 #
-function psrpa_compare_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
+function psrpa_compareBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_compare_bmp rpa_object left_x top_x right_x bottom_y input.bmp"
+		write-output "Usage: psrpa_compareBmp rpa_object left_x top_x right_x bottom_y input.bmp"
 		write-output "Compare specifoed rectangle and bmpfile."
 		write-output 'Return $true when specified rectangle and input.bmp are same.'
 		write-output "ex."
-		write-output '    $bool = psrpa_compare_bmp $rpa 10 10 200 100 "icon.bmp"'
+		write-output '    $bool = psrpa_compareBmp $rpa 10 10 200 100 "icon.bmp"'
 		write-output '    if ($bool){'
 		write-output '        write-output "match"'
 		write-output '    }else{'
@@ -3412,7 +3412,7 @@ function psrpa_compare_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$dstimg = psrpa_get_bmp_from_innerfunction $rpa $x1 $y1 $x2 $y2
+	$dstimg = psrpa_getBmpFromInnerFunction $rpa $x1 $y1 $x2 $y2
 	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
 
 	$img1 = New-Object System.Drawing.Bitmap($dstimg.Size.Width, $dstimg.Size.Height)
@@ -3436,15 +3436,15 @@ function psrpa_compare_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 }
 
 #
-# psrpa_search_bmp - Search bmpfile in screen
+# psrpa_searchBmp - Search bmpfile in screen
 #
-function psrpa_search_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
+function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_search_bmp rpa_object left_x top_x right_x bottom_y input.bmp"
+		write-output "Usage: psrpa_searchBmp rpa_object left_x top_x right_x bottom_y input.bmp"
 		write-output "Search bmpfile in screen."
 		write-output 'Return @(left,top,right,bottom) when bmpfile is found in screen.'
 		write-output "ex."
-		write-output '    $pos = psrpa_search_bmp $rpa $null $null $null $null "icon.bmp"'
+		write-output '    $pos = psrpa_searchBmp $rpa $null $null $null $null "icon.bmp"'
 		write-output '    if ($pos[0] < 0){'
 		write-output '        write-output "not found"'
 		write-output '    }else{'
@@ -3484,7 +3484,7 @@ function psrpa_search_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($y2 -eq $null -or $y2 -eq ""){
 		$y2 = $pheight
 	}
-	$scrimg = psrpa_get_bmp_from_innerfunction $rpa 0 0 $pwidth $pheight
+	$scrimg = psrpa_getBmpFromInnerFunction $rpa 0 0 $pwidth $pheight
 	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
 	$pos_array = [Psrpa]::SearchImage($scrimg, $fileimg)
 	$scrimg.Dispose()
@@ -3494,9 +3494,9 @@ function psrpa_search_bmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 }
 
 #
-# Called from psrpa_get_bmp and psrpa_compare_bmp
+# Called from psrpa_getBmp and psrpa_compareBmp
 #
-function psrpa_get_bmp_from_innerfunction($rpa, $x1, $y1, $x2, $y2){
+function psrpa_getBmpFromInnerFunction($rpa, $x1, $y1, $x2, $y2){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Sorry, internal usage only."
 		return
@@ -3675,15 +3675,15 @@ function psrpa_uia_close($rpa, $element){
 }
 
 #
-# psrpa_uia_setvalue - Set value into ui-automation element(ValuePattern)
+# psrpa_uia_setValue - Set value into ui-automation element(ValuePattern)
 #
-function psrpa_uia_setvalue($rpa, $element, $value){
+function psrpa_uia_setValue($rpa, $element, $value){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_setvalue rpa_object element value"
+		write-output "Usage: psrpa_uia_setValue rpa_object element value"
 		write-output "Set value into ui-automation element(ValuePattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
-		write-output '    psrpa_uia_setvalue $rpa $elm "any-string"'
+		write-output '    psrpa_uia_setValue $rpa $elm "any-string"'
 		write-output ""
 		return
 	}
@@ -3693,15 +3693,15 @@ function psrpa_uia_setvalue($rpa, $element, $value){
 }
 
 #
-# psrpa_uia_gettext - Get text from ui-automation element(TextPattern)
+# psrpa_uia_getText - Get text from ui-automation element(TextPattern)
 #
-function psrpa_uia_gettext($rpa, $element){
+function psrpa_uia_getText($rpa, $element){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_gettext rpa_object element"
+		write-output "Usage: psrpa_uia_getText rpa_object element"
 		write-output "Get text from ui-automation element(TextPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
-		write-output '    $text = psrpa_uia_gettext $rpa $elm'
+		write-output '    $text = psrpa_uia_getText $rpa $elm'
 		write-output ""
 		return
 	}
@@ -3792,17 +3792,17 @@ function psrpa_uia_resize{
 }
 
 #
-# psrpa_uia_getgrid_classname - Get grid classname of ui-automation element(GridPattern)
+# psrpa_uia_getGridClassName - Get grid classname of ui-automation element(GridPattern)
 #
-function psrpa_uia_getgrid_classname($rpa, $element, $row, $col){
+function psrpa_uia_getGridClassName($rpa, $element, $row, $col){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getgrid_classname rpa_object element row col"
+		write-output "Usage: psrpa_uia_getGridClassName rpa_object element row col"
 		write-output "Get grid classname of ui-automation element(GridPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
 		write-output '    $row = 0'
 		write-output '    $col = 0'
-		write-output '    $classname = psrpa_uia_getgrid_classname $rpa $elm $row $col'
+		write-output '    $classname = psrpa_uia_getGridClassName $rpa $elm $row $col'
 		write-output ""
 		return
 	}
@@ -3812,17 +3812,17 @@ function psrpa_uia_getgrid_classname($rpa, $element, $row, $col){
 }
 
 #
-# psrpa_uia_getgrid_controltype - Get grid controltype of ui-automation element(GridPattern)
+# psrpa_uia_getGridControlType - Get grid controltype of ui-automation element(GridPattern)
 #
-function psrpa_uia_getgrid_controltype($rpa, $element, $row, $col){
+function psrpa_uia_getGridControlType($rpa, $element, $row, $col){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getgrid_controltype rpa_object element row col"
+		write-output "Usage: psrpa_uia_getGridControlType rpa_object element row col"
 		write-output "Get grid controltype of ui-automation element(GridPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
 		write-output '    $row = 0'
 		write-output '    $col = 0'
-		write-output '    $controltype = psrpa_uia_getgrid_controltype $rpa $elm $row $col'
+		write-output '    $controltype = psrpa_uia_getGridControlType $rpa $elm $row $col'
 		write-output ""
 		return
 	}
@@ -3832,17 +3832,17 @@ function psrpa_uia_getgrid_controltype($rpa, $element, $row, $col){
 }
 
 #
-# psrpa_uia_getgrid_name - Get grid name of ui-automation element(GridPattern)
+# psrpa_uia_getGridName - Get grid name of ui-automation element(GridPattern)
 #
-function psrpa_uia_getgrid_name($rpa, $element, $row, $col){
+function psrpa_uia_getGridName($rpa, $element, $row, $col){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getgrid_name rpa_object element row col"
+		write-output "Usage: psrpa_uia_getGridName rpa_object element row col"
 		write-output "Get grid name of ui-automation element(GridPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
 		write-output '    $row = 0'
 		write-output '    $col = 0'
-		write-output '    $name = psrpa_uia_getgrid_name $rpa $elm $row $col'
+		write-output '    $name = psrpa_uia_getGridName $rpa $elm $row $col'
 		write-output ""
 		return
 	}
@@ -3852,15 +3852,15 @@ function psrpa_uia_getgrid_name($rpa, $element, $row, $col){
 }
 
 #
-# psrpa_uia_getgrid_column - Get grid colmun of ui-automation element(GridPattern)
+# psrpa_uia_getGridColumn - Get grid colmun of ui-automation element(GridPattern)
 #
-function psrpa_uia_getgrid_column($rpa, $element){
+function psrpa_uia_getGridColumn($rpa, $element){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getgrid_column rpa_object element"
+		write-output "Usage: psrpa_uia_getGridColumn rpa_object element"
 		write-output "Get grid column of ui-automation element(GridPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
-		write-output '    $col = psrpa_uia_getgrid_column $rpa $elm'
+		write-output '    $col = psrpa_uia_getGridColumn $rpa $elm'
 		write-output ""
 		return
 	}
@@ -3870,15 +3870,15 @@ function psrpa_uia_getgrid_column($rpa, $element){
 }
 
 #
-# psrpa_uia_getgrid_row - Get grid row of ui-automation element(GridPattern)
+# psrpa_uia_getGridRow - Get grid row of ui-automation element(GridPattern)
 #
-function psrpa_uia_getgrid_row($rpa, $element){
+function psrpa_uia_getGridRow($rpa, $element){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getgrid_row rpa_object element"
+		write-output "Usage: psrpa_uia_getGridRow rpa_object element"
 		write-output "Get grid row of ui-automation element(GridPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
-		write-output '    $row = psrpa_uia_getgrid_row $rpa $elm'
+		write-output '    $row = psrpa_uia_getGridRow $rpa $elm'
 		write-output ""
 		return
 	}
@@ -3888,15 +3888,15 @@ function psrpa_uia_getgrid_row($rpa, $element){
 }
 
 #
-# psrpa_uia_getgriditem_column - Get griditem column of ui-automation element(GridItemPattern)
+# psrpa_uia_getGridItemColumn - Get griditem column of ui-automation element(GridItemPattern)
 #
-function psrpa_uia_getgriditem_column($rpa, $element){
+function psrpa_uia_getGridItemColumn($rpa, $element){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getgriditem_column rpa_object element"
+		write-output "Usage: psrpa_uia_getGridItemColumn rpa_object element"
 		write-output "Get griditem column of ui-automation element(GridItemPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
-		write-output '    $column = psrpa_uia_getgriditem_column $rpa $elm'
+		write-output '    $column = psrpa_uia_getGridItemColumn $rpa $elm'
 		write-output ""
 		return
 	}
@@ -3906,15 +3906,15 @@ function psrpa_uia_getgriditem_column($rpa, $element){
 }
 
 #
-# psrpa_uia_getgriditem_columnspan - Get griditem column span of ui-automation element(GridItemPattern)
+# psrpa_uia_getGridItemColumnSpan - Get griditem column span of ui-automation element(GridItemPattern)
 #
-function psrpa_uia_getgriditem_columnspan($rpa, $element){
+function psrpa_uia_getGridItemColumnSpan($rpa, $element){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getgriditem_columnspan rpa_object element"
+		write-output "Usage: psrpa_uia_getGridItemColumnSpan rpa_object element"
 		write-output "Get griditem column span of ui-automation element(GridItemPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
-		write-output '    $columnspan = psrpa_uia_getgriditem_columnspan $rpa $elm'
+		write-output '    $columnspan = psrpa_uia_getGridItemColumnSpan $rpa $elm'
 		write-output ""
 		return
 	}
@@ -3924,15 +3924,15 @@ function psrpa_uia_getgriditem_columnspan($rpa, $element){
 }
 
 #
-# psrpa_uia_getgriditem_row - Get griditem row of ui-automation element(GridItemPattern)
+# psrpa_uia_getGridItemRow - Get griditem row of ui-automation element(GridItemPattern)
 #
-function psrpa_uia_getgriditem_row($rpa, $element){
+function psrpa_uia_getGridItemRow($rpa, $element){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getgriditem_row rpa_object element"
+		write-output "Usage: psrpa_uia_getGridItemRow rpa_object element"
 		write-output "Get griditem row of ui-automation element(GridItemPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
-		write-output '    $row = psrpa_uia_getgriditem_row $rpa $elm'
+		write-output '    $row = psrpa_uia_getGridItemRow $rpa $elm'
 		write-output ""
 		return
 	}
@@ -3942,15 +3942,15 @@ function psrpa_uia_getgriditem_row($rpa, $element){
 }
 
 #
-# psrpa_uia_getgriditem_rowspan - Get griditem row span of ui-automation element(GridItemPattern)
+# psrpa_uia_getGridItemRowSpan - Get griditem row span of ui-automation element(GridItemPattern)
 #
-function psrpa_uia_getgriditem_rowspan($rpa, $element){
+function psrpa_uia_getGridItemRowSpan($rpa, $element){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getgriditem_rowspan rpa_object element"
+		write-output "Usage: psrpa_uia_getGridItemRowSpan rpa_object element"
 		write-output "Get griditem row span of ui-automation element(GridItemPattern)."
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
-		write-output '    $rowspan = psrpa_uia_getgriditem_rowspan $rpa $elm'
+		write-output '    $rowspan = psrpa_uia_getGridItemRowSpan $rpa $elm'
 		write-output ""
 		return
 	}
@@ -3960,11 +3960,11 @@ function psrpa_uia_getgriditem_rowspan($rpa, $element){
 }
 
 #
-# psrpa_uia_getpattern - Get pattern from ui-automation element
+# psrpa_uia_getPattern - Get pattern from ui-automation element
 #
-function psrpa_uia_getpattern($rpa, $element, $pattern){
+function psrpa_uia_getPattern($rpa, $element, $pattern){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_getpattern rpa_object element pattern"
+		write-output "Usage: psrpa_uia_getPattern rpa_object element pattern"
 		write-output "Get pattern from ui-automation element."
 		write-output '    pattern "Invoke"'
 		write-output '            "ExpandCollapse"'
@@ -3984,7 +3984,7 @@ function psrpa_uia_getpattern($rpa, $element, $pattern){
 		write-output '            "ScrollItem"'
 		write-output "ex."
 		write-output '    $elm = psrpa_uia_get ...snip...'
-		write-output '    $pattern = psrpa_uia_getpattern $rpa $elm "Invoke"'
+		write-output '    $pattern = psrpa_uia_getPattern $rpa $elm "Invoke"'
 		write-output '    $pattern.Invoke()'
 		write-output ""
 		return
