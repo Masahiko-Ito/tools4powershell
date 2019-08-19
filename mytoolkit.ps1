@@ -2827,14 +2827,14 @@ function psrpa_showMouse($rpa){
 		write-output ""
 		return
 	}
-#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	while ($true){
 		$x = [System.Windows.Forms.Cursor]::Position.X
 		$y = [System.Windows.Forms.Cursor]::Position.Y
 		write-output "$x $y"
 		sleep -Second 1
 	}
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -2852,7 +2852,7 @@ function psrpa_showMouseByClick($rpa, $wait = 5){
 		write-output ""
 		return
 	}
-#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	Start-Sleep $wait
 
 	$pwidth = (
@@ -2920,7 +2920,7 @@ function psrpa_showMouseByClick($rpa, $wait = 5){
 	$pb.Cursor = [System.Windows.Forms.Cursors]::Cross
 	$stat = $w.ShowDialog()
 
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 
@@ -3063,12 +3063,12 @@ function psrpa_showAppTitle($rpa){
 		write-output ""
 		return
 	}
-#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$ps = get-process
 	foreach ($process in $ps){
 		write-output ('"' + $process.Name + '" "' + $process.MainWindowTitle + '"')
 	}
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3270,7 +3270,7 @@ function psrpa_getClipboard($rpa){
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	return [Windows.Forms.Clipboard]::GetText()
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3312,7 +3312,7 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 		write-output ""
 		return
 	}
-#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	Start-Sleep $wait
 
 	$pwidth = (
@@ -3390,7 +3390,7 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 	$pb.Cursor = [System.Windows.Forms.Cursors]::Cross
 	$stat = $w.ShowDialog()
 
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3432,7 +3432,7 @@ function psrpa_compareBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	$gr2.Dispose()
 
 	return $isSame
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3490,7 +3490,7 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	$scrimg.Dispose()
 	$fileimg.Dispose()
 	return $pos_array
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3501,7 +3501,7 @@ function psrpa_getBmpFromInnerFunction($rpa, $x1, $y1, $x2, $y2){
 		write-output "Sorry, internal usage only."
 		return
 	}
-#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+###	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$width = $x2 - $x1
 	$height = $y2 - $y1
 	$pwidth = (
@@ -3534,7 +3534,7 @@ function psrpa_getBmpFromInnerFunction($rpa, $x1, $y1, $x2, $y2){
 	$gr.Dispose()
 	$rect = $null
 	return $dstimg
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+###	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3549,7 +3549,7 @@ function psrpa_uia_show($rpa){
 		write-output ""
 		return
 	}
-#	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	[Psrpa]::GetRootWindow().FindAll(
 		[System.Windows.Automation.TreeScope]::Children,
 		[System.Windows.Automation.Condition]::TrueCondition) |
@@ -3572,7 +3572,7 @@ function psrpa_uia_show($rpa){
 			"-------------------------------------------------------------------------"
 		}
 	}
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3611,13 +3611,40 @@ function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name)
 	}elseif ($name -eq ""){
 		$name = "^$"
 	}
-	$element.FindAll(
-		[System.Windows.Automation.TreeScope]::SubTree,
-		[System.Windows.Automation.Condition]::TrueCondition) |
-	where-object{$_.Current.ClassName -match $classname -and 
-		$_.Current.LocalizedControlType -match $localizedcontroltype -and
-		$_.Current.Name -match $name}
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return ($element.FindAll(
+			[System.Windows.Automation.TreeScope]::SubTree,
+			[System.Windows.Automation.Condition]::TrueCondition) |
+		where-object{$_.Current.ClassName -match $classname -and 
+			$_.Current.LocalizedControlType -match $localizedcontroltype -and
+			$_.Current.Name -match $name}
+		)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getGeometry - Get geometry of ui-automation element(*Pattern)
+#
+function psrpa_uia_getGeometry($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getGeometry rpa_object element"
+		write-output "Get geometry of ui-automation element(*Pattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $geo = psrpa_uia_getGeometry $rpa $elm'
+		write-output '    $x = $geo[0]'
+		write-output '    $y = $geo[1]'
+		write-output '    $width = $geo[2]'
+		write-output '    $height = $geo[3]'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$x = $element.Current.BoundingRectangle.X
+	$y = $element.Current.BoundingRectangle.Y
+	$width = $element.Current.BoundingRectangle.Width
+	$height = $element.Current.BoundingRectangle.Height
+	return @($x, $y, $width, $height)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3706,8 +3733,8 @@ function psrpa_uia_getText($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern).DocumentRange.getText(65535)
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern).DocumentRange.getText(65535)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3807,8 +3834,8 @@ function psrpa_uia_getGridClassName($rpa, $element, $row, $col){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.ClassName
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.ClassName
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3827,8 +3854,8 @@ function psrpa_uia_getGridControlType($rpa, $element, $row, $col){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.LocalizedControlType
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.LocalizedControlType
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3847,8 +3874,8 @@ function psrpa_uia_getGridName($rpa, $element, $row, $col){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.Name
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.Name
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3865,8 +3892,8 @@ function psrpa_uia_getGridColumn($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.ColumnCount
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.ColumnCount
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3883,8 +3910,8 @@ function psrpa_uia_getGridRow($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.RowCount
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.RowCount
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3901,8 +3928,8 @@ function psrpa_uia_getGridItemColumn($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Column
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Column
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3919,8 +3946,8 @@ function psrpa_uia_getGridItemColumnSpan($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.ColumnSpan
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.ColumnSpan
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3937,8 +3964,8 @@ function psrpa_uia_getGridItemRow($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Row
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Row
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3955,8 +3982,156 @@ function psrpa_uia_getGridItemRowSpan($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.RowSpan
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.RowSpan
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_setRangeValue - Set RangeValue of ui-automation element(RangeValuePattern)
+#
+function psrpa_uia_setRangeValue($rpa, $element, $value){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_setRangeValue rpa_object element value"
+		write-output "Set RangeValue of ui-automation element(RangeValuePattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_setRangeValue $rpa $elm 10'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).SetValue($value)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getRangeValue - Get RangeValue of ui-automation element(RangeValuePattern)
+#
+function psrpa_uia_getRangeValue($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getRangeValue rpa_object element"
+		write-output "Get RangeValue of ui-automation element(RangeValuePattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $value = psrpa_uia_getRangeValue $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).Current.Value
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getRangeValueMax - Get Maximum RangeValue of ui-automation element(RangeValuePattern)
+#
+function psrpa_uia_getRangeValueMax($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getRangeValueMax rpa_object element"
+		write-output "Get Maximum RangeValue of ui-automation element(RangeValuePattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $max = psrpa_uia_getRangeValueMax $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).Current.Maximum
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getRangeValueMin - Get Minimum RangeValue of ui-automation element(RangeValuePattern)
+#
+function psrpa_uia_getRangeValueMin($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getRangeValueMin rpa_object element"
+		write-output "Get Minimum RangeValue of ui-automation element(RangeValuePattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $min = psrpa_uia_getRangeValueMin $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).Current.Minimum
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_setScroll - Set Scroll of ui-automation element(ScrollPattern)
+#
+function psrpa_uia_setScroll($rpa, $element, $x_percent, $y_percent){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_setScroll rpa_object element horizontal_percent vertical_percent"
+		write-output "Set Scroll of ui-automation element(ScrollPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_setScroll $rpa $elm 10 100'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).SetScrollPercent($x_percent, $y_percent)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getScroll - Get Scroll of ui-automation element(ScrollPattern)
+#
+function psrpa_uia_getScroll($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getScroll rpa_object element"
+		write-output "Get Scroll of ui-automation element(ScrollPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $scroll = psrpa_uia_getScroll $rpa $elm'
+		write-output '    $scroll_horizontal = $scroll[0]'
+		write-output '    $scroll_vertical = $scroll[1]'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$hp = $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.HorizontalScrollPercent
+	$vp = $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.VerticalScrollPercent
+	return @($hp, $vp)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getScrollHview - Get Horizontal view size(%) of Scroll of ui-automation element(ScrollPattern)
+#
+function psrpa_uia_getScrollHview($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getScrollHview rpa_object element"
+		write-output "Get Horizontal view size(%) of Scroll of ui-automation element(ScrollPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $horizontal_view_percent = psrpa_uia_getScrollHview $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.HorizontalViewSize
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_getScrollVview - Get Vertical view size(%) of Scroll of ui-automation element(ScrollPattern)
+#
+function psrpa_uia_getScrollVview($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_getScrollVview rpa_object element"
+		write-output "Get Vertical view size(%) of Scroll of ui-automation element(ScrollPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    $vertical_view_percent = psrpa_uia_getScrollVview $rpa $elm'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	return $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.VerticalViewSize
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3991,38 +4166,39 @@ function psrpa_uia_getPattern($rpa, $element, $pattern){
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	if ($pattern -eq "Invoke"){
-		$element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+		$ret = element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
 	}elseif ($pattern -eq "ExpandCollapse"){
-		$element.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern)
 	}elseif ($pattern -eq "Window"){
-		$element.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern)
 	}elseif ($pattern -eq "Value"){
-		$element.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
 	}elseif ($pattern -eq "Text"){
-		$element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern)
 	}elseif ($pattern -eq "Toggle"){
-		$element.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
 	}elseif ($pattern -eq "SelectionItem"){
-		$element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
 	}elseif ($pattern -eq "Grid"){
-		$element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern)
 	}elseif ($pattern -eq "GridItem"){
-		$element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern)
+	}elseif ($pattern -eq "RangeValue"){
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern)
+	}elseif ($pattern -eq "Scroll"){
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern)
 #
 	}elseif ($pattern -eq "Selection"){
-		$element.GetCurrentPattern([System.Windows.Automation.SelectionPattern]::Pattern)
-	}elseif ($pattern -eq "RangeValue"){
-		$element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern)
-	}elseif ($pattern -eq "Scroll"){
-		$element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.SelectionPattern]::Pattern)
 	}elseif ($pattern -eq "MultipleView"){
-		$element.GetCurrentPattern([System.Windows.Automation.MultipleViewPattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.MultipleViewPattern]::Pattern)
 	}elseif ($pattern -eq "Table"){
-		$element.GetCurrentPattern([System.Windows.Automation.TablePattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.TablePattern]::Pattern)
 	}elseif ($pattern -eq "TableItem"){
-		$element.GetCurrentPattern([System.Windows.Automation.TableItemPattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.TableItemPattern]::Pattern)
 	}elseif ($pattern -eq "ScrollItem"){
-		$element.GetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern)
 	}
-#	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }

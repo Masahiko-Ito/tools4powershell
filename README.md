@@ -684,6 +684,12 @@ Usage: psrpa_uia_get rpa_object parent_element class_name localized_controlname 
 Get ui-automation element.
 ```
 
+## psrpa_uia_getGeometry - Get geometry of ui-automation element(*Pattern)
+```
+Usage: psrpa_uia_getGeometry rpa_object element
+Get geometry of ui-automation element(*Pattern).
+```
+
 ## psrpa_uia_invoke - Invoke ui-automation element(InvokePattern)
 ```
 Usage: psrpa_uia_invoke rpa_object element
@@ -790,6 +796,54 @@ Get griditem row of ui-automation element(GridItemPattern).
 ```
 Usage: psrpa_uia_getGridItemRowSpan rpa_object element
 Get griditem row span of ui-automation element(GridItemPattern).
+```
+
+## psrpa_uia_setRangeValue - Set RangeValue of ui-automation element(RangeValuePattern)
+```
+Usage: psrpa_uia_setRangeValue rpa_object element value
+Set RangeValue of ui-automation element(RangeValuePattern).
+```
+
+## psrpa_uia_getRangeValue - Get RangeValue of ui-automation element(RangeValuePattern)
+```
+Usage: psrpa_uia_getRangeValue rpa_object element
+Get RangeValue of ui-automation element(RangeValuePattern).
+```
+
+## psrpa_uia_getRangeValueMax - Get Maximum RangeValue of ui-automation element(RangeValuePattern)
+```
+Usage: psrpa_uia_getRangeValueMax rpa_object element
+Get Maximum RangeValue of ui-automation element(RangeValuePattern).
+```
+
+## psrpa_uia_getRangeValueMin - Get Minimum RangeValue of ui-automation element(RangeValuePattern)
+```
+Usage: psrpa_uia_getRangeValueMin rpa_object element
+Get Minimum RangeValue of ui-automation element(RangeValuePattern).
+```
+
+## psrpa_uia_setScroll - Set Scroll of ui-automation element(ScrollPattern)
+```
+Usage: psrpa_uia_setScroll rpa_object element horizontal_percent vertical_percent
+Set Scroll of ui-automation element(ScrollPattern).
+```
+
+## psrpa_uia_getScroll - Get Scroll of ui-automation element(ScrollPattern)
+```
+Usage: psrpa_uia_getScroll rpa_object element
+Get Scroll of ui-automation element(ScrollPattern).
+```
+
+## psrpa_uia_getScrollHview - Get Horizontal view size(%) of Scroll of ui-automation element(ScrollPattern)
+```
+Usage: psrpa_uia_getScrollHview rpa_object element
+Get Horizontal view size(%) of Scroll of ui-automation element(ScrollPattern).
+```
+
+## psrpa_uia_getScrollVview - Get Vertical view size(%) of Scroll of ui-automation element(ScrollPattern)
+```
+Usage: psrpa_uia_getScrollVview rpa_object element
+Get Vertical view size(%) of Scroll of ui-automation element(ScrollPattern).
 ```
 
 ## psrpa_uia_getPattern - Get pattern from ui-automation element
