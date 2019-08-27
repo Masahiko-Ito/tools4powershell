@@ -2735,6 +2735,8 @@ function psrpa_init{
 				byte[] fileimgbyte = new byte[fileimg.Width * fileimg.Height * 4];
 				Marshal.Copy(scrimgdata.Scan0, scrimgbyte, 0, scrimgbyte.Length);
 				Marshal.Copy(fileimgdata.Scan0, fileimgbyte, 0, fileimgbyte.Length);
+				scrimg.UnlockBits(scrimgdata);
+				fileimg.UnlockBits(fileimgdata);
 				byte[] scrimggraybyte = new byte[scrimg.Width * scrimg.Height];
 				byte[] fileimggraybyte = new byte[fileimg.Width * fileimg.Height];
 				int pixsize, j, x1, y1, x2, y2;
