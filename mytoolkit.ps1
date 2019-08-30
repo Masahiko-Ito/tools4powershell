@@ -3396,12 +3396,12 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 }
 
 #
-# psrpa_compareBmp - Compare specifoed rectangle and bmpfile 
+# psrpa_compareBmp - Compare specified rectangle and bmpfile 
 #
 function psrpa_compareBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrpa_compareBmp rpa_object left_x top_x right_x bottom_y input.bmp"
-		write-output "Compare specifoed rectangle and bmpfile."
+		write-output "Compare specified rectangle and bmpfile."
 		write-output 'Return $true when specified rectangle and input.bmp are same.'
 		write-output "ex."
 		write-output '    $bool = psrpa_compareBmp $rpa 10 10 200 100 "icon.bmp"'
