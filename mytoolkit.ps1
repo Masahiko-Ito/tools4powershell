@@ -3381,6 +3381,9 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 			$outputfile = "$x1" + "_" + "$y1" + "_" + "$x2" + "_" + "$y2" + "_" + $bmpfile
 			$dstimg.Save((psabspath $outputfile), [System.Drawing.Imaging.ImageFormat]::Bmp)
 			write-host ('psrpa_compareBmp $rpa ' + "$x1 $y1 $x2 $y2 $outputfile")
+			write-host ('psrpa_isSameBmp $rpa ' + "$x1 $y1 $outputfile")
+			write-host ('psrpa_searchBmp $rpa ' + "$x1 $y1 $x2 $y2 $outputfile")
+			write-host ('psrpa_getBmpPosition $rpa ' + "$outputfile")
 			$dstimg.Dispose()
 			$rect = $null
 			$script:psrpa_getBmpByClick_click_seq = 0
