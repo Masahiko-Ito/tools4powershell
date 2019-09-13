@@ -3400,7 +3400,7 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 #
 function psrpa_compareBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_compareBmp rpa_object left_x top_x right_x bottom_y input.bmp"
+		write-output "Usage: psrpa_compareBmp rpa_object left_x top_y right_x bottom_y input.bmp"
 		write-output "Compare specified rectangle and bmpfile."
 		write-output 'Return $true when specified rectangle and input.bmp are same.'
 		write-output "ex."
@@ -3438,11 +3438,37 @@ function psrpa_compareBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 }
 
 #
+# psrpa_isSameBmp - Compare rectangle starts with specified point and bmpfile 
+#
+function psrpa_isSameBmp($rpa, $x, $y, $bmpfile){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_isSameBmp rpa_object left top input.bmp"
+		write-output "Compare rectangle starts with specified point and bmpfile."
+		write-output 'Return $true when same bmp.'
+		write-output "ex."
+		write-output '    $bool = psrpa_isSameBmp $rpa 10 10 "icon.bmp"'
+		write-output '    if ($bool){'
+		write-output '        write-output "match"'
+		write-output '    }else{'
+		write-output '        write-output "not match"'
+		write-output '    }'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$img = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
+	$isSame = psrpa_compareBMP $rpa  $x  $y ([int]$x + [int]($img.Size.Width)) ([int]$y + [int]($img.Size.Height)) $bmpfile
+	$img.Dispose()
+	return $isSame
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
 # psrpa_searchBmp - Search bmpfile in screen
 #
 function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_searchBmp rpa_object left_x top_x right_x bottom_y input.bmp"
+		write-output "Usage: psrpa_searchBmp rpa_object left_x top_y right_x bottom_y input.bmp"
 		write-output "Search bmpfile in screen."
 		write-output 'Return @(left,top,right,bottom) when bmpfile is found in screen.'
 		write-output "ex."
@@ -3492,6 +3518,35 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	$scrimg.Dispose()
 	$fileimg.Dispose()
 	return $pos_array
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_getBmpPosition - Get position of bmpfile in whole screen
+#
+function psrpa_getBmpPosition($rpa, $bmpfile){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_getBmpPosition rpa_object input.bmp"
+		write-output "Get position of bmpfile in whole screen."
+		write-output 'Return @(left,top,width,height) when bmpfile is found in screen.'
+		write-output "ex."
+		write-output '    $pos = psrpa_getBmpPosition $rpa "icon.bmp"'
+		write-output '    if ($pos[0] < 0){'
+		write-output '        write-output "not found"'
+		write-output '    }else{'
+		write-output '        write-output "found"'
+		write-output '        $left = $pos[0]'
+		write-output '        $top = $pos[1]'
+		write-output '        $width = $pos[2]'
+		write-output '        $height = $pos[3]'
+		write-output '    }'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$array = psrpa_searchBmp $rpa $null $null $null $null $bmpfile
+	$return_array = @($array[0], $array[1], ([int]$array[2] - [int]$array[0]), ([int]$array[3] - [int]$array[1]))
+	return $return_array
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
