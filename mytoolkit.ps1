@@ -3614,20 +3614,33 @@ function psrpa_uia_show($rpa){
 		[System.Windows.Automation.TreeScope]::Children,
 		[System.Windows.Automation.Condition]::TrueCondition) |
 	%{
-
+		$top = $true
 		"========================================================================="
 		$_.FindAll(
 			[System.Windows.Automation.TreeScope]::SubTree,
 			[System.Windows.Automation.Condition]::TrueCondition) |
 		%{
-			"ClassName = " + $_.Current.ClassName
-#			"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
-			"LocalizedControlType = " + $_.Current.LocalizedControlType
-			"Name = " + $_.Current.Name
-#			"ProcessId = " + $_.Current.ProcessId.tostring()
-			$_.GetSupportedPatterns() |
-			%{
-				"SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+			if ($top){
+				"ClassName = " + $_.Current.ClassName
+#				"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+				"LocalizedControlType = " + $_.Current.LocalizedControlType
+				"Name = " + $_.Current.Name
+#				"ProcessId = " + $_.Current.ProcessId.tostring()
+				$_.GetSupportedPatterns() |
+				%{
+					"    SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+				}
+				$top = $false
+			}else{
+				"    ClassName = " + $_.Current.ClassName
+#				"    ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+				"    LocalizedControlType = " + $_.Current.LocalizedControlType
+				"    Name = " + $_.Current.Name
+#				"    ProcessId = " + $_.Current.ProcessId.tostring()
+				$_.GetSupportedPatterns() |
+				%{
+					"        SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+				}
 			}
 			"-------------------------------------------------------------------------"
 		}
