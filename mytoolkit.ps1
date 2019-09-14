@@ -3383,7 +3383,7 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 			write-host ('psrpa_compareBmp $rpa ' + "$x1 $y1 $x2 $y2 $outputfile")
 			write-host ('psrpa_isSameBmp $rpa ' + "$x1 $y1 $outputfile")
 			write-host ('psrpa_searchBmp $rpa ' + "$x1 $y1 $x2 $y2 $outputfile")
-			write-host ('psrpa_getBmpPosition $rpa ' + "$outputfile")
+			write-host ('psrpa_searchBmpPosition $rpa ' + "$outputfile")
 			$dstimg.Dispose()
 			$rect = $null
 			$script:psrpa_getBmpByClick_click_seq = 0
@@ -3525,15 +3525,15 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 }
 
 #
-# psrpa_getBmpPosition - Get position of bmpfile in whole screen
+# psrpa_searchBmpPosition - Get position of bmpfile in whole screen
 #
-function psrpa_getBmpPosition($rpa, $bmpfile){
+function psrpa_searchBmpPosition($rpa, $bmpfile){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_getBmpPosition rpa_object input.bmp"
+		write-output "Usage: psrpa_searchBmpPosition rpa_object input.bmp"
 		write-output "Get position of bmpfile in whole screen."
 		write-output 'Return @(left,top,width,height) when bmpfile is found in screen.'
 		write-output "ex."
-		write-output '    $pos = psrpa_getBmpPosition $rpa "icon.bmp"'
+		write-output '    $pos = psrpa_searchBmpPosition $rpa "icon.bmp"'
 		write-output '    if ($pos[0] < 0){'
 		write-output '        write-output "not found"'
 		write-output '    }else{'

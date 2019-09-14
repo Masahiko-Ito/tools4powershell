@@ -678,9 +678,9 @@ Compare rectangle starts with specified point and bmpfile.
 Usage: psrpa_searchBmp rpa_object left_x top_x right_x bottom_y input.bmp
 ```
 
-## psrpa_getBmpPosition - Get position of bmpfile in whole screen
+## psrpa_searchBmpPosition - Get position of bmpfile in whole screen
 ```
-Usage: psrpa_getBmpPosition rpa_object input.bmp
+Usage: psrpa_searchBmpPosition rpa_object input.bmp
 Get position of bmpfile in whole screen.
 ```
 
