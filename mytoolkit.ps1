@@ -2857,22 +2857,24 @@ function psrpa_showMouseByClick($rpa, $wait = 5){
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	Start-Sleep $wait
 
-	$pwidth = (
-		gwmi win32_videocontroller | 
-		out-string -stream | 
-		select-string "CurrentHorizontalResolution" | 
-		foreach{$_ -replace "^.*: *",""} | 
-		sort | 
-		select-object -Last 1
-	)
-	$pheight = (
-		gwmi win32_videocontroller | 
-		out-string -stream | 
-		select-string "CurrentVerticalResolution" | 
-		foreach{$_ -replace "^.*: *",""} | 
-		sort | 
-		select-object -Last 1
-	)
+#	$pwidth = (
+#		gwmi win32_videocontroller | 
+#		out-string -stream | 
+#		select-string "CurrentHorizontalResolution" | 
+#		foreach{$_ -replace "^.*: *",""} | 
+#		sort | 
+#		select-object -Last 1
+#	)
+	$pwidth = [System.Windows.Forms.Screen]::Allscreens.bounds.width
+#	$pheight = (
+#		gwmi win32_videocontroller | 
+#		out-string -stream | 
+#		select-string "CurrentVerticalResolution" | 
+#		foreach{$_ -replace "^.*: *",""} | 
+#		sort | 
+#		select-object -Last 1
+#	)
+	$pheight = [System.Windows.Forms.Screen]::Allscreens.bounds.height
 	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
 	$gr = [System.Drawing.Graphics]::FromImage($img)
 	$gr.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
@@ -3317,22 +3319,24 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	Start-Sleep $wait
 
-	$pwidth = (
-		gwmi win32_videocontroller | 
-		out-string -stream | 
-		select-string "CurrentHorizontalResolution" | 
-		foreach{$_ -replace "^.*: *",""} | 
-		sort | 
-		select-object -Last 1
-	)
-	$pheight = (
-		gwmi win32_videocontroller | 
-		out-string -stream | 
-		select-string "CurrentVerticalResolution" | 
-		foreach{$_ -replace "^.*: *",""} | 
-		sort | 
-		select-object -Last 1
-	)
+#	$pwidth = (
+#		gwmi win32_videocontroller | 
+#		out-string -stream | 
+#		select-string "CurrentHorizontalResolution" | 
+#		foreach{$_ -replace "^.*: *",""} | 
+#		sort | 
+#		select-object -Last 1
+#	)
+	$pwidth = [System.Windows.Forms.Screen]::Allscreens.bounds.width
+#	$pheight = (
+#		gwmi win32_videocontroller | 
+#		out-string -stream | 
+#		select-string "CurrentVerticalResolution" | 
+#		foreach{$_ -replace "^.*: *",""} | 
+#		sort | 
+#		select-object -Last 1
+#	)
+	$pheight = [System.Windows.Forms.Screen]::Allscreens.bounds.height
 	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
 	$gr = [System.Drawing.Graphics]::FromImage($img)
 	$gr.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
@@ -3436,8 +3440,8 @@ function psrpa_compareBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	$gr1.Dispose()
 	$gr2.Dispose()
 
-	return $isSame
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $isSame
 }
 
 #
@@ -3462,8 +3466,8 @@ function psrpa_isSameBmp($rpa, $x, $y, $bmpfile){
 	$img = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
 	$isSame = psrpa_compareBMP $rpa  $x  $y ([int]$x + [int]($img.Size.Width)) ([int]$y + [int]($img.Size.Height)) $bmpfile
 	$img.Dispose()
-	return $isSame
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $isSame
 }
 
 #
@@ -3489,20 +3493,22 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	$pwidth = (gwmi win32_videocontroller | 
-		out-string -stream | 
-		select-string "CurrentHorizontalResolution" | 
-		foreach{$_ -replace "^.*: *",""} | 
-		sort | 
-		select-object -Last 1
-	)
-	$pheight = (gwmi win32_videocontroller | 
-		out-string -stream | 
-		select-string "CurrentVerticalResolution" | 
-		foreach{$_ -replace "^.*: *",""} | 
-		sort | 
-		select-object -Last 1
-	)
+#	$pwidth = (gwmi win32_videocontroller | 
+#		out-string -stream | 
+#		select-string "CurrentHorizontalResolution" | 
+#		foreach{$_ -replace "^.*: *",""} | 
+#		sort | 
+#		select-object -Last 1
+#	)
+	$pwidth = [System.Windows.Forms.Screen]::Allscreens.bounds.width
+#	$pheight = (gwmi win32_videocontroller | 
+#		out-string -stream | 
+#		select-string "CurrentVerticalResolution" | 
+#		foreach{$_ -replace "^.*: *",""} | 
+#		sort | 
+#		select-object -Last 1
+#	)
+	$pheight = [System.Windows.Forms.Screen]::Allscreens.bounds.height
 	if ($x1 -eq $null -or $x1 -eq ""){
 		$x1 = 0
 	}
@@ -3520,8 +3526,8 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	$pos_array = [Psrpa]::SearchImage($scrimg, $fileimg)
 	$scrimg.Dispose()
 	$fileimg.Dispose()
-	return $pos_array
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $pos_array
 }
 
 #
@@ -3549,8 +3555,8 @@ function psrpa_searchBmpPosition($rpa, $bmpfile){
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$array = psrpa_searchBmp $rpa $null $null $null $null $bmpfile
 	$return_array = @($array[0], $array[1], ([int]$array[2] - [int]$array[0]), ([int]$array[3] - [int]$array[1]))
-	return $return_array
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $return_array
 }
 
 #
@@ -3561,25 +3567,27 @@ function psrpa_getBmpFromInnerFunction($rpa, $x1, $y1, $x2, $y2){
 		write-output "Sorry, internal usage only."
 		return
 	}
-###	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$width = $x2 - $x1
 	$height = $y2 - $y1
-	$pwidth = (
-		gwmi win32_videocontroller | 
-		out-string -stream | 
-		select-string "CurrentHorizontalResolution" | 
-		foreach{$_ -replace "^.*: *",""} | 
-		sort | 
-		select-object -Last 1
-	)
-	$pheight = (
-		gwmi win32_videocontroller | 
-		out-string -stream | 
-		select-string "CurrentVerticalResolution" | 
-		foreach{$_ -replace "^.*: *",""} | 
-		sort | 
-		select-object -Last 1
-	)
+#	$pwidth = (
+#		gwmi win32_videocontroller | 
+#		out-string -stream | 
+#		select-string "CurrentHorizontalResolution" | 
+#		foreach{$_ -replace "^.*: *",""} | 
+#		sort | 
+#		select-object -Last 1
+#	)
+	$pwidth = [System.Windows.Forms.Screen]::Allscreens.bounds.width
+#	$pheight = (
+#		gwmi win32_videocontroller | 
+#		out-string -stream | 
+#		select-string "CurrentVerticalResolution" | 
+#		foreach{$_ -replace "^.*: *",""} | 
+#		sort | 
+#		select-object -Last 1
+#	)
+	$pheight = [System.Windows.Forms.Screen]::Allscreens.bounds.height
 	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
 	$gr = [System.Drawing.Graphics]::FromImage($img)
 	$gr.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
@@ -3593,8 +3601,8 @@ function psrpa_getBmpFromInnerFunction($rpa, $x1, $y1, $x2, $y2){
 	$img.Dispose()
 	$gr.Dispose()
 	$rect = $null
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 	return $dstimg
-###	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3684,6 +3692,7 @@ function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name)
 	}elseif ($name -eq ""){
 		$name = "^$"
 	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
 	return ($element.FindAll(
 			[System.Windows.Automation.TreeScope]::SubTree,
 			[System.Windows.Automation.Condition]::TrueCondition) |
@@ -3691,7 +3700,6 @@ function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name)
 			$_.Current.LocalizedControlType -match $localizedcontroltype -and
 			$_.Current.Name -match $name}
 		)
-	Start-Sleep -Milliseconds $rpa["AfterWait"]
 }
 
 #
@@ -3716,8 +3724,8 @@ function psrpa_uia_getGeometry($rpa, $element){
 	$y = $element.Current.BoundingRectangle.Y
 	$width = $element.Current.BoundingRectangle.Width
 	$height = $element.Current.BoundingRectangle.Height
-	return @($x, $y, $width, $height)
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return @($x, $y, $width, $height)
 }
 
 #
@@ -3806,8 +3814,9 @@ function psrpa_uia_getText($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern).DocumentRange.getText(65535)
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern).DocumentRange.getText(65535)
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -3907,8 +3916,9 @@ function psrpa_uia_getGridClassName($rpa, $element, $row, $col){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.ClassName
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.ClassName
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -3927,8 +3937,9 @@ function psrpa_uia_getGridControlType($rpa, $element, $row, $col){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.LocalizedControlType
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.LocalizedControlType
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -3947,8 +3958,9 @@ function psrpa_uia_getGridName($rpa, $element, $row, $col){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.Name
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem($row, $col).current.Name
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -3965,8 +3977,9 @@ function psrpa_uia_getGridColumn($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.ColumnCount
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.ColumnCount
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -3983,8 +3996,9 @@ function psrpa_uia_getGridRow($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.RowCount
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).Current.RowCount
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4001,8 +4015,9 @@ function psrpa_uia_getGridItemColumn($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Column
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Column
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4019,8 +4034,9 @@ function psrpa_uia_getGridItemColumnSpan($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.ColumnSpan
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.ColumnSpan
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4037,8 +4053,9 @@ function psrpa_uia_getGridItemRow($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Row
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.Row
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4055,8 +4072,9 @@ function psrpa_uia_getGridItemRowSpan($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.RowSpan
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.GridItemPattern]::Pattern).Current.RowSpan
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4091,8 +4109,9 @@ function psrpa_uia_getRangeValue($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).Current.Value
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).Current.Value
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4109,8 +4128,9 @@ function psrpa_uia_getRangeValueMax($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).Current.Maximum
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).Current.Maximum
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4127,8 +4147,9 @@ function psrpa_uia_getRangeValueMin($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).Current.Minimum
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern).Current.Minimum
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4167,8 +4188,8 @@ function psrpa_uia_getScroll($rpa, $element){
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$hp = $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.HorizontalScrollPercent
 	$vp = $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.VerticalScrollPercent
-	return @($hp, $vp)
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return @($hp, $vp)
 }
 
 #
@@ -4185,8 +4206,9 @@ function psrpa_uia_getScrollHview($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.HorizontalViewSize
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.HorizontalViewSize
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4203,8 +4225,9 @@ function psrpa_uia_getScrollVview($rpa, $element){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	return $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.VerticalViewSize
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern).Current.VerticalViewSize
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
 
 #
@@ -4272,6 +4295,6 @@ function psrpa_uia_getPattern($rpa, $element, $pattern){
 	}elseif ($pattern -eq "ScrollItem"){
 		$ret = $element.GetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern)
 	}
-	return $ret
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
 }
