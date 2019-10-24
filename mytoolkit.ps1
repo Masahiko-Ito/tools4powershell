@@ -2865,7 +2865,7 @@ function psrpa_showMouseByClick($rpa, $wait = 5){
 #		sort | 
 #		select-object -Last 1
 #	)
-	$pwidth = [System.Windows.Forms.Screen]::Allscreens.bounds.width
+	$pwidth = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.width
 #	$pheight = (
 #		gwmi win32_videocontroller | 
 #		out-string -stream | 
@@ -2874,7 +2874,7 @@ function psrpa_showMouseByClick($rpa, $wait = 5){
 #		sort | 
 #		select-object -Last 1
 #	)
-	$pheight = [System.Windows.Forms.Screen]::Allscreens.bounds.height
+	$pheight = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.height
 	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
 	$gr = [System.Drawing.Graphics]::FromImage($img)
 	$gr.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
@@ -3327,7 +3327,7 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 #		sort | 
 #		select-object -Last 1
 #	)
-	$pwidth = [System.Windows.Forms.Screen]::Allscreens.bounds.width
+	$pwidth = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.width
 #	$pheight = (
 #		gwmi win32_videocontroller | 
 #		out-string -stream | 
@@ -3336,7 +3336,7 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 #		sort | 
 #		select-object -Last 1
 #	)
-	$pheight = [System.Windows.Forms.Screen]::Allscreens.bounds.height
+	$pheight = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.height
 	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
 	$gr = [System.Drawing.Graphics]::FromImage($img)
 	$gr.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
@@ -3500,7 +3500,7 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 #		sort | 
 #		select-object -Last 1
 #	)
-	$pwidth = [System.Windows.Forms.Screen]::Allscreens.bounds.width
+	$pwidth = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.width
 #	$pheight = (gwmi win32_videocontroller | 
 #		out-string -stream | 
 #		select-string "CurrentVerticalResolution" | 
@@ -3508,7 +3508,7 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 #		sort | 
 #		select-object -Last 1
 #	)
-	$pheight = [System.Windows.Forms.Screen]::Allscreens.bounds.height
+	$pheight = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.height
 	if ($x1 -eq $null -or $x1 -eq ""){
 		$x1 = 0
 	}
@@ -3578,7 +3578,7 @@ function psrpa_getBmpFromInnerFunction($rpa, $x1, $y1, $x2, $y2){
 #		sort | 
 #		select-object -Last 1
 #	)
-	$pwidth = [System.Windows.Forms.Screen]::Allscreens.bounds.width
+	$pwidth = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.width
 #	$pheight = (
 #		gwmi win32_videocontroller | 
 #		out-string -stream | 
@@ -3587,7 +3587,7 @@ function psrpa_getBmpFromInnerFunction($rpa, $x1, $y1, $x2, $y2){
 #		sort | 
 #		select-object -Last 1
 #	)
-	$pheight = [System.Windows.Forms.Screen]::Allscreens.bounds.height
+	$pheight = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.height
 	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
 	$gr = [System.Drawing.Graphics]::FromImage($img)
 	$gr.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
@@ -3629,6 +3629,7 @@ function psrpa_uia_show($rpa){
 			[System.Windows.Automation.Condition]::TrueCondition) |
 		%{
 			if ($top){
+				'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
 				"ClassName = " + $_.Current.ClassName
 #				"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
 				"LocalizedControlType = " + $_.Current.LocalizedControlType
@@ -3640,6 +3641,7 @@ function psrpa_uia_show($rpa){
 				}
 				$top = $false
 			}else{
+				'    "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
 				"    ClassName = " + $_.Current.ClassName
 #				"    ControlType.Id = " + $_.Current.ControlType.Id.tostring()
 				"    LocalizedControlType = " + $_.Current.LocalizedControlType
