@@ -684,6 +684,24 @@ Usage: psrpa_searchBmpPosition rpa_object input.bmp
 Get position of bmpfile in whole screen.
 ```
 
+## psrpa_waitBmp - Wait appearnce of specified bmp
+```
+Usage: psrpa_waitBmp rpa_object bmp_file
+Wait appearnce of specified bmp.
+```
+
+## psrpa_waitBmpVanished - Wait vanishing of specified bmp
+```
+Usage: psrpa_waitBmpVanished rpa_object bmp_file
+Wait vanishing of specified bmp.
+```
+
+## psrpa_clickBmp - Click specified bmp
+```
+Usage: psrpa_clickBmp rpa_object bmp_file button click
+Click specified bmp.
+```
+
 ## psrpa_uia_show - Show all ui-automation element information
 ```
 Usage: psrpa_uia_show rpa_object

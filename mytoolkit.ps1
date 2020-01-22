@@ -3554,7 +3554,11 @@ function psrpa_searchBmpPosition($rpa, $bmpfile){
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$array = psrpa_searchBmp $rpa $null $null $null $null $bmpfile
-	$return_array = @($array[0], $array[1], ([int]$array[2] - [int]$array[0]), ([int]$array[3] - [int]$array[1]))
+	if ($array[0] -ge 0){
+		$return_array = @($array[0], $array[1], ([int]$array[2] - [int]$array[0]), ([int]$array[3] - [int]$array[1]))
+	}else{
+		$return_array = @(-1, -1, -1, -1)
+	}
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 	return $return_array
 }
@@ -3603,6 +3607,76 @@ function psrpa_getBmpFromInnerFunction($rpa, $x1, $y1, $x2, $y2){
 	$rect = $null
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 	return $dstimg
+}
+
+#
+# psrpa_waitBmp - Wait appearnce of specified bmp
+#
+function psrpa_waitBmp($rpa, $bmpfile){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_waitBmp rpa_object bmp_file"
+		write-output "Wait appearnce of specified bmp."
+		write-output ""
+		write-output "ex."
+		write-output '    psrpa_waitBmp $rpa "icon.bmp"'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$pos = psrpa_searchBmpPosition $rpa $bmpfile
+	while ($pos[0] -lt 0){
+		sleep 1
+		$pos = psrpa_searchBmpPosition $rpa $bmpfile
+	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $pos
+}
+
+#
+# psrpa_waitBmpVanished - Wait vanishing of specified bmp
+#
+function psrpa_waitBmpVanished($rpa, $bmpfile){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_waitBmpVanished rpa_object bmp_file"
+		write-output "Wait vanishing of specified bmp."
+		write-output ""
+		write-output "ex."
+		write-output '    psrpa_waitBmpVanished $rpa "icon.bmp"'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$pos = psrpa_searchBmpPosition $rpa $bmpfile
+	while ($pos[0] -ge 0){
+		sleep 1
+		$pos = psrpa_searchBmpPosition $rpa $bmpfile
+	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $pos
+}
+
+#
+# psrpa_clickBmp - Click specified bmp
+#
+function psrpa_clickBmp($rpa, $bmpfile, $button, $click){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_clickBmp rpa_object bmp_file button click"
+		write-output "Click specified bmp."
+		write-output ""
+		write-output "ex."
+		write-output '    psrpa_clickBmp $rpa "icon.bmp" "left" "click"'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	psrpa_setMouse $rpa 0 0
+	$pos = psrpa_waitBmp $rpa $bmpfile
+	$left, $top, $width, $height = $pos
+	$x = $left + ($width / 2)
+	$y = $top + ($height / 2)
+	psrpa_clickPoint $rpa $x $y $button $click
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $pos
 }
 
 #
