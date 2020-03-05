@@ -1214,7 +1214,7 @@ function psconreadline(){
 #     $inObj = psopen -r "input.txt"
 #     $outObj = psopen -w "output.txt"
 #     $read_length = $inObj.BaseStream.Read($arrayByte, 0, $arrayByte.length)
-#     while ($read_length > 0){
+#     while ($read_length -gt 0){
 #         $outObj.BaseStream.Write($arrayByte, 0, $read_length)
 #         $read_length = $inObj.BaseStream.Read($arrayByte, 0, $arrayByte.length)
 #     }
@@ -1244,7 +1244,7 @@ function psopen(){
 				write-output '  $inObj = psopen -r "input.txt"'
 				write-output '  $outObj = psopen -w "output.txt"'
 				write-output '  $read_length = $inObj.BaseStream.Read($arrayByte, 0, $arrayByte.length)'
-				write-output '  while ($read_length > 0){'
+				write-output '  while ($read_length -gt 0){'
 				write-output '      $outObj.BaseStream.Write($arrayByte, 0, $read_length)'
 				write-output '      $read_length = $inObj.BaseStream.Read($arrayByte, 0, $arrayByte.length)'
 				write-output '  }'
@@ -3480,7 +3480,7 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 		write-output 'Return @(left,top,right,bottom) when bmpfile is found in screen.'
 		write-output "ex."
 		write-output '    $pos = psrpa_searchBmp $rpa $null $null $null $null "icon.bmp"'
-		write-output '    if ($pos[0] < 0){'
+		write-output '    if ($pos[0] -lt 0){'
 		write-output '        write-output "not found"'
 		write-output '    }else{'
 		write-output '        write-output "found"'
@@ -3540,7 +3540,7 @@ function psrpa_searchBmpPosition($rpa, $bmpfile){
 		write-output 'Return @(left,top,width,height) when bmpfile is found in screen.'
 		write-output "ex."
 		write-output '    $pos = psrpa_searchBmpPosition $rpa "icon.bmp"'
-		write-output '    if ($pos[0] < 0){'
+		write-output '    if ($pos[0] -lt 0){'
 		write-output '        write-output "not found"'
 		write-output '    }else{'
 		write-output '        write-output "found"'
