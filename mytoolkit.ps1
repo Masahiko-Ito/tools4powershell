@@ -2642,7 +2642,7 @@ function psrpa_init{
 				public int mouseData;
 				public int dwFlags;
 				public int time;
-				public int dwExtraInfo;
+				public IntPtr dwExtraInfo;
 			};
 			[StructLayout(LayoutKind.Sequential)]
 			public struct KEYBDINPUT {
@@ -2650,7 +2650,7 @@ function psrpa_init{
 				public short wScan;
 				public int dwFlags;
 				public int time;
-				public int dwExtraInfo;
+				public IntPtr dwExtraInfo;
 			};
 			[StructLayout(LayoutKind.Sequential)]
 			public struct HARDWAREINPUT {
@@ -2658,20 +2658,24 @@ function psrpa_init{
 				public short wParamL;
 				public short wParamH;
 			};
-			[StructLayout(LayoutKind.Explicit)]
+			[StructLayout(LayoutKind.Sequential)]
 			public struct INPUT {
-				[FieldOffset(0)]
 				public int type;
-				[FieldOffset(4)]
+				public MKH_INPUT ui;
+			};
+			[StructLayout(LayoutKind.Explicit)]
+			public struct MKH_INPUT {
+				[FieldOffset(0)]
 				public MOUSEINPUT no;
-				[FieldOffset(4)]
+				[FieldOffset(0)]
 				public KEYBDINPUT ki;
-				[FieldOffset(4)]
+				[FieldOffset(0)]
 				public HARDWAREINPUT hi;
 			};
 
 			[DllImport("user32.dll")]
-			public extern static void SendInput(int nInputs, ref INPUT pInputs, int cbsize);
+			// public extern static void SendInput(int nInputs, ref INPUT pInputs, int cbsize);
+			public extern static uint SendInput(uint nInputs, INPUT[] pInputs, int cbsize);
 			[DllImport("user32.dll", EntryPoint = "MapVirtualKeyA")]
 			public extern static int MapVirtualKey(int wCode, int wMapType);
 			public const int INPUT_KEYBOARD = 1;
@@ -2680,19 +2684,19 @@ function psrpa_init{
 			public const int KEYEVENTF_EXTENDEDKEY = 0x1;
 			// public void Send(Keys key, bool isEXTEND){
 			public static void Send(short key, bool isDown, bool isEXTEND){
-				INPUT inp = new INPUT();
+				INPUT[] inp = new INPUT[1];
 
-				inp.type = INPUT_KEYBOARD;
-				inp.ki.wVk = (short)key;
-				inp.ki.wScan = (short)MapVirtualKey(inp.ki.wVk, 0);
-				inp.ki.time = 0;
-				inp.ki.dwExtraInfo = 0;
+				inp[0].type = INPUT_KEYBOARD;
+				inp[0].ui.ki.wVk = (short)key;
+				inp[0].ui.ki.wScan = (short)MapVirtualKey(inp[0].ui.ki.wVk, 0);
+				inp[0].ui.ki.time = 0;
+				inp[0].ui.ki.dwExtraInfo = IntPtr.Zero;
 				if (isDown){
-					inp.ki.dwFlags = ((isEXTEND)?(KEYEVENTF_EXTENDEDKEY):0x0)|KEYEVENTF_KEYDOWN;
+					inp[0].ui.ki.dwFlags = ((isEXTEND)?(KEYEVENTF_EXTENDEDKEY):0x0)|KEYEVENTF_KEYDOWN;
 				}else{
-					inp.ki.dwFlags = ((isEXTEND)?(KEYEVENTF_EXTENDEDKEY):0x0)|KEYEVENTF_KEYUP;
+					inp[0].ui.ki.dwFlags = ((isEXTEND)?(KEYEVENTF_EXTENDEDKEY):0x0)|KEYEVENTF_KEYUP;
 				}
-				SendInput(1, ref inp, Marshal.SizeOf(inp));
+				SendInput(1, inp, Marshal.SizeOf(inp[0]));
 			}
 			public static AutomationElement GetRootWindow(){ 
 				return AutomationElement.RootElement; 
