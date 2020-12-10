@@ -3,17 +3,22 @@
 #
 function pscat {
 	begin{
+		$enc = "Default"
 		$numberSw = "off"
 		$number = 0
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "Usage: pscat [-h|--help] [-n] [input ...]"
+				write-output "Usage: pscat [-h|--help] [-e encoding] [-n] [input ...]"
 				write-output "Concatenate input(s), or standard input, to standard output."
 				write-output ""
-				write-output "  -n        number all output lines"
+				write-output "  -e encoding       encoding for get-content called internally"
+				write-output "  -n                number all output lines"
 				return
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}elseif ($args[$i] -eq "-n"){
 				$numberSw = "on"
 			}else{
@@ -26,9 +31,9 @@ function pscat {
 		if ($filesIndex -gt 0){
 			for ($i = 0; $i -lt $filesIndex; $i++){
 				if ($numberSw -eq "off"){
-					get-content $files[$i]
+					get-content -encoding $enc $files[$i]
 				}else{
-					get-content $files[$i] |
+					get-content -encoding $enc $files[$i] |
 					foreach-object {
 						$number++
 						$out = $number.tostring() + " " + $_
@@ -57,22 +62,27 @@ function psgrep {
 	begin{
 		$ignorecaseSw = "off"
 		$invertSw = "off"
+		$enc = "Default"
 		$string = ""
 		$stringSw = "off"
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "Usage: psgrep [-h|--help] [-v] [-i] regex [input ...]"
+				write-output "Usage: psgrep [-h|--help] [-v] [-i] [-e encoding] regex [input ...]"
 				write-output "Search for regex in each input or standard input."
 				write-output ""
-				write-output "  -v        select non-matching lines"
-				write-output "  -i        ignore case distinctions"
+				write-output "  -v                 select non-matching lines"
+				write-output "  -i                 ignore case distinctions"
+				write-output "  -e encoding        encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-v"){
 				$invertSw = "on"
 			}elseif ($args[$i] -eq "-i"){
 				$ignorecaseSw = "on"
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}else{
 				if ($stringSw -eq "off"){
 					$string = $args[$i]
@@ -88,7 +98,7 @@ function psgrep {
 		if ($invertSw -eq "off"){
 			if ($filesIndex -gt 0){
 				for ($i = 0; $i -lt $filesIndex; $i++){
-					get-content $files[$i] |
+					get-content -encoding $enc $files[$i] |
 					foreach-object {
 						if ($ignorecaseSw -eq "off"){
 							if ($_ -cmatch $string){
@@ -125,7 +135,7 @@ function psgrep {
 		}else{
 			if ($filesIndex -gt 0){
 				for ($i = 0; $i -lt $filesIndex; $i++){
-					get-content $files[$i] |
+					get-content -encoding $enc $files[$i] |
 					foreach-object {
 						if ($ignorecaseSw -eq "off"){
 							if ($_ -cnotmatch $string){
@@ -171,6 +181,7 @@ function psgrep {
 function pswcl {
 	begin{
 		$helpSw = $false
+		$enc = "Default"
 		$number = 0
 		$total_number = 0
 		$files = @{}
@@ -178,9 +189,14 @@ function pswcl {
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "Usage: pswcl [-h|--help] [input ...]"
+				write-output "Usage: pswcl [-h|--help] [-e encoding] [input ...]"
 				write-output "Print newline counts for each input, and a total line if more than one input is specified."
+				write-output ""
+				write-output "  -e encoding        encoding for get-content called internally"
 				return
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}else{
 				$files[$filesIndex] = $args[$i]
 				$filesIndex++
@@ -191,7 +207,7 @@ function pswcl {
 		if ($filesIndex -gt 0){
 			for ($i = 0; $i -lt $filesIndex; $i++){
 				$number = 0
-				get-content $files[$i] |
+				get-content -encoding $enc $files[$i] |
 				foreach-object {
 					$number++
 				}
@@ -226,13 +242,19 @@ function pssed {
 	begin{
 		$before_string = $null
 		$after_string = $null
+		$enc = "Default"
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "Usage: pssed [-h|--help] regex string [input ...]"
+				write-output "Usage: pssed [-h|--help] [-e encoding] regex string [input ...]"
 				write-output "For each substring matching regex in each lines from input, substitute the string."
+				write-output ""
+				write-output "  -e encoding        encoding for get-content called internally"
 				return
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}elseif ($before_string -eq $null){
 				$before_string = $args[$i]
 			}elseif ($after_string -eq $null){
@@ -246,7 +268,7 @@ function pssed {
 	process{
 		if ($filesIndex -gt 0){
 			for ($i = 0; $i -lt $filesIndex; $i++){
-				get-content $files[$i] |
+				get-content -encoding $enc $files[$i] |
 				foreach-object {
 					$out = $_ -replace $before_string, $after_string
 					write-output $out
@@ -272,15 +294,19 @@ function pshead {
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "Usage: pshead [-h|--help] [-l line_number] [input ...]"
+				write-output "Usage: pshead [-h|--help] [-l line_number] [-e encoding] [input ...]"
 				write-output "Print the first 10 lines of each input to standard output."
 				write-output "With no input, read standard input."
 				write-output ""
 				write-output "  -l line_number        print the first line_number lines instead of the first 10"
+				write-output "  -e encoding           encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-l"){
 				$i++
 				$line = $args[$i]
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}else{
 				$files[$filesIndex] = $args[$i]
 				$filesIndex++
@@ -291,7 +317,7 @@ function pshead {
 		if ($filesIndex -gt 0){
 			for ($i = 0; $i -lt $filesIndex; $i++){
 				$wline = 0
-				get-content $files[$i] |
+				get-content -encoding $enc $files[$i] |
 				select-object -first $line
 #				foreach-object {
 #					if ($wline -lt $line){
@@ -323,20 +349,25 @@ function pstail {
 		$helpSw = $false
 		$tmpfile = [System.IO.Path]::GetTempFileName()
 		$line = 10
+		$enc = "Default"
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "Usage: pstail [-h|--help] [-l line_number] [input ...]"
+				write-output "Usage: pstail [-h|--help] [-l line_number] [-e encoding] [input ...]"
 				write-output "Print the last 10 lines of each input to standard output."
 				write-output "With no input, read standard input."
 				write-output ""
 				write-output "  -l line_number        print the last line_number lines instead of the last 10"
+				write-output "  -e encoding           encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-l"){
 				$i++
 				$line = $args[$i]
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}else{
 				$files[$filesIndex] = $args[$i]
 				$filesIndex++
@@ -346,7 +377,7 @@ function pstail {
 	process{
 		if ($filesIndex -gt 0){
 			for ($i = 0; $i -lt $filesIndex; $i++){
-				get-content $files[$i] |
+				get-content -encoding $enc $files[$i] |
 				select-object -last $line
 			}
 		}else{
@@ -356,7 +387,7 @@ function pstail {
 	end{
 		if ($helpSw -eq $false){
 			if ($filesIndex -eq 0){
-				get-content $tmpfile |
+				get-content -encoding $enc $tmpfile |
 				select-object -last $line
 				remove-item $tmpfile
 			}
@@ -370,16 +401,18 @@ function pstail {
 function pscut {
 	begin{
 		$delimiter = ","
+		$enc = "Default"
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "Usage: pscut [-h|--help] [-d ""delimiter""] -i ""index,..."" [input ...]"
+				write-output "Usage: pscut [-h|--help] [-d ""delimiter""] -i ""index,..."" [-e encoding] [input ...]"
 				write-output "Print selected parts of lines from each input to standard output."
 				write-output "With no input, read standard input."
 				write-output ""
 				write-output "  -d ""delimiter""        use ""delimiter"" instead of "","" for field delimiter"
 				write-output "  -i ""index,...""        select only these fields(0 origin)"
+				write-output "  -e encoding             encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-d"){
 				$i++
@@ -387,6 +420,9 @@ function pscut {
 			}elseif ($args[$i] -eq "-i"){
 				$i++
 				$cols = $args[$i] -split ","
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}else{
 				$files[$filesIndex] = $args[$i]
 				$filesIndex++
@@ -396,7 +432,7 @@ function pscut {
 	process{
 		if ($filesIndex -gt 0){
 			for ($i = 0; $i -lt $filesIndex; $i++){
-				get-content $files[$i] |
+				get-content -encoding $enc $files[$i] |
 				foreach-object {
 					$out = ""
 					foreach ($j in $cols){
@@ -463,6 +499,7 @@ function psuniq {
 		$helpSw = $false
 		$oldrec = $null
 		$count = 0
+		$enc = "Default"
 		$duplicateSw = "off"
 		$countSw = "off"
 		$files = @{}
@@ -470,18 +507,22 @@ function psuniq {
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "Usage: psuniq [-h|--help] [-d|-c] [input ...]"
+				write-output "Usage: psuniq [-h|--help] [-d|-c] [-e encoding] [input ...]"
 				write-output "Filter adjacent matching lines from input (or standard input),"
 				write-output "writing to standard output."
 				write-output "With no options, matching lines are merged to the first occurrence."
 				write-output ""
-				write-output "  -d        only print duplicate lines"
-				write-output "  -c        prefix lines by the number of occurrences"
+				write-output "  -d                 only print duplicate lines"
+				write-output "  -c                 prefix lines by the number of occurrences"
+v				write-output "  -e encoding        encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-d"){
 				$duplicateSw = "on"
 			}elseif ($args[$i] -eq "-c"){
 				$countSw = "on"
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}else{
 				$files[$filesIndex] = $args[$i]
 				$filesIndex++
@@ -493,7 +534,7 @@ function psuniq {
 			for ($i = 0; $i -lt $filesIndex; $i++){
 				$oldrec = $null
 				$count = 0
-				get-content $files[$i] |
+				get-content -encoding $enc $files[$i] |
 				foreach-object {
 					if ($duplicateSw -eq "on"){
 						if ($oldrec -eq $null){
@@ -678,6 +719,39 @@ function psjoin {
 		    $encoding1 -eq "utf-8n" -or 
 		    $encoding1 -eq "UTF-8N"){
 			$enc1 = New-Object System.Text.UTF8Encoding $False
+		}elseif ($encoding1 -eq "utf8" -or 
+			  $encoding1 -eq "UTF8" -or 
+			  $encoding1 -eq "utf-8" -or 
+			  $encoding1 -eq "UTF-8"){
+			$enc1 = New-Object System.Text.UTF8Encoding $True
+		}elseif ($encoding1 -eq "utf16n" -or 
+			  $encoding1 -eq "UTF16N" -or 
+			  $encoding1 -eq "utf-16n" -or 
+			  $encoding1 -eq "UTF-16N" -or
+			  $encoding1 -eq "utf16len" -or 
+			  $encoding1 -eq "UTF16LEN" -or 
+			  $encoding1 -eq "utf-16len" -or 
+			  $encoding1 -eq "UTF-16LEN"){
+			$enc1 = New-Object System.Text.UnicodeEncoding $False,$False
+		}elseif ($encoding1 -eq "utf16" -or 
+			  $encoding1 -eq "UTF16" -or 
+			  $encoding1 -eq "utf-16" -or 
+			  $encoding1 -eq "UTF-16" -or
+			  $encoding1 -eq "utf16le" -or 
+			  $encoding1 -eq "UTF16LE" -or 
+			  $encoding1 -eq "utf-16le" -or 
+			  $encoding1 -eq "UTF-16LE"){
+			$enc1 = New-Object System.Text.UnicodeEncoding $False,$True
+		}elseif ($encoding1 -eq "utf16ben" -or 
+			  $encoding1 -eq "UTF16BEN" -or 
+			  $encoding1 -eq "utf-16ben" -or 
+			  $encoding1 -eq "UTF-16BEN"){
+			$enc1 = New-Object System.Text.UnicodeEncoding $True,$False
+		}elseif ($encoding1 -eq "utf16be" -or 
+			  $encoding1 -eq "UTF16BE" -or 
+			  $encoding1 -eq "utf-16be" -or 
+			  $encoding1 -eq "UTF-16BE"){
+			$enc1 = New-Object System.Text.UnicodeEncoding $True,$True
 		}else{
 			$enc1 = [Text.Encoding]::GetEncoding($encoding1)
 		}
@@ -687,8 +761,41 @@ function psjoin {
 		    $encoding2 -eq "utf-8n" -or 
 		    $encoding2 -eq "UTF-8N"){
 			$enc2 = New-Object System.Text.UTF8Encoding $False
+		}elseif ($encoding2 -eq "utf8" -or 
+			  $encoding2 -eq "UTF8" -or 
+			  $encoding2 -eq "utf-8" -or 
+			  $encoding2 -eq "UTF-8"){
+			$enc2 = New-Object System.Text.UTF8Encoding $True
+		}elseif ($encoding2 -eq "utf16n" -or 
+			  $encoding2 -eq "UTF16N" -or 
+			  $encoding2 -eq "utf-16n" -or 
+			  $encoding2 -eq "UTF-16N" -or
+			  $encoding2 -eq "utf16len" -or 
+			  $encoding2 -eq "UTF16LEN" -or 
+			  $encoding2 -eq "utf-16len" -or 
+			  $encoding2 -eq "UTF-16LEN"){
+			$enc2 = New-Object System.Text.UnicodeEncoding $False,$False
+		}elseif ($encoding2 -eq "utf16" -or 
+			  $encoding2 -eq "UTF16" -or 
+			  $encoding2 -eq "utf-16" -or 
+			  $encoding2 -eq "UTF-16" -or
+			  $encoding2 -eq "utf16le" -or 
+			  $encoding2 -eq "UTF16LE" -or 
+			  $encoding2 -eq "utf-16le" -or 
+			  $encoding2 -eq "UTF-16LE"){
+			$enc2 = New-Object System.Text.UnicodeEncoding $False,$True
+		}elseif ($encoding2 -eq "utf16ben" -or 
+			  $encoding2 -eq "UTF16BEN" -or 
+			  $encoding2 -eq "utf-16ben" -or 
+			  $encoding2 -eq "UTF-16BEN"){
+			$enc2 = New-Object System.Text.UnicodeEncoding $True,$False
+		}elseif ($encoding2 -eq "utf16be" -or 
+			  $encoding2 -eq "UTF16BE" -or 
+			  $encoding2 -eq "utf-16be" -or 
+			  $encoding2 -eq "UTF-16BE"){
+			$enc2 = New-Object System.Text.UnicodeEncoding $True,$True
 		}else{
-			$enc2 = [Text.Encoding]::GetEncoding($encoding1)
+			$enc2 = [Text.Encoding]::GetEncoding($encoding2)
 		}
 		$oIn2 = New-Object System.IO.StreamReader($files[1],$enc2)
 	}
@@ -852,17 +959,20 @@ function psxls2csv {
 		$strInput = ""
 		$sheet = 1
 		$tabSw = "off"
+		$enc = "Default"
 		$strOutput = ""
 		$files = @{}
 		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "Usage: psxls2csv [-h|--help] [-i input] [-s sheet] [-t] [-o [output|-]]"
+				write-output "Usage: psxls2csv [-h|--help] [-i input] [-s sheet] [-t] [-e encoding] [-o [output|-]]"
 				write-output "Convert specified excel sheet to csv or tsv with -t option."
 				write-output "If input is not specified, all excel files in current directory will be converted."
 				write-output "If output is not specified, input will be converted into same filename, but with extention "".csv"" or "".txt""."
 				write-output "If ""-"" is specified for ""-o"" option, input will be converted into stdout."
+				write-output ""
+				write-output "  -e encoding       encoding for get-content called internally"
 				write-output ""
 				write-output "BUGS"
 				write-output "  If input is not specified and output is specified, only last excel sheet in current directory will remain in output file."
@@ -878,6 +988,9 @@ function psxls2csv {
 			}elseif ($args[$i] -eq "-o"){
 				$i++
 				$strOutput = $args[$i]
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}else{
 				$files[$filesIndex] = $args[$i]
 				$filesIndex++
@@ -923,11 +1036,11 @@ function psxls2csv {
 				$objExcel.Quit()
 #				if ($tabSw -eq "on"){
 #					$TmpOutPath = [System.IO.Path]::GetTempFileName()
-#					Get-Content $OutPath | Out-File -Encoding default $TmpOutPath 
+#					Get-Content -encoding $enc $OutPath | Out-File -Encoding default $TmpOutPath 
 #					Move-Item -Force -path $TmpOutPath -destination $OutPath
 #				}
 				if ($strOutput -eq "-"){
-					get-content $OutPath
+					get-content -encoding $enc $OutPath
 					remove-item $OutPath
 				}
 			}
@@ -967,11 +1080,11 @@ function psxls2csv {
 			$objExcel.Quit()
 #			if ($tabSw -eq "on"){
 #				$TmpOutPath = [System.IO.Path]::GetTempFileName()
-#				Get-Content $OutPath | Out-File -Encoding default $TmpOutPath 
+#				Get-Content -encoding $enc $OutPath | Out-File -Encoding default $TmpOutPath 
 #				Move-Item -Force -path $TmpOutPath -destination $OutPath
 #			}
 			if ($strOutput -eq "-"){
-				get-content $OutPath
+				get-content -encoding $enc $OutPath
 				remove-item $OutPath
 			}
 		}
@@ -1294,6 +1407,39 @@ function psopen(){
 			    $encoding -eq "utf-8n" -or 
 			    $encoding -eq "UTF-8N"){
 				$enc = New-Object System.Text.UTF8Encoding $False
+			}elseif ($encoding -eq "utf8" -or 
+				  $encoding -eq "UTF8" -or 
+				  $encoding -eq "utf-8" -or 
+				  $encoding -eq "UTF-8"){
+				$enc = New-Object System.Text.UTF8Encoding $True
+			}elseif ($encoding -eq "utf16n" -or 
+				  $encoding -eq "UTF16N" -or 
+				  $encoding -eq "utf-16n" -or 
+				  $encoding -eq "UTF-16N" -or
+				  $encoding -eq "utf16len" -or 
+				  $encoding -eq "UTF16LEN" -or 
+				  $encoding -eq "utf-16len" -or 
+				  $encoding -eq "UTF-16LEN"){
+				$enc = New-Object System.Text.UnicodeEncoding $False,$False
+			}elseif ($encoding -eq "utf16" -or 
+				  $encoding -eq "UTF16" -or 
+				  $encoding -eq "utf-16" -or 
+				  $encoding -eq "UTF-16" -or
+				  $encoding -eq "utf16le" -or 
+				  $encoding -eq "UTF16LE" -or 
+				  $encoding -eq "utf-16le" -or 
+				  $encoding -eq "UTF-16LE"){
+				$enc = New-Object System.Text.UnicodeEncoding $False,$True
+			}elseif ($encoding -eq "utf16ben" -or 
+				  $encoding -eq "UTF16BEN" -or 
+				  $encoding -eq "utf-16ben" -or 
+				  $encoding -eq "UTF-16BEN"){
+				$enc = New-Object System.Text.UnicodeEncoding $True,$False
+			}elseif ($encoding -eq "utf16be" -or 
+				  $encoding -eq "UTF16BE" -or 
+				  $encoding -eq "utf-16be" -or 
+				  $encoding -eq "UTF-16BE"){
+				$enc = New-Object System.Text.UnicodeEncoding $True,$True
 			}else{
 				$enc = [Text.Encoding]::GetEncoding($encoding)
 			}
@@ -2183,6 +2329,39 @@ Function pssock_open($addr, $port, $encoding = 0){
 	    $encoding -eq "utf-8n" -or 
 	    $encoding -eq "UTF-8N"){
 		$enc = New-Object System.Text.UTF8Encoding $False
+	}elseif ($encoding -eq "utf8" -or 
+		  $encoding -eq "UTF8" -or 
+		  $encoding -eq "utf-8" -or 
+		  $encoding -eq "UTF-8"){
+		$enc = New-Object System.Text.UTF8Encoding $True
+	}elseif ($encoding -eq "utf16n" -or 
+		  $encoding -eq "UTF16N" -or 
+		  $encoding -eq "utf-16n" -or 
+		  $encoding -eq "UTF-16N" -or
+		  $encoding -eq "utf16len" -or 
+		  $encoding -eq "UTF16LEN" -or 
+		  $encoding -eq "utf-16len" -or 
+		  $encoding -eq "UTF-16LEN"){
+		$enc = New-Object System.Text.UnicodeEncoding $False,$False
+	}elseif ($encoding -eq "utf16" -or 
+		  $encoding -eq "UTF16" -or 
+		  $encoding -eq "utf-16" -or 
+		  $encoding -eq "UTF-16" -or
+		  $encoding -eq "utf16le" -or 
+		  $encoding -eq "UTF16LE" -or 
+		  $encoding -eq "utf-16le" -or 
+		  $encoding -eq "UTF-16LE"){
+		$enc = New-Object System.Text.UnicodeEncoding $False,$True
+	}elseif ($encoding -eq "utf16ben" -or 
+		  $encoding -eq "UTF16BEN" -or 
+		  $encoding -eq "utf-16ben" -or 
+		  $encoding -eq "UTF-16BEN"){
+		$enc = New-Object System.Text.UnicodeEncoding $True,$False
+	}elseif ($encoding -eq "utf16be" -or 
+		  $encoding -eq "UTF16BE" -or 
+		  $encoding -eq "utf-16be" -or 
+		  $encoding -eq "UTF-16BE"){
+		$enc = New-Object System.Text.UnicodeEncoding $True,$True
 	}else{
 		$enc = [Text.Encoding]::GetEncoding($encoding)
 	}
@@ -2358,6 +2537,39 @@ Function pssock_accept($server, $encoding = 0){
 	    $encoding -eq "utf-8n" -or 
 	    $encoding -eq "UTF-8N"){
 		$enc = New-Object System.Text.UTF8Encoding $False
+	}elseif ($encoding -eq "utf8" -or 
+		  $encoding -eq "UTF8" -or 
+		  $encoding -eq "utf-8" -or 
+		  $encoding -eq "UTF-8"){
+		$enc = New-Object System.Text.UTF8Encoding $True
+	}elseif ($encoding -eq "utf16n" -or 
+		  $encoding -eq "UTF16N" -or 
+		  $encoding -eq "utf-16n" -or 
+		  $encoding -eq "UTF-16N" -or
+		  $encoding -eq "utf16len" -or 
+		  $encoding -eq "UTF16LEN" -or 
+		  $encoding -eq "utf-16len" -or 
+		  $encoding -eq "UTF-16LEN"){
+		$enc = New-Object System.Text.UnicodeEncoding $False,$False
+	}elseif ($encoding -eq "utf16" -or 
+		  $encoding -eq "UTF16" -or 
+		  $encoding -eq "utf-16" -or 
+		  $encoding -eq "UTF-16" -or
+		  $encoding -eq "utf16le" -or 
+		  $encoding -eq "UTF16LE" -or 
+		  $encoding -eq "utf-16le" -or 
+		  $encoding -eq "UTF-16LE"){
+		$enc = New-Object System.Text.UnicodeEncoding $False,$True
+	}elseif ($encoding -eq "utf16ben" -or 
+		  $encoding -eq "UTF16BEN" -or 
+		  $encoding -eq "utf-16ben" -or 
+		  $encoding -eq "UTF-16BEN"){
+		$enc = New-Object System.Text.UnicodeEncoding $True,$False
+	}elseif ($encoding -eq "utf16be" -or 
+		  $encoding -eq "UTF16BE" -or 
+		  $encoding -eq "utf-16be" -or 
+		  $encoding -eq "UTF-16BE"){
+		$enc = New-Object System.Text.UnicodeEncoding $True,$True
 	}else{
 		$enc = [Text.Encoding]::GetEncoding($encoding)
 	}
