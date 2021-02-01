@@ -289,6 +289,7 @@ function pssed {
 function pshead {
 	begin{
 		$line = 10
+		$enc = "Default"
 		$wline = 0
 		$files = @{}
 		$filesIndex = 0
@@ -435,22 +436,28 @@ function pscut {
 				get-content -encoding $enc $files[$i] |
 				foreach-object {
 					$out = ""
-					foreach ($j in $cols){
-						if ($out -eq ""){
-							$out = $_.split($delimiter)[$j]
-						}else{
-							$out = $out + $delimiter + $_.split($delimiter)[$j]
+					if ($_ -ne $null){
+						$firstSw = $true
+						foreach ($j in $cols){
+							if ($firstSw){
+								$out = $_.split($delimiter)[$j]
+								$firstSw = $false
+							}else{
+								$out = $out + $delimiter + $_.split($delimiter)[$j]
+							}
 						}
+						write-output $out
 					}
-					write-output $out
 				}
 			}
 		}else{
 			$out = ""
 			if ($_ -ne $null){
+				$firstSw = $true
 				foreach ($j in $cols){
-					if ($out -eq ""){
+					if ($firstSw){
 						$out = $_.split($delimiter)[$j]
+						$firstSw = $false
 					}else{
 						$out = $out + $delimiter + $_.split($delimiter)[$j]
 					}
@@ -3737,13 +3744,19 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($y2 -eq $null -or $y2 -eq ""){
 		$y2 = $pheight
 	}
-	$scrimg = psrpa_getBmpFromInnerFunction $rpa 0 0 $pwidth $pheight
+#	$scrimg = psrpa_getBmpFromInnerFunction $rpa 0 0 $pwidth $pheight
+	$scrimg = psrpa_getBmpFromInnerFunction $rpa $x1 $y1 $x2 $y2
 	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
 	$pos_array = [Psrpa]::SearchImage($scrimg, $fileimg)
 	$scrimg.Dispose()
 	$fileimg.Dispose()
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
-	return $pos_array
+#	return $pos_array
+	if ($pos_array[0] -lt 0){
+		return $pos_array
+	}else{
+		return @(($pos_array[0] + $x1),($pos_array[1] + $y1),($pos_array[2] + $x1),($pos_array[3] + $y1))
+	}
 }
 
 #
