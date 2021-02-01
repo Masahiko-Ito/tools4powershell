@@ -521,7 +521,7 @@ function psuniq {
 				write-output ""
 				write-output "  -d                 only print duplicate lines"
 				write-output "  -c                 prefix lines by the number of occurrences"
-v				write-output "  -e encoding        encoding for get-content called internally"
+				write-output "  -e encoding        encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-d"){
 				$duplicateSw = "on"
