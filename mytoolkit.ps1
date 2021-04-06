@@ -2089,7 +2089,7 @@ function psoracle_open($ip, $user, $password){
 		write-output "Usage: psoracle_open oracle_ip_address username password"
 		write-output "Connect to oracle."
 		write-output "ex."
-		write-output '    $ocon = poracle_open "127.0.0.1" "taro" "himitsu"'
+		write-output '    $ocon = psoracle_open "127.0.0.1" "taro" "himitsu"'
 		write-output ""
 		return
 	}
