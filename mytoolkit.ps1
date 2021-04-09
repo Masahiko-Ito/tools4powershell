@@ -320,20 +320,12 @@ function pshead {
 				$wline = 0
 				get-content -encoding $enc $files[$i] |
 				select-object -first $line
-#				foreach-object {
-#					if ($wline -lt $line){
-#						write-output $_
-#					}else{
-#						break
-#					}
-#					$wline++
-#				}
 			}
 		}else{
 			if ($wline -lt $line){
 				write-output $_
 			}else{
-				break
+				return
 			}
 			$wline++
 		}
