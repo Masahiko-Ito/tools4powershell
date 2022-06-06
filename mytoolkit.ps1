@@ -2840,6 +2840,8 @@ function psrpa_init{
 		using System.Windows.Automation;
 		using System.Drawing;
 		using System.Drawing.Imaging;
+		using System.Collections;
+		using System.Collections.Generic;
 		public class Psrpa {
 			[DllImport("user32.dll")]
 			[return: MarshalAs(UnmanagedType.Bool)]
@@ -2916,6 +2918,13 @@ function psrpa_init{
 				PropertyCondition cond = new System.Windows.Automation.PropertyCondition(System.Windows.Automation.AutomationElement.NameProperty, title);
 				return AutomationElement.RootElement.FindFirst(TreeScope.Element | TreeScope.Children, cond);
 			}
+			public static AutomationElementCollection FindAllFromRootWindow(){ 
+				return AutomationElement.RootElement.FindAll(TreeScope.Children, System.Windows.Automation.Condition.TrueCondition); 
+			}
+			public static AutomationElementCollection FindAllFromElement(AutomationElement element){ 
+				return element.FindAll(TreeScope.Subtree, System.Windows.Automation.Condition.TrueCondition); 
+			}
+
 			[System.Runtime.InteropServices.DllImport("msvcrt.dll",CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
 			private static extern int memcmp(byte[] b1, byte[] b2, UIntPtr count);
 			public static bool CompareImage(Bitmap img1, Bitmap img2){
@@ -3913,15 +3922,11 @@ function psrpa_uia_show($rpa){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	[Psrpa]::GetRootWindow().FindAll(
-		[System.Windows.Automation.TreeScope]::Children,
-		[System.Windows.Automation.Condition]::TrueCondition) |
+	[Psrpa]::FindAllFromRootWindow() |
 	%{
 		$top = $true
 		"========================================================================="
-		$_.FindAll(
-			[System.Windows.Automation.TreeScope]::SubTree,
-			[System.Windows.Automation.Condition]::TrueCondition) |
+		[Psrpa]::FindAllFromElement($_) |
 		%{
 			if ($top){
 				'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
@@ -3990,9 +3995,7 @@ function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name)
 		$name = "^$"
 	}
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
-	return ($element.FindAll(
-			[System.Windows.Automation.TreeScope]::SubTree,
-			[System.Windows.Automation.Condition]::TrueCondition) |
+	return ([Psrpa]::FindAllFromElement($element) |
 		where-object{$_.Current.ClassName -match $classname -and 
 			$_.Current.LocalizedControlType -match $localizedcontroltype -and
 			$_.Current.Name -match $name}
