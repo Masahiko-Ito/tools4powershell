@@ -3959,6 +3959,84 @@ function psrpa_uia_show($rpa){
 }
 
 #
+# psrpa_uia_show_root - Show all ui-automation element information in root window
+#
+function psrpa_uia_show_root($rpa){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_show_root rpa_object"
+		write-output "Show all ui-automation element in root window."
+		write-output "ex."
+		write-output '    psrpa_uia_show_root $rpa'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	"========================================================================="
+	[Psrpa]::FindAllFromRootWindow() |
+	%{
+		'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
+		"ClassName = " + $_.Current.ClassName
+#		"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+		"LocalizedControlType = " + $_.Current.LocalizedControlType
+		"Name = " + $_.Current.Name
+#		"ProcessId = " + $_.Current.ProcessId.tostring()
+		$_.GetSupportedPatterns() |
+		%{
+			"    SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+		}
+		"========================================================================="
+	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
+# psrpa_uia_show_element - Show all ui-automation element information in specified element
+#
+function psrpa_uia_show_element($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_show_element rpa_object element"
+		write-output "Show all ui-automation element in specified element."
+		write-output "ex."
+		write-output '    $element = psrpa_uia_get $rpa ...'
+		write-output '    psrpa_uia_show_element $rpa $element'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$top = $true
+	"========================================================================="
+	[Psrpa]::FindAllFromElement($element) |
+	%{
+		if ($top){
+			'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
+			"ClassName = " + $_.Current.ClassName
+#			"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+			"LocalizedControlType = " + $_.Current.LocalizedControlType
+			"Name = " + $_.Current.Name
+#			"ProcessId = " + $_.Current.ProcessId.tostring()
+			$_.GetSupportedPatterns() |
+			%{
+				"    SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+			}
+			$top = $false
+		}else{
+			'    "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
+			"    ClassName = " + $_.Current.ClassName
+#			"    ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+			"    LocalizedControlType = " + $_.Current.LocalizedControlType
+			"    Name = " + $_.Current.Name
+#			"    ProcessId = " + $_.Current.ProcessId.tostring()
+			$_.GetSupportedPatterns() |
+			%{
+				"        SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+			}
+		}
+		"-------------------------------------------------------------------------"
+	}
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+}
+
+#
 # psrpa_uia_get - Get ui-automation element
 #
 function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name){
