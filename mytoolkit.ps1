@@ -4054,9 +4054,6 @@ function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name)
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	if ($element -eq $null -or $element -eq ""){
-		$element = [Psrpa]::GetRootWindow()
-	}
 	if ($classname -eq $null){
 		$classname = "^.*$"
 	}elseif ($classname -eq ""){
@@ -4073,11 +4070,19 @@ function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name)
 		$name = "^$"
 	}
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
-	return ([Psrpa]::FindAllFromElement($element) |
-		where-object{$_.Current.ClassName -match $classname -and 
-			$_.Current.LocalizedControlType -match $localizedcontroltype -and
-			$_.Current.Name -match $name}
+	if ($element -eq $null -or $element -eq ""){
+		return ([Psrpa]::FindAllFromRootWindow() |
+			where-object{$_.Current.ClassName -match $classname -and 
+				$_.Current.LocalizedControlType -match $localizedcontroltype -and
+				$_.Current.Name -match $name}
 		)
+	}else{
+		return ([Psrpa]::FindAllFromElement($element) |
+			where-object{$_.Current.ClassName -match $classname -and 
+				$_.Current.LocalizedControlType -match $localizedcontroltype -and
+				$_.Current.Name -match $name}
+		)
+	}
 }
 
 #
