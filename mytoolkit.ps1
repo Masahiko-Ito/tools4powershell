@@ -3984,35 +3984,77 @@ function psrpa_uia_show_element_all($rpa, $element){
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	[Psrpa]::FindChildrenFromElement($element) |
 	%{
-		$top = $true
 		"========================================================================="
-		[Psrpa]::FindAllFromElement($_) |
+		'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
+		"ClassName = " + $_.Current.ClassName
+#		"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+		"LocalizedControlType = " + $_.Current.LocalizedControlType
+		"Name = " + $_.Current.Name
+#		"ProcessId = " + $_.Current.ProcessId.tostring()
+		$_.GetSupportedPatterns() |
 		%{
-			if ($top){
-				'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
-				"ClassName = " + $_.Current.ClassName
-#				"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
-				"LocalizedControlType = " + $_.Current.LocalizedControlType
-				"Name = " + $_.Current.Name
-#				"ProcessId = " + $_.Current.ProcessId.tostring()
+			"    SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+		}
+		[Psrpa]::FindChildrenFromElement($_) |
+		%{
+			"-------------------------------------------------------------------------"
+			'    "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
+			"    ClassName = " + $_.Current.ClassName
+#			"    ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+			"    LocalizedControlType = " + $_.Current.LocalizedControlType
+			"    Name = " + $_.Current.Name
+#			"    ProcessId = " + $_.Current.ProcessId.tostring()
+			$_.GetSupportedPatterns() |
+			%{
+				"        SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+			}
+			[Psrpa]::FindChildrenFromElement($_) |
+			%{
+				"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+				'        "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
+				"        ClassName = " + $_.Current.ClassName
+#				"        ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+				"        LocalizedControlType = " + $_.Current.LocalizedControlType
+				"        Name = " + $_.Current.Name
+#				"        ProcessId = " + $_.Current.ProcessId.tostring()
 				$_.GetSupportedPatterns() |
 				%{
-					"    SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+					"            SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
 				}
-				$top = $false
-			}else{
-				'    "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
-				"    ClassName = " + $_.Current.ClassName
-#				"    ControlType.Id = " + $_.Current.ControlType.Id.tostring()
-				"    LocalizedControlType = " + $_.Current.LocalizedControlType
-				"    Name = " + $_.Current.Name
-#				"    ProcessId = " + $_.Current.ProcessId.tostring()
-				$_.GetSupportedPatterns() |
+				[Psrpa]::FindChildrenFromElement($_) |
 				%{
-					"        SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+					"........................................................................."
+					'            "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
+					"            ClassName = " + $_.Current.ClassName
+#					"            ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+					"            LocalizedControlType = " + $_.Current.LocalizedControlType
+					"            Name = " + $_.Current.Name
+#					"            ProcessId = " + $_.Current.ProcessId.tostring()
+					$_.GetSupportedPatterns() |
+					%{
+						"                SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+					}
+					$top = $true
+					[Psrpa]::FindAllFromElement($_) |
+					%{
+						if ($top -eq $true){
+							$top = $false
+						}else{
+							". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ."
+							'                "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
+							"                ClassName = " + $_.Current.ClassName
+#							"                ControlType.Id = " + $_.Current.ControlType.Id.tostring()
+							"                LocalizedControlType = " + $_.Current.LocalizedControlType
+							"                Name = " + $_.Current.Name
+#							"                ProcessId = " + $_.Current.ProcessId.tostring()
+							$_.GetSupportedPatterns() |
+							%{
+								"                    SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+							}
+						}
+					}
 				}
 			}
-			"-------------------------------------------------------------------------"
 		}
 	}
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
