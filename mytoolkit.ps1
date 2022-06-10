@@ -3933,7 +3933,7 @@ function psrpa_uia_show_element($rpa, $element){
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	"========================================================================="
-	[Psrpa]::FindCildrenFromElement($element) |
+	[Psrpa]::FindChildrenFromElement($element) |
 	%{
 		'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
 		"ClassName = " + $_.Current.ClassName
@@ -4060,8 +4060,8 @@ function psrpa_uia_get_element($rpa, $element, $classname, $localizedcontroltype
 		write-output '    localized_controlname'
 		write-output '    name'
 		write-output "ex."
-		write-output '    $app = psrpa_uia_get $rpa $null "Notepad" "ウィンドウ" "無題 - メモ帳"'
-		write-output '    $help = psrpa_uia_get $rpa $app "" "メニュー項目" "ヘルプ\(H\)"'
+		write-output '    $app = psrpa_uia_get_element $rpa $null "Notepad" "ウィンドウ" "無題 - メモ帳"'
+		write-output '    $help = psrpa_uia_get_element $rpa $app "" "メニュー項目" "ヘルプ\(H\)"'
 		write-output ""
 		return
 	}
@@ -4153,7 +4153,7 @@ function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name)
 		write-output ""
 		return
 	}
-	return (psrpa_uia_get_element_all $rpa $element)
+	return (psrpa_uia_get_element_all $rpa $element $classname $localizedcontroltype $name)
 }
 
 #
