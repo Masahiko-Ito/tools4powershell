@@ -1003,7 +1003,6 @@ function psxls2csv {
 		if ($strInput -eq ""){
 			Get-ChildItem *.xls* |
 			ForEach-Object {
-#				$InPath = (resolve-path $_.Name).Path
 				$InPath = psabspath $_.Name
 				if ($strOutput -eq ""){
 					if ($tabSw -eq "on"){
@@ -1026,18 +1025,13 @@ function psxls2csv {
 			
 				$objSheet = $objExcel.Worksheets.Item($sheet)
 				if ($tabSw -eq "on"){
-#					$objSheet.SaveAs($OutPath, -4158)
 					$objSheet.SaveAs($OutPath, 42)
 				}else{
-					$objSheet.SaveAs($OutPath, 6)
+###					$objSheet.SaveAs($OutPath, 6)
+					$objSheet.SaveAs($OutPath, 62)
 				}
 				$objExcel.Workbooks.Close()
 				$objExcel.Quit()
-#				if ($tabSw -eq "on"){
-#					$TmpOutPath = [System.IO.Path]::GetTempFileName()
-#					Get-Content -encoding $enc $OutPath | Out-File -Encoding default $TmpOutPath 
-#					Move-Item -Force -path $TmpOutPath -destination $OutPath
-#				}
 				if ($strOutput -eq "-"){
 					get-content -encoding $enc $OutPath
 					remove-item $OutPath
@@ -1047,7 +1041,6 @@ function psxls2csv {
 			if ($strInput -match '^[A-Za-z]:' -or $strInput -match '^\\'){
 				$InPath = $strInput
 			}else{
-#				$InPath = (resolve-path $strInput).Path
 				$InPath = psabspath $strInput
 			}
 			if ($strOutput -eq ""){
@@ -1070,18 +1063,13 @@ function psxls2csv {
 		
 			$objSheet = $objExcel.Worksheets.Item($sheet)
 			if ($tabSw -eq "on"){
-#				$objSheet.SaveAs($OutPath, -4158)
 				$objSheet.SaveAs($OutPath, 42)
 			}else{
-				$objSheet.SaveAs($OutPath, 6)
+###				$objSheet.SaveAs($OutPath, 6)
+				$objSheet.SaveAs($OutPath, 62)
 			}
 			$objExcel.Workbooks.Close()
 			$objExcel.Quit()
-#			if ($tabSw -eq "on"){
-#				$TmpOutPath = [System.IO.Path]::GetTempFileName()
-#				Get-Content -encoding $enc $OutPath | Out-File -Encoding default $TmpOutPath 
-#				Move-Item -Force -path $TmpOutPath -destination $OutPath
-#			}
 			if ($strOutput -eq "-"){
 				get-content -encoding $enc $OutPath
 				remove-item $OutPath
@@ -1452,6 +1440,37 @@ function psopen(){
 			return $objIO
 		}
 	}
+}
+#
+# psconvenc - Convert encoding of text file
+#
+function psconvenc() {
+	for ($i = 0; $i -lt $args.length; $i++){
+		if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
+			write-output "Usage: psconvenc -h|--help"
+			write-output "Usage: psconvenc -i inputfile -ie encoding -o outputfile -oe encoding"
+			return
+		}elseif ($args[$i] -eq "-i"){
+			$i++
+			$input = $args[$i]
+		}elseif ($args[$i] -eq "-ie"){
+			$i++
+			$ie = $args[$i]
+		}elseif ($args[$i] -eq "-o"){
+			$i++
+			$output = $args[$i]
+		}elseif ($args[$i] -eq "-oe"){
+			$i++
+			$oe = $args[$i]
+		}
+	}
+	$inObj = psopen -r $input -e $ie
+	$outObj = psopen -w $output -e $oe
+	while (($rec = $inObj.readLine()) -ne $null){
+		$outObj.writeLine($rec)
+	}
+	$inObj.close()
+	$outObj.close()
 }
 
 #
@@ -3928,12 +3947,15 @@ function psrpa_uia_show_element($rpa, $element){
 		write-output ""
 		return
 	}
-	if ($element -eq $null -or $element -eq ""){
-		$element = [Psrpa]::GetRootWindow()
-	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	"========================================================================="
-	[Psrpa]::FindChildrenFromElement($element) |
+	%{
+		if ($element -eq $null -or $element -eq ""){
+			[Psrpa]::FindChildrenFromRootWindow()
+		}else{
+			[Psrpa]::FindChildrenFromElement($element)
+		}
+	} |
 	%{
 		'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
 		"ClassName = " + $_.Current.ClassName
@@ -3951,21 +3973,6 @@ function psrpa_uia_show_element($rpa, $element){
 }
 
 #
-# psrpa_uia_show_element_root - Show child ui-automation element information in root window
-#
-function psrpa_uia_show_element_root($rpa){
-	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_show_element_root rpa_object"
-		write-output "Show child ui-automation element information in root window."
-		write-output "ex."
-		write-output '    psrpa_uia_show_element_root $rpa'
-		write-output ""
-		return
-	}
-	psrpa_uia_show_element $rpa $null
-}
-
-#
 # psrpa_uia_show_element_all - Show all ui-automation element information in specified elemment
 #
 function psrpa_uia_show_element_all($rpa, $element){
@@ -3978,11 +3985,14 @@ function psrpa_uia_show_element_all($rpa, $element){
 		write-output ""
 		return
 	}
-	if ($element -eq $null -or $element -eq ""){
-		$element = [Psrpa]::GetRootWindow()
-	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-	[Psrpa]::FindChildrenFromElement($element) |
+	%{
+		if ($element -eq $null -or $element -eq ""){
+			[Psrpa]::FindChildrenFromRootWindow()
+		}else{
+			[Psrpa]::FindChildrenFromElement($element)
+		}
+	} |
 	%{
 		"========================================================================="
 		'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
@@ -4061,21 +4071,6 @@ function psrpa_uia_show_element_all($rpa, $element){
 }
 
 #
-# psrpa_uia_show_element_all_root - Show all ui-automation element information in root window
-#
-function psrpa_uia_show_element_all_root($rpa){
-	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_show_element_all_root rpa_object"
-		write-output "Show all ui-automation element information in root window."
-		write-output "ex."
-		write-output '    psrpa_uia_show_element_all_root $rpa'
-		write-output ""
-		return
-	}
-	psrpa_uia_show_element_all $rpa $null
-}
-
-#
 # psrpa_uia_show - Same as psrpa_uia_show_element_all_root
 #
 function psrpa_uia_show($rpa){
@@ -4123,15 +4118,20 @@ function psrpa_uia_get_element($rpa, $element, $classname, $localizedcontroltype
 	}elseif ($name -eq ""){
 		$name = "^$"
 	}
-	if ($element -eq $null -or $element -eq ""){
-		$element = [Psrpa]::GetRootWindow()
-	}
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
-	return ([Psrpa]::FindChildrenFromElement($element) |
-		where-object{$_.Current.ClassName -match $classname -and 
-			$_.Current.LocalizedControlType -match $localizedcontroltype -and
-			$_.Current.Name -match $name}
-	)
+	if ($element -eq $null -or $element -eq ""){
+		return ([Psrpa]::FindChildrenFromRootWindow() |
+			where-object{$_.Current.ClassName -match $classname -and 
+				$_.Current.LocalizedControlType -match $localizedcontroltype -and
+				$_.Current.Name -match $name}
+		)
+	}else{
+		return ([Psrpa]::FindChildrenFromElement($element) |
+			where-object{$_.Current.ClassName -match $classname -and 
+				$_.Current.LocalizedControlType -match $localizedcontroltype -and
+				$_.Current.Name -match $name}
+		)
+	}
 }
 
 #
@@ -4171,31 +4171,38 @@ function psrpa_uia_get_element_all($rpa, $element, $classname, $localizedcontrol
 		$element = [Psrpa]::GetRootWindow()
 	}
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
-	return ([Psrpa]::FindAllFromElement($element) |
-		where-object{$_.Current.ClassName -match $classname -and 
-			$_.Current.LocalizedControlType -match $localizedcontroltype -and
-			$_.Current.Name -match $name}
-	)
+	if ($element -eq $null -or $element -eq ""){
+		return ([Psrpa]::FindAllFromRootWindow() |
+			where-object{$_.Current.ClassName -match $classname -and 
+				$_.Current.LocalizedControlType -match $localizedcontroltype -and
+				$_.Current.Name -match $name}
+		)
+	}else{
+		return ([Psrpa]::FindAllFromElement($element) |
+			where-object{$_.Current.ClassName -match $classname -and 
+				$_.Current.LocalizedControlType -match $localizedcontroltype -and
+				$_.Current.Name -match $name}
+		)
+	}
 }
 
 #
-# psrpa_uia_get - Get all ui-automation element in specfied element
+# psrpa_uia_get - Get all ui-automation element in root window
 #
-function psrpa_uia_get($rpa, $element, $classname, $localizedcontroltype, $name){
+function psrpa_uia_get($rpa, $classname, $localizedcontroltype, $name){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psrpa_uia_get rpa_object parent_element class_name localized_controlname name"
-		write-output "Get all ui-automation element in specfied element."
-		write-output '    parent_element        "" or $null mean root-window'
+		write-output "Usage: psrpa_uia_get rpa_object class_name localized_controlname name"
+		write-output "Get all ui-automation element in root window."
 		write-output '    class_name            "" means "^$", $null means "^.*$"'
 		write-output '    localized_controlname'
 		write-output '    name'
 		write-output "ex."
-		write-output '    $app = psrpa_uia_get $rpa $null "Notepad" "ウィンドウ" "無題 - メモ帳"'
-		write-output '    $help = psrpa_uia_get $rpa $app "" "メニュー項目" "ヘルプ\(H\)"'
+		write-output '    $app = psrpa_uia_get $rpa "Notepad" "ウィンドウ" "無題 - メモ帳"'
+		write-output '    $help = psrpa_uia_get $rpa "" "メニュー項目" "ヘルプ\(H\)"'
 		write-output ""
 		return
 	}
-	return (psrpa_uia_get_element_all $rpa $element $classname $localizedcontroltype $name)
+	return (psrpa_uia_get_element_all $rpa $null $classname $localizedcontroltype $name)
 }
 
 #
