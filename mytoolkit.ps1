@@ -4734,6 +4734,44 @@ function psrpa_uia_getScrollVview($rpa, $element){
 }
 
 #
+# psrpa_uia_transformMove - Move ui-automation element(TransformPattern)
+#
+function psrpa_uia_transformMove($rpa, $element, $x, $y){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_transformMove rpa_object element x y"
+		write-output "Move ui-automation element(TransformPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_transformMove $rpa $elm 10 20'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.TransformPattern]::Pattern).Move($x, $y)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
+}
+
+#
+# psrpa_uia_transformResize - Resize ui-automation element(TransformPattern)
+#
+function psrpa_uia_transformResize($rpa, $element, $xw, $yh){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_transformResize rpa_object element width height"
+		write-output "Resize ui-automation element(TransformPattern)."
+		write-output "ex."
+		write-output '    $elm = psrpa_uia_get ...snip...'
+		write-output '    psrpa_uia_transformResize $rpa $elm 100 200'
+		write-output ""
+		return
+	}
+	Start-Sleep -Milliseconds $rpa["BeforeWait"]
+	$ret = $element.GetCurrentPattern([System.Windows.Automation.TransformPattern]::Pattern).Resize($xw, $yh)
+	Start-Sleep -Milliseconds $rpa["AfterWait"]
+	return $ret
+}
+
+#
 # psrpa_uia_getPattern - Get pattern from ui-automation element
 #
 function psrpa_uia_getPattern($rpa, $element, $pattern){
@@ -4752,6 +4790,10 @@ function psrpa_uia_getPattern($rpa, $element, $pattern){
 		write-output '            "Selection"'
 		write-output '            "RangeValue"'
 		write-output '            "Scroll"'
+		write-output '            "Transform"'
+		write-output '            "VirtualizedItem"'
+		write-output '            "ItemContainer"'
+		write-output '            "Selection"'
 		write-output '            "MultipleView"'
 		write-output '            "Table"'
 		write-output '            "TableItem"'
@@ -4765,7 +4807,7 @@ function psrpa_uia_getPattern($rpa, $element, $pattern){
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	if ($pattern -eq "Invoke"){
-		$ret = element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
 	}elseif ($pattern -eq "ExpandCollapse"){
 		$ret = $element.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern)
 	}elseif ($pattern -eq "Window"){
@@ -4786,7 +4828,13 @@ function psrpa_uia_getPattern($rpa, $element, $pattern){
 		$ret = $element.GetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern)
 	}elseif ($pattern -eq "Scroll"){
 		$ret = $element.GetCurrentPattern([System.Windows.Automation.ScrollPattern]::Pattern)
+	}elseif ($pattern -eq "Transform"){
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.TransformPattern]::Pattern)
 #
+	}elseif ($pattern -eq "VirtualizedItem"){
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.VirtualizedItemPattern]::Pattern)
+	}elseif ($pattern -eq "ItemContainer"){
+		$ret = $element.GetCurrentPattern([System.Windows.Automation.ItemContainerPattern]::Pattern)
 	}elseif ($pattern -eq "Selection"){
 		$ret = $element.GetCurrentPattern([System.Windows.Automation.SelectionPattern]::Pattern)
 	}elseif ($pattern -eq "MultipleView"){
