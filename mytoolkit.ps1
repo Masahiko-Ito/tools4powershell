@@ -1477,7 +1477,7 @@ function psconvenc() {
 # psexcel_open - Open excel_file and get excel_object for it
 #
 function psexcel_open($xlsPath) {
-	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $objExcel -eq "-h" -or $objExcel -eq "--help"){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help" -or $xlsPath -eq "-h" -or $xlsPath -eq "--help"){
 		write-output "Usage: psexcel_open excel_file"
 		write-output "Open excel_file and get excel_object for it."
 		write-output "ex."
@@ -3458,7 +3458,7 @@ function psrpa_sendKeyEx ($rpa, $virtual_keycode, $action, $isExtended){
 		write-output '               see https://learn.microsoft.com/en-us/windows/win32/inputdev/about-keyboard-input#extended-key-flag'
 #
 # Extended-Key Flag
-# 
+#
 # The extended-key flag indicates whether the keystroke message originated from
 # one of the additional keys on the Enhanced 101/102-key keyboard. The extended
 # keys consist of the ALT and CTRL keys on the right-hand side of the keyboard;
@@ -3472,7 +3472,7 @@ function psrpa_sendKeyEx ($rpa, $virtual_keycode, $action, $isExtended){
 #
 # Transrated by ChatGPT.
 # 拡張キー フラグ
-# 
+#
 # 拡張キー フラグは、キーストローク メッセージがEnhanced 101/102
 # キー キーボードの追加キーの1つから発生したかどうかを示します。
 # 拡張キーには、キーボードの右側にあるALTキーとCTRLキーが含まれ
@@ -4006,6 +4006,47 @@ function psrpa_uia_show_element($rpa, $element){
 }
 
 #
+# psrpa_uia_show_element_recursive - Show recursively child ui-automation element information in specified elemment
+#
+function psrpa_uia_show_element_recursive($rpa, $element){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psrpa_uia_show_element_recursive rpa_object element"
+		write-output "Show recursively child ui-automation element information in specified elemment."
+		write-output '    element        "" or $null mean root-window'
+		write-output "ex."
+		write-output '    psrpa_uia_show_element_recursive $rpa $element'
+		write-output ""
+		return
+	}
+	if ($element -eq $null -or $element -eq ""){
+		$elm = [Psrpa]::GetRootWindow()
+	}else{
+		$elm = $element
+	}
+	psrpa_uia_show_element_recursive_inner $rpa $elm 0
+}
+
+function psrpa_uia_show_element_recursive_inner($rpa, $element, $layer){
+	[Psrpa]::FindChildrenFromElement($element) |
+	%{
+		if ($layer -eq 0){
+			"========================================================================="
+		}else{
+			"-------------------------------------------------------------------------"
+		}
+		$layer.tostring() + ' : "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
+		$layer.tostring() + " : ClassName = " + $_.Current.ClassName
+		$layer.tostring() + " : LocalizedControlType = " + $_.Current.LocalizedControlType
+		$layer.tostring() + " : Name = " + $_.Current.Name
+		$_.GetSupportedPatterns() |
+		%{
+			$layer.tostring() + " : SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
+		}
+		psrpa_uia_show_element_recursive_inner $rpa $_ ($layer + 1)
+	}
+}
+
+#
 # psrpa_uia_show_element_all - Show all ui-automation element information in specified elemment
 #
 function psrpa_uia_show_element_all($rpa, $element){
@@ -4016,6 +4057,7 @@ function psrpa_uia_show_element_all($rpa, $element){
 		write-output "ex."
 		write-output '    psrpa_uia_show_element_all $rpa $element'
 		write-output ""
+		write-output "This is obsolete. Use psrpa_uia_show_element_recursive instead."
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
@@ -4104,15 +4146,16 @@ function psrpa_uia_show_element_all($rpa, $element){
 }
 
 #
-# psrpa_uia_show - Same as psrpa_uia_show_element_all_root
+# psrpa_uia_show - Show all ui-automation element information in root-window
 #
 function psrpa_uia_show($rpa){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrpa_uia_show rpa_object"
-		write-output "Show all ui-automation element information in root window."
+		write-output "Show all ui-automation element information in root-window."
 		write-output "ex."
 		write-output '    psrpa_uia_show $rpa'
 		write-output ""
+		write-output "This is obsolete. Use psrpa_uia_show_element_recursive instead."
 		return
 	}
 	return (psrpa_uia_show_element_all $rpa $null)
