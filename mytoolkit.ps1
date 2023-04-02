@@ -1122,7 +1122,7 @@ function psxls2sheetname (){
 }
 
 #
-# print
+# psprint - print arguments to standard output
 #
 function psprint (){
 	begin{
@@ -1447,7 +1447,6 @@ function psopen(){
 function psconvenc() {
 	for ($i = 0; $i -lt $args.length; $i++){
 		if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-			write-output "Usage: psconvenc -h|--help"
 			write-output "Usage: psconvenc -i inputfile -ie encoding -o outputfile -oe encoding"
 			return
 		}elseif ($args[$i] -eq "-i"){
@@ -1992,7 +1991,7 @@ function psexcel_turnoffAlert($objExcel) {
 #
 # psprov - Print formatted data with overlay
 #
-Function psprov(){
+function psprov(){
 	begin{
 		Function psprov_prpv($rec) {
 			foreach ($i in $formatArray.keys){
@@ -2330,7 +2329,7 @@ function psoracle_commit($otran){
 #
 # pssock_open - Open socket for client
 #
-Function pssock_open($addr, $port, $encoding = 0){
+function pssock_open($addr, $port, $encoding = 0){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_open server_ip server_port [encoding]"
 		write-output "Open socket for client."
@@ -2394,7 +2393,7 @@ Function pssock_open($addr, $port, $encoding = 0){
 #
 # pssock_close - Close socket for client
 #
-Function pssock_close($param){
+function pssock_close($param){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_close socket_param"
 		write-output "Close socket for client."
@@ -2413,7 +2412,7 @@ Function pssock_close($param){
 #
 # pssock_readline - Read a line from socket
 #
-Function pssock_readline($param){
+function pssock_readline($param){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_readline socket_param"
 		write-output "Read a line from socket."
@@ -2434,7 +2433,7 @@ Function pssock_readline($param){
 #
 # pssock_writeline - Write a line to socket
 #
-Function pssock_writeline($param, $line){
+function pssock_writeline($param, $line){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_writeline socket_param string"
 		write-output "Write a line to socket."
@@ -2457,7 +2456,7 @@ Function pssock_writeline($param, $line){
 #
 # pssock_read - Read data as binary from socket
 #
-Function pssock_read($param, $bufBytes, $length){
+function pssock_read($param, $bufBytes, $length){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_read socket_param array_byte length"
 		write-output "Read data as binary from socket."
@@ -2479,7 +2478,7 @@ Function pssock_read($param, $bufBytes, $length){
 #
 # pssock_write - Write data as binary to socket
 #
-Function pssock_write($param, $bufBytes, $length){
+function pssock_write($param, $bufBytes, $length){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_write socket_param array_byte length"
 		write-output "Write data as binary to socket."
@@ -2503,7 +2502,7 @@ Function pssock_write($param, $bufBytes, $length){
 #
 # pssock_start - Start server
 #
-Function pssock_start($port){
+function pssock_start($port){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_start server_port"
 		write-output "Start server."
@@ -2522,7 +2521,7 @@ Function pssock_start($port){
 #
 # pssock_stop - Stop server
 #
-Function pssock_stop($server){
+function pssock_stop($server){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_stop server"
 		write-output "Stop server."
@@ -2538,7 +2537,7 @@ Function pssock_stop($server){
 #
 # pssock_accept - Accept connection from client
 #
-Function pssock_accept($server, $encoding = 0){
+function pssock_accept($server, $encoding = 0){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_accept server [encoding]"
 		write-output "Accept connection from client."
@@ -2602,7 +2601,7 @@ Function pssock_accept($server, $encoding = 0){
 #
 # pssock_unaccept - Unaccept(disconnect) connection from client
 #
-Function pssock_unaccept($param){
+function pssock_unaccept($param){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_unaccept socket_param"
 		write-output "Unaccept(disconnect) connection from client."
@@ -2621,7 +2620,7 @@ Function pssock_unaccept($param){
 #
 # pssock_getip - Get ip-address of client
 #
-Function pssock_getip($param){
+function pssock_getip($param){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_getip socket_param"
 		write-output "Get ip-address of client."
@@ -2637,7 +2636,7 @@ Function pssock_getip($param){
 #
 # pssock_getipstr - Get ip-address string of client
 #
-Function pssock_getipstr($param){
+function pssock_getipstr($param){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_getipstr socket_param"
 		write-output "Get ip-address string of client."
@@ -2653,7 +2652,7 @@ Function pssock_getipstr($param){
 #
 # pssock_getport - Get port of client
 #
-Function pssock_getport($param){
+function pssock_getport($param){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_getport socket_param"
 		write-output "Get port of client."
@@ -2669,7 +2668,7 @@ Function pssock_getport($param){
 #
 # pssock_getportstr - Get port string of client
 #
-Function pssock_getportstr($param){
+function pssock_getportstr($param){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_getportstr socket_param"
 		write-output "Get port string of client."
@@ -2685,7 +2684,7 @@ Function pssock_getportstr($param){
 #
 # psrunspc_getarraylist - Get System.Collections.ArrayList
 #
-Function psrunspc_getarraylist(){
+function psrunspc_getarraylist(){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrunspc_getarraylist"
 		write-output "Get System.Collections.ArrayList."
@@ -2702,7 +2701,7 @@ Function psrunspc_getarraylist(){
 #
 # psrunspc_open - Create and Open RunSpacePool
 #
-Function psrunspc_open($max_runspace){
+function psrunspc_open($max_runspace){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrunspc_open max_runspace"
 		write-output "Create and Open RunSpacePool."
@@ -2721,7 +2720,7 @@ Function psrunspc_open($max_runspace){
 #
 # psrunspc_close - Close RunSpacePool
 #
-Function psrunspc_close($rsp){
+function psrunspc_close($rsp){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrunspc_close run_space_pool"
 		write-output "Close RunSpacePool."
@@ -2738,7 +2737,7 @@ Function psrunspc_close($rsp){
 #
 # psrunspc_createthread - Create thread of powershell and add script to it
 #
-Function psrunspc_createthread($rsp, $script){
+function psrunspc_createthread($rsp, $script){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrunspc_createthread run_space_pool script_block"
 		write-output "Create thread of powershell and add script to it."
@@ -2756,7 +2755,7 @@ Function psrunspc_createthread($rsp, $script){
 #
 # psrunspc_addargument - Add argument to thread of powershell
 #
-Function psrunspc_addargument($ps, $arg){
+function psrunspc_addargument($ps, $arg){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrunspc_addargument thread_of_powershellargument"
 		write-output "Add argument to thread of powershell."
@@ -2771,7 +2770,7 @@ Function psrunspc_addargument($ps, $arg){
 #
 # psrunspc_begin - Begin script in thread
 #
-Function psrunspc_begin($ps, $aryps, $arych){
+function psrunspc_begin($ps, $aryps, $arych){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrunspc_begin thread_of_powershell arraylist_of_powershell arraylist_of_child"
 		write-output "Begin script in thread."
@@ -2791,7 +2790,7 @@ Function psrunspc_begin($ps, $aryps, $arych){
 #
 # psrunspc_wait - Wait terminate of all child thread
 #
-Function psrunspc_wait($aryps, $arych){
+function psrunspc_wait($aryps, $arych){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrunspc_wait arraylist_of_powershell arraylist_of_child"
 		write-output "Wait terminate of all child thread."
@@ -2813,7 +2812,7 @@ Function psrunspc_wait($aryps, $arych){
 #
 # psrunspc_waitasync - Wait asynchronously terminate of all child thread
 #
-Function psrunspc_waitasync($aryps, $arych){
+function psrunspc_waitasync($aryps, $arych){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psrunspc_waitasync arraylist_of_powershell arraylist_of_child"
 		write-output "Wait asynchronously terminate of all child thread."
