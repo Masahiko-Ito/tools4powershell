@@ -2929,9 +2929,9 @@ function psrpa_init{
 				}
 				SendInput(1, inp, Marshal.SizeOf(inp[0]));
 			}
-			public static AutomationElement GetRootWindow(){ 
-				return AutomationElement.RootElement; 
-			}
+//			public static AutomationElement GetRootWindow(){ 
+//				return AutomationElement.RootElement; 
+//			}
 			public static AutomationElement GetMainWindowByTitle(string title) {
 				PropertyCondition cond = new System.Windows.Automation.PropertyCondition(System.Windows.Automation.AutomationElement.NameProperty, title);
 				return AutomationElement.RootElement.FindFirst(TreeScope.Element | TreeScope.Children, cond);
@@ -4017,16 +4017,17 @@ function psrpa_uia_show_element_recursive($rpa, $element){
 		write-output ""
 		return
 	}
-	if ($element -eq $null -or $element -eq ""){
-		$elm = [Psrpa]::GetRootWindow()
-	}else{
-		$elm = $element
-	}
-	psrpa_uia_show_element_recursive_inner $rpa $elm 0
+	psrpa_uia_show_element_recursive_inner $rpa $element 0
 }
 
 function psrpa_uia_show_element_recursive_inner($rpa, $element, $layer){
-	[Psrpa]::FindChildrenFromElement($element) |
+	%{
+		if ($element -eq $null -or $element -eq ""){
+			[Psrpa]::FindChildrenFromRootWindow()
+		}else{
+			[Psrpa]::FindChildrenFromElement($element)
+		}
+	} | 
 	%{
 		if ($layer -eq 0){
 			"========================================================================="
@@ -4241,9 +4242,6 @@ function psrpa_uia_get_element_all($rpa, $element, $classname, $localizedcontrol
 		$name = "^.*$"
 	}elseif ($name -eq ""){
 		$name = "^$"
-	}
-	if ($element -eq $null -or $element -eq ""){
-		$element = [Psrpa]::GetRootWindow()
 	}
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 	if ($element -eq $null -or $element -eq ""){
