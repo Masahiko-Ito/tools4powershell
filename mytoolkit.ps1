@@ -2851,6 +2851,8 @@ function psrpa_init{
 	add-type -assemblyname System.Windows.Forms
 	add-type -assemblyname microsoft.visualbasic
 	add-type -assemblyname system.windows.forms
+#	add-type -assemblyname UIAutomationClient
+#	add-type -assemblyname UIAutomationTypes
 
 	$source = @" 
 		using System;
