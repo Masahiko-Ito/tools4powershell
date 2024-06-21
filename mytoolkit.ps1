@@ -4,10 +4,10 @@
 function pscat {
 	begin{
 		$enc = "Default"
-		$numberSw = "off"
+		$numberSw = $false
 		$number = 0
-		$files = @{}
-		$filesIndex = 0
+		$filestmp = @()
+		$files = @()
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				write-output "Usage: pscat [-h|--help] [-e encoding] [-n] [input ...]"
@@ -20,34 +20,34 @@ function pscat {
 				$i++
 				$enc = $args[$i]
 			}elseif ($args[$i] -eq "-n"){
-				$numberSw = "on"
+				$numberSw = $true
 			}else{
-				$files[$filesIndex] = $args[$i]
-				$filesIndex++
+				$filestmp += $args[$i]
 			}
+		}
+		if ($filestmp.count -gt 0){
+			$files = get-item $filestmp
 		}
 	}
 	process{
-		if ($filesIndex -gt 0){
-			for ($i = 0; $i -lt $filesIndex; $i++){
-				if ($numberSw -eq "off"){
-					get-content -encoding $enc $files[$i]
+		if ($files.count -gt 0){
+			foreach ($i in $files){
+				if (-not $numberSw){
+					get-content -encoding $enc $i
 				}else{
-					get-content -encoding $enc $files[$i] |
-					foreach-object {
+					get-content -encoding $enc $i |
+					foreach {
 						$number++
-						$out = $number.tostring() + " " + $_
-						write-output $out
+						write-output ([String]::Format("{0} {1}",$number , $_))
 					}
 				}
 			}
 		}else{
-			if ($numberSw -eq "off"){
+			if (-not $numberSw){
 				write-output $_
 			}else{
 				$number++
-				$out = $number.tostring() + " " + $_
-				write-output $out
+				write-output ([String]::Format("{0} {1}",$number , $_))
 			}
 		}
 	}
@@ -60,61 +60,77 @@ function pscat {
 #
 function psgrep {
 	begin{
-		$ignorecaseSw = "off"
-		$invertSw = "off"
+		$ignorecaseSw = $false
+		$invertSw = $false
+		$shortSw = $false
 		$enc = "Default"
 		$string = ""
-		$stringSw = "off"
-		$files = @{}
-		$filesIndex = 0
+		$stringSw = $false
+		$filestmp = @()
+		$files = @()
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "Usage: psgrep [-h|--help] [-v] [-i] [-e encoding] regex [input ...]"
+				write-output "Usage: psgrep [-h|--help] [-v] [-i] [-sn] [-e encoding] regex [input ...]"
 				write-output "Search for regex in each input or standard input."
 				write-output ""
 				write-output "  -v                 select non-matching lines"
 				write-output "  -i                 ignore case distinctions"
+				write-output "  -sn                show short filename"
 				write-output "  -e encoding        encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-v"){
-				$invertSw = "on"
+				$invertSw = $true
 			}elseif ($args[$i] -eq "-i"){
-				$ignorecaseSw = "on"
+				$ignorecaseSw = $true
+			}elseif ($args[$i] -eq "-sn"){
+				$shortSw = $true
 			}elseif ($args[$i] -eq "-e"){
 				$i++
 				$enc = $args[$i]
 			}else{
-				if ($stringSw -eq "off"){
+				if (-not $stringSw){
 					$string = $args[$i]
-					$stringSw = "on"
+					$stringSw = $true
 				}else{
-					$files[$filesIndex] = $args[$i]
-					$filesIndex++
+					$filestmp += $args[$i]
 				}
 			}
 		}
+		if ($filestmp.count -gt 0){
+			$files = get-item $filestmp
+		}
 	}
 	process{
-		if ($invertSw -eq "off"){
-			if ($filesIndex -gt 0){
-				for ($i = 0; $i -lt $filesIndex; $i++){
-					get-content -encoding $enc $files[$i] |
-					foreach-object {
-						if ($ignorecaseSw -eq "off"){
-							if ($_ -cmatch $string){
-								if ($filesIndex -eq 1){
+		if ($invertSw){
+			if ($files.count -gt 0){
+				foreach ($i in $files){
+					get-content -encoding $enc $i |
+					foreach {
+						if ($ignorecaseSw){
+							if ($_ -notmatch $string){
+								if ($files.count -eq 1){
 									$out = $_
 								}else{
-									$out = $files[$i] + ":" + $_
+									if ($shortSw){
+										$fn = $i.name
+									}else{
+										$fn = $i
+									}
+									$out = [String]::Format("{0}:{1}", $fn, $_)
 								}
 								write-output $out
 							}
 						}else{
-							if ($_ -match $string){
-								if ($filesIndex -eq 1){
+							if ($_ -cnotmatch $string){
+								if ($files.count -eq 1){
 									$out = $_
 								}else{
-									$out = $files[$i] + ":" + $_
+									if ($shortSw){
+										$fn = $i.name
+									}else{
+										$fn = $i
+									}
+									$out = [String]::Format("{0}:{1}", $fn, $_)
 								}
 								write-output $out
 							}
@@ -122,36 +138,46 @@ function psgrep {
 					}
 				}
 			}else{
-				if ($ignorecaseSw -eq "off"){
-					if ($_ -cmatch $string){
+				if ($ignorecaseSw){
+					if ($_ -notmatch $string){
 						write-output $_
 					}
 				}else{
-					if ($_ -match $string){
+					if ($_ -cnotmatch $string){
 						write-output $_
 					}
 				}
 			}
 		}else{
-			if ($filesIndex -gt 0){
-				for ($i = 0; $i -lt $filesIndex; $i++){
-					get-content -encoding $enc $files[$i] |
-					foreach-object {
-						if ($ignorecaseSw -eq "off"){
-							if ($_ -cnotmatch $string){
-								if ($filesIndex -eq 1){
+			if ($files.count -gt 0){
+				foreach ($i in $files){
+					get-content -encoding $enc $i |
+					foreach {
+						if ($ignorecaseSw){
+							if ($_ -match $string){
+								if ($files.count -eq 1){
 									$out = $_
 								}else{
-									$out = $files[$i] + ":" + $_
+									if ($shortSw){
+										$fn = $i.name
+									}else{
+										$fn = $i
+									}
+									$out = [String]::Format("{0}:{1}", $fn, $_)
 								}
 								write-output $out
 							}
 						}else{
-							if ($_ -notmatch $string){
-								if ($filesIndex -eq 1){
+							if ($_ -cmatch $string){
+								if ($files.count -eq 1){
 									$out = $_
 								}else{
-									$out = $files[$i] + ":" + $_
+									if ($shortSw){
+										$fn = $i.name
+									}else{
+										$fn = $i
+									}
+									$out = [String]::Format("{0}:{1}", $fn, $_)
 								}
 								write-output $out
 							}
@@ -159,12 +185,12 @@ function psgrep {
 					}
 				}
 			}else{
-				if ($ignorecaseSw -eq "off"){
-					if ($_ -cnotmatch $string){
+				if ($ignorecaseSw){
+					if ($_ -match $string){
 						write-output $_
 					}
 				}else{
-					if ($_ -notmatch $string){
+					if ($_ -cmatch $string){
 						write-output $_
 					}
 				}
@@ -181,38 +207,48 @@ function psgrep {
 function pswcl {
 	begin{
 		$helpSw = $false
+		$shortSw = $false
 		$enc = "Default"
 		$number = 0
 		$total_number = 0
-		$files = @{}
-		$filesIndex = 0
+		$filestmp = @()
+		$files = @()
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "Usage: pswcl [-h|--help] [-e encoding] [input ...]"
+				write-output "Usage: pswcl [-h|--help] [-sn] [-e encoding] [input ...]"
 				write-output "Print newline counts for each input, and a total line if more than one input is specified."
 				write-output ""
+				write-output "  -sn                show short filename"
 				write-output "  -e encoding        encoding for get-content called internally"
 				return
+			}elseif ($args[$i] -eq "-sn"){
+				$shortSw = $true
 			}elseif ($args[$i] -eq "-e"){
 				$i++
 				$enc = $args[$i]
 			}else{
-				$files[$filesIndex] = $args[$i]
-				$filesIndex++
+				$filestmp += $args[$i]
 			}
+		}
+		if ($filestmp.count -gt 0){
+			$files = get-item $filestmp
 		}
 	}
 	process{
-		if ($filesIndex -gt 0){
-			for ($i = 0; $i -lt $filesIndex; $i++){
+		if ($files.count -gt 0){
+			foreach ($i in $files){
 				$number = 0
-				get-content -encoding $enc $files[$i] |
-				foreach-object {
+				get-content -encoding $enc $i |
+				foreach {
 					$number++
 				}
-				$out = $number.tostring() + " " + $args[$i]
-				write-output $out
+				if ($shortSw){
+					$fn = $i.name
+				}else{
+					$fn = $i
+				}
+				write-output ([String]::Format("{0} {1}", $number ,$fn))
 				$total_number += $number
 			}
 		}else{
@@ -222,13 +258,12 @@ function pswcl {
 		}
 	}
 	end{
-		if ($helpSw -eq $false){
-			if ($filesIndex -eq 0){
+		if (-not $helpSw){
+			if ($files.count -eq 0){
 				write-output $number
 			}else{
-				if ($filesIndex -gt 1){
-					$out = $total_number.tostring() + " TOTAL"
-					write-output $out
+				if ($files.count -gt 1){
+					write-output ([String]::Format("{0} TOTAL", $total_number))
 				}
 			}
 		}
@@ -243,8 +278,8 @@ function pssed {
 		$before_string = $null
 		$after_string = $null
 		$enc = "Default"
-		$files = @{}
-		$filesIndex = 0
+		$filestmp = @()
+		$files = @()
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				write-output "Usage: pssed [-h|--help] [-e encoding] regex string [input ...]"
@@ -260,23 +295,23 @@ function pssed {
 			}elseif ($after_string -eq $null){
 				$after_string = $args[$i]
 			}else{
-				$files[$filesIndex] = $args[$i]
-				$filesIndex++
+				$filestmp += $args[$i]
 			}
+		}
+		if ($filestmp.count -gt 0){
+			$files = get-item $filestmp
 		}
 	}
 	process{
-		if ($filesIndex -gt 0){
-			for ($i = 0; $i -lt $filesIndex; $i++){
-				get-content -encoding $enc $files[$i] |
-				foreach-object {
-					$out = $_ -replace $before_string, $after_string
-					write-output $out
+		if ($files.count -gt 0){
+			foreach ($i in $files){
+				get-content -encoding $enc $i |
+				foreach {
+					write-output ($_ -replace $before_string, $after_string)
 				}
 			}
 		}else{
-			$out = $_ -replace $before_string, $after_string
-			write-output $out
+			write-output ($_ -replace $before_string, $after_string)
 		}
 	}
 	end{
@@ -289,36 +324,48 @@ function pssed {
 function pshead {
 	begin{
 		$line = 10
+		$shortSw = $false
 		$enc = "Default"
 		$wline = 0
-		$files = @{}
-		$filesIndex = 0
+		$filestmp = @()
+		$files = @()
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "Usage: pshead [-h|--help] [-l line_number] [-e encoding] [input ...]"
+				write-output "Usage: pshead [-h|--help] [-l line_number] [-sn] [-e encoding] [input ...]"
 				write-output "Print the first 10 lines of each input to standard output."
 				write-output "With no input, read standard input."
 				write-output ""
 				write-output "  -l line_number        print the first line_number lines instead of the first 10"
+				write-output "  -sn                   show short filename"
 				write-output "  -e encoding           encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-l"){
 				$i++
 				$line = $args[$i]
+			}elseif ($args[$i] -eq "-sn"){
+				$shortSw = $true
 			}elseif ($args[$i] -eq "-e"){
 				$i++
 				$enc = $args[$i]
 			}else{
-				$files[$filesIndex] = $args[$i]
-				$filesIndex++
+				$filestmp += $args[$i]
 			}
+		}
+		if ($filestmp.count -gt 0){
+			$files = get-item $filestmp
 		}
 	}
 	process{
-		if ($filesIndex -gt 0){
-			for ($i = 0; $i -lt $filesIndex; $i++){
-				$wline = 0
-				get-content -encoding $enc $files[$i] |
+		if ($files.count -gt 0){
+			foreach ($i in $files){
+				if ($files.count -gt 1){
+					if ($shortSw){
+						write-output ([String]::Format("==> {0} <==", $i.name))
+					}else{
+						write-output ([String]::Format("==> {0} <==", $i))
+					}
+				}
+				get-content -encoding $enc $i |
 				select-object -first $line
 			}
 		}else{
@@ -335,42 +382,55 @@ function pshead {
 }
 
 #
-# pstail - output the last part of files
+# pstailnew - output the last part of files
 #
 function pstail {
 	begin{
 		$helpSw = $false
 		$tmpfile = [System.IO.Path]::GetTempFileName()
 		$line = 10
+		$shortSw = $false
 		$enc = "Default"
-		$files = @{}
-		$filesIndex = 0
+		$filestmp = @()
+		$files = @()
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
-				write-output "Usage: pstail [-h|--help] [-l line_number] [-e encoding] [input ...]"
+				write-output "Usage: pstail [-h|--help] [-l line_number] [-sn] [-e encoding] [input ...]"
 				write-output "Print the last 10 lines of each input to standard output."
 				write-output "With no input, read standard input."
 				write-output ""
 				write-output "  -l line_number        print the last line_number lines instead of the last 10"
+				write-output "  -sn                   show short filename"
 				write-output "  -e encoding           encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-l"){
 				$i++
 				$line = $args[$i]
+			}elseif ($args[$i] -eq "-sn"){
+				$shortSw = $true
 			}elseif ($args[$i] -eq "-e"){
 				$i++
 				$enc = $args[$i]
 			}else{
-				$files[$filesIndex] = $args[$i]
-				$filesIndex++
+				$filestmp += $args[$i]
 			}
+		}
+		if ($filestmp.count -gt 0){
+			$files = get-item $filestmp
 		}
 	}
 	process{
-		if ($filesIndex -gt 0){
-			for ($i = 0; $i -lt $filesIndex; $i++){
-				get-content -encoding $enc $files[$i] |
+		if ($files.count -gt 0){
+			foreach ($i in $files){
+				if ($files.count -gt 1){
+					if ($shortSw){
+						write-output ([String]::Format("==> {0} <==", $i.name))
+					}else{
+						write-output ([String]::Format("==> {0} <==", $i))
+					}
+				}
+				get-content -encoding $enc $i |
 				select-object -last $line
 			}
 		}else{
@@ -378,8 +438,8 @@ function pstail {
 		}
 	}
 	end{
-		if ($helpSw -eq $false){
-			if ($filesIndex -eq 0){
+		if (-not $helpSw){
+			if ($files.count -eq 0){
 				get-content -encoding $enc $tmpfile |
 				select-object -last $line
 				remove-item $tmpfile
@@ -395,8 +455,8 @@ function pscut {
 	begin{
 		$delimiter = ","
 		$enc = "Default"
-		$files = @{}
-		$filesIndex = 0
+		$filestmp = @()
+		$files = @()
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				write-output "Usage: pscut [-h|--help] [-d ""delimiter""] -i ""index,..."" [-e encoding] [input ...]"
@@ -417,16 +477,18 @@ function pscut {
 				$i++
 				$enc = $args[$i]
 			}else{
-				$files[$filesIndex] = $args[$i]
-				$filesIndex++
+				$filestmp += $args[$i]
 			}
+		}
+		if ($filestmp.count -gt 0){
+			$files = get-item $filestmp
 		}
 	}
 	process{
-		if ($filesIndex -gt 0){
-			for ($i = 0; $i -lt $filesIndex; $i++){
-				get-content -encoding $enc $files[$i] |
-				foreach-object {
+		if ($files.count -gt 0){
+			foreach ($i in $files){
+				get-content -encoding $enc $i |
+				foreach {
 					$out = ""
 					if ($_ -ne $null){
 						$firstSw = $true
@@ -435,7 +497,7 @@ function pscut {
 								$out = $_.split($delimiter)[$j]
 								$firstSw = $false
 							}else{
-								$out = $out + $delimiter + $_.split($delimiter)[$j]
+								$out = ([String]::Format("{0}{1}{2}", $out, $delimiter, ($_.split($delimiter)[$j])))
 							}
 						}
 						write-output $out
@@ -451,7 +513,7 @@ function pscut {
 						$out = $_.split($delimiter)[$j]
 						$firstSw = $false
 					}else{
-						$out = $out + $delimiter + $_.split($delimiter)[$j]
+						$out = ([String]::Format("{0}{1}{2}", $out, $delimiter, ($_.split($delimiter)[$j])))
 					}
 				}
 				write-output $out
@@ -467,23 +529,27 @@ function pscut {
 #
 function pstee {
 	begin{
-		$files = @{}
-		$filesIndex = 0
+		$files = @()
+		$enc = "Default"
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-				write-output "Usage: pstee [-h|--help] [output ...]"
+				write-output "Usage: pstee [-h|--help] [-e encoding] [output ...]"
 				write-output "Copy standard input to each output, and also to standard output."
+				write-output ""
+				write-output "  -e encoding           encoding for out-file called internally"
 				return
+			}elseif ($args[$i] -eq "-e"){
+				$i++
+				$enc = $args[$i]
 			}else{
-				$files[$filesIndex] = $args[$i]
-				$filesIndex++
+				$files += $args[$i]
 			}
 		}
 	}
 	process{
 		write-output $_
-		for ($i = 0; $i -lt $filesIndex; $i++){
-			write-output $_ >>$files[$i]
+		foreach ($i in $files){
+			write-output $_ | out-file -append -encoding $enc $i
 		}
 	}
 	end{
@@ -499,10 +565,10 @@ function psuniq {
 		$oldrec = $null
 		$count = 0
 		$enc = "Default"
-		$duplicateSw = "off"
-		$countSw = "off"
-		$files = @{}
-		$filesIndex = 0
+		$duplicateSw = $false
+		$countSw = $false
+		$filestmp = @()
+		$files = @()
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
@@ -516,41 +582,43 @@ function psuniq {
 				write-output "  -e encoding        encoding for get-content called internally"
 				return
 			}elseif ($args[$i] -eq "-d"){
-				$duplicateSw = "on"
+				$duplicateSw = $true
 			}elseif ($args[$i] -eq "-c"){
-				$countSw = "on"
+				$countSw = $true
 			}elseif ($args[$i] -eq "-e"){
 				$i++
 				$enc = $args[$i]
 			}else{
-				$files[$filesIndex] = $args[$i]
-				$filesIndex++
+				$filestmp += $args[$i]
 			}
+		}
+		if ($filestmp.count -gt 0){
+			$files = get-item $filestmp
 		}
 	}
 	process{
-		if ($filesIndex -gt 0){
-			for ($i = 0; $i -lt $filesIndex; $i++){
+		if ($files.count -gt 0){
+			foreach ($i in $files){
 				$oldrec = $null
 				$count = 0
-				get-content -encoding $enc $files[$i] |
+				get-content -encoding $enc $i |
 				foreach-object {
-					if ($duplicateSw -eq "on"){
+					if ($duplicateSw){
 						if ($oldrec -eq $null){
 							$oldrec = $_
-							$isDuplicateSw = "off"
+							$isDuplicateSw = $false
 						}else{
 							if ($_ -eq $oldrec){
-								$isDuplicateSw = "on"
+								$isDuplicateSw = $true
 							}else{
-								if ($isDuplicateSw -eq "on"){
+								if ($isDuplicateSw){
 									write-output $oldrec
 								}
 								$oldrec = $_	
-								$isDuplicateSw = "off"
+								$isDuplicateSw = $false
 							}
 						}
-					}elseif ($countSw -eq "on"){
+					}elseif ($countSw){
 						if ($oldrec -eq $null){
 							$oldrec = $_
 							$count++
@@ -558,8 +626,7 @@ function psuniq {
 							if ($_ -eq $oldrec){
 								$count++
 							}else{
-								$out = $count.tostring() + " " + $oldrec
-								write-output $out
+								write-output ([String]::Format("{0} {1}", $count, $oldrec))
 								$count = 0
 								$oldrec = $_	
 								$count++
@@ -568,38 +635,36 @@ function psuniq {
 					}else{
 						if ($oldrec -eq $null){
 							$oldrec = $_
-							$isDuplicateSw = "off"
+							$isDuplicateSw = $false
 						}else{
 							if ($_ -eq $oldrec){
-								$isDuplicateSw = "on"
+								$isDuplicateSw = $true
 							}else{
-#								if ($isDuplicateSw -eq "off"){
-									write-output $oldrec
-#								}
+								write-output $oldrec
 								$oldrec = $_	
-								$isDuplicateSw = "off"
+								$isDuplicateSw = $false
 							}
 						}
 					}
 				}
 			}
 		}else{
-			if ($duplicateSw -eq "on"){
+			if ($duplicateSw){
 				if ($oldrec -eq $null){
 					$oldrec = $_
-					$isDuplicateSw = "off"
+					$isDuplicateSw = $false
 				}else{
 					if ($_ -eq $oldrec){
-						$isDuplicateSw = "on"
+						$isDuplicateSw = $true
 					}else{
-						if ($isDuplicateSw -eq "on"){
+						if ($isDuplicateSw){
 							write-output $oldrec
 						}
 						$oldrec = $_	
-						$isDuplicateSw = "off"
+						$isDuplicateSw = $false
 					}
 				}
-			}elseif ($countSw -eq "on"){
+			}elseif ($countSw){
 				if ($oldrec -eq $null){
 					$oldrec = $_
 					$count++
@@ -607,8 +672,7 @@ function psuniq {
 					if ($_ -eq $oldrec){
 						$count++
 					}else{
-						$out = $count.tostring() + " " + $oldrec
-						write-output $out
+						write-output ([String]::Format("{0} {1}", $count, $oldrec))
 						$count = 0
 						$oldrec = $_	
 						$count++
@@ -617,16 +681,14 @@ function psuniq {
 			}else{
 				if ($oldrec -eq $null){
 					$oldrec = $_
-					$isDuplicateSw = "off"
+					$isDuplicateSw = $false
 				}else{
 					if ($_ -eq $oldrec){
-						$isDuplicateSw = "on"
+						$isDuplicateSw = $true
 					}else{
-#						if ($isDuplicateSw -eq "off"){
-							write-output $oldrec
-#						}
+						write-output $oldrec
 						$oldrec = $_	
-						$isDuplicateSw = "off"
+						$isDuplicateSw = $false
 					}
 				}
 			}
@@ -634,17 +696,14 @@ function psuniq {
 	}
 	end{
 		if ($helpSw -eq $false){
-			if ($duplicateSw -eq "on"){
-				if ($isDuplicateSw -eq "on"){
+			if ($duplicateSw){
+				if ($isDuplicateSw){
 					write-output $oldrec
 				}
-			}elseif ($countSw -eq "on"){
-				$out = $count.tostring() + " " + $oldrec
-				write-output $out
+			}elseif ($countSw){
+				write-output ([String]::Format("{0} {1}", $count, $oldrec))
 			}else{
-#				if ($isDuplicateSw -eq "off"){
-					write-output $oldrec
-#				}
+				write-output $oldrec
 			}
 		}
 	}
@@ -661,8 +720,8 @@ function psjoin {
 		$keyidx2 = "0"
 		$action = "m"
 		$multikey = ""
-		$files = @{}
-		$filesIndex = 0
+		$filestmp = @()
+		$files = @()
 		$encoding1 = 0
 		$encoding2 = 0
 		for ($i = 0; $i -lt $args.length; $i++){
@@ -683,6 +742,7 @@ function psjoin {
 				write-output "  -m [1|2]                specify input which has multiple join fields"
 				write-output "  -e1 encoding            encoding for file 1(default 0 means Default)"
 				write-output "  -e2 encoding            encoding for file 2(default 0 means Default)"
+				write-output "                          encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0"
 				return
 			}elseif ($args[$i] -eq "-d"){
 				$i++
@@ -706,92 +766,45 @@ function psjoin {
 				$i++
 				$encoding2 = $args[$i]
 			}else{
-#				$files[$filesIndex] = (resolve-path $args[$i]).Path
-				$files[$filesIndex] = psabspath $args[$i]
-				$filesIndex++
+				$filestmp += psabspath $args[$i]
 			}
 		}
-#		$oIn1 = New-Object System.IO.StreamReader($files[0],[Text.Encoding]::Default)
-#		$oIn2 = New-Object System.IO.StreamReader($files[1],[Text.Encoding]::Default)
-		if ($encoding1 -eq "utf8n" -or 
-		    $encoding1 -eq "UTF8N" -or 
-		    $encoding1 -eq "utf-8n" -or 
-		    $encoding1 -eq "UTF-8N"){
+		if ($filestmp.count -gt 0){
+			$files = get-item $filestmp
+		}
+
+		if ($encoding1 -match "^utf-*8n$"){
 			$enc1 = New-Object System.Text.UTF8Encoding $False
-		}elseif ($encoding1 -eq "utf8" -or 
-			  $encoding1 -eq "UTF8" -or 
-			  $encoding1 -eq "utf-8" -or 
-			  $encoding1 -eq "UTF-8"){
+		}elseif ($encoding1 -match "^utf-*8$"){
 			$enc1 = New-Object System.Text.UTF8Encoding $True
-		}elseif ($encoding1 -eq "utf16n" -or 
-			  $encoding1 -eq "UTF16N" -or 
-			  $encoding1 -eq "utf-16n" -or 
-			  $encoding1 -eq "UTF-16N" -or
-			  $encoding1 -eq "utf16len" -or 
-			  $encoding1 -eq "UTF16LEN" -or 
-			  $encoding1 -eq "utf-16len" -or 
-			  $encoding1 -eq "UTF-16LEN"){
+		}elseif ($encoding1 -match "^utf-*16n$" -or 
+			  $encoding1 -match "^utf-*16len$"){ 
 			$enc1 = New-Object System.Text.UnicodeEncoding $False,$False
-		}elseif ($encoding1 -eq "utf16" -or 
-			  $encoding1 -eq "UTF16" -or 
-			  $encoding1 -eq "utf-16" -or 
-			  $encoding1 -eq "UTF-16" -or
-			  $encoding1 -eq "utf16le" -or 
-			  $encoding1 -eq "UTF16LE" -or 
-			  $encoding1 -eq "utf-16le" -or 
-			  $encoding1 -eq "UTF-16LE"){
+		}elseif ($encoding1 -match "^utf-*16$" -or 
+			  $encoding1 -match "^utf-*16le$"){
 			$enc1 = New-Object System.Text.UnicodeEncoding $False,$True
-		}elseif ($encoding1 -eq "utf16ben" -or 
-			  $encoding1 -eq "UTF16BEN" -or 
-			  $encoding1 -eq "utf-16ben" -or 
-			  $encoding1 -eq "UTF-16BEN"){
+		}elseif ($encoding1 -match "^utf-*16ben$"){
 			$enc1 = New-Object System.Text.UnicodeEncoding $True,$False
-		}elseif ($encoding1 -eq "utf16be" -or 
-			  $encoding1 -eq "UTF16BE" -or 
-			  $encoding1 -eq "utf-16be" -or 
-			  $encoding1 -eq "UTF-16BE"){
+		}elseif ($encoding1 -match "^utf-*16be$"){
 			$enc1 = New-Object System.Text.UnicodeEncoding $True,$True
 		}else{
 			$enc1 = [Text.Encoding]::GetEncoding($encoding1)
 		}
 		$oIn1 = New-Object System.IO.StreamReader($files[0],$enc1)
-		if ($encoding2 -eq "utf8n" -or 
-		    $encoding2 -eq "UTF8N" -or 
-		    $encoding2 -eq "utf-8n" -or 
-		    $encoding2 -eq "UTF-8N"){
+
+		if ($encoding2 -match "^utf-*8n$"){
 			$enc2 = New-Object System.Text.UTF8Encoding $False
-		}elseif ($encoding2 -eq "utf8" -or 
-			  $encoding2 -eq "UTF8" -or 
-			  $encoding2 -eq "utf-8" -or 
-			  $encoding2 -eq "UTF-8"){
+		}elseif ($encoding2 -match "^utf-*8$"){
 			$enc2 = New-Object System.Text.UTF8Encoding $True
-		}elseif ($encoding2 -eq "utf16n" -or 
-			  $encoding2 -eq "UTF16N" -or 
-			  $encoding2 -eq "utf-16n" -or 
-			  $encoding2 -eq "UTF-16N" -or
-			  $encoding2 -eq "utf16len" -or 
-			  $encoding2 -eq "UTF16LEN" -or 
-			  $encoding2 -eq "utf-16len" -or 
-			  $encoding2 -eq "UTF-16LEN"){
+		}elseif ($encoding2 -match "^utf-*16n$" -or 
+			  $encoding2 -match "^utf-*16len$"){ 
 			$enc2 = New-Object System.Text.UnicodeEncoding $False,$False
-		}elseif ($encoding2 -eq "utf16" -or 
-			  $encoding2 -eq "UTF16" -or 
-			  $encoding2 -eq "utf-16" -or 
-			  $encoding2 -eq "UTF-16" -or
-			  $encoding2 -eq "utf16le" -or 
-			  $encoding2 -eq "UTF16LE" -or 
-			  $encoding2 -eq "utf-16le" -or 
-			  $encoding2 -eq "UTF-16LE"){
+		}elseif ($encoding2 -match "^utf-*16$" -or 
+			  $encoding2 -match "^utf-*16le$"){
 			$enc2 = New-Object System.Text.UnicodeEncoding $False,$True
-		}elseif ($encoding2 -eq "utf16ben" -or 
-			  $encoding2 -eq "UTF16BEN" -or 
-			  $encoding2 -eq "utf-16ben" -or 
-			  $encoding2 -eq "UTF-16BEN"){
+		}elseif ($encoding2 -match "^utf-*16ben$"){
 			$enc2 = New-Object System.Text.UnicodeEncoding $True,$False
-		}elseif ($encoding2 -eq "utf16be" -or 
-			  $encoding2 -eq "UTF16BE" -or 
-			  $encoding2 -eq "utf-16be" -or 
-			  $encoding2 -eq "UTF-16BE"){
+		}elseif ($encoding2 -match "^utf-*16be$"){
 			$enc2 = New-Object System.Text.UnicodeEncoding $True,$True
 		}else{
 			$enc2 = [Text.Encoding]::GetEncoding($encoding2)
@@ -957,11 +970,9 @@ function psxls2csv {
 		$helpSw = $false
 		$strInput = ""
 		$sheet = 1
-		$tabSw = "off"
+		$tabSw = $false
 		$enc = "Default"
 		$strOutput = ""
-		$files = @{}
-		$filesIndex = 0
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
@@ -983,16 +994,13 @@ function psxls2csv {
 				$i++
 				$sheet = $args[$i]
 			}elseif ($args[$i] -eq "-t"){
-				$tabSw = "on"
+				$tabSw = $true
 			}elseif ($args[$i] -eq "-o"){
 				$i++
 				$strOutput = $args[$i]
 			}elseif ($args[$i] -eq "-e"){
 				$i++
 				$enc = $args[$i]
-			}else{
-				$files[$filesIndex] = $args[$i]
-				$filesIndex++
 			}
 		}
 	}
@@ -1002,21 +1010,21 @@ function psxls2csv {
 		}
 		if ($strInput -eq ""){
 			Get-ChildItem *.xls* |
-			ForEach-Object {
+			foreach {
 				$InPath = psabspath $_.Name
 				if ($strOutput -eq ""){
-					if ($tabSw -eq "on"){
+					if ($tabSw){
 						$OutPath = $InPath -replace ".xls.*", ".txt"
-						$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".txt")
+						$out = ([String]::Format("{0} -> {1}", $_.Name ,($_.Name -replace ".xls.*", ".txt")))
 					}else{
 						$OutPath = $InPath -replace ".xls.*", ".csv"
-						$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".csv")
+						$out = ([String]::Format("{0} -> {1}", $_.Name ,($_.Name -replace ".xls.*", ".csv")))
 					}
 					write-output $out
 				}elseif ($strOutput -eq "-"){
 					$OutPath = [System.IO.Path]::GetTempFileName()
 				}else{
-					$OutPath = (get-location).tostring() + "\" + $strOutput
+					$OutPath = ([String]::Format("{0}\{1}", (get-location).tostring() ,$strOutput))
 				}
 				$objExcel = New-Object -ComObject Excel.Application
 				$objExcel.DisplayAlerts = $false
@@ -1024,10 +1032,9 @@ function psxls2csv {
 				$objExcel.Workbooks.open($InPath) | out-null
 			
 				$objSheet = $objExcel.Worksheets.Item($sheet)
-				if ($tabSw -eq "on"){
+				if ($tabSw){
 					$objSheet.SaveAs($OutPath, 42)
 				}else{
-###					$objSheet.SaveAs($OutPath, 6)
 					$objSheet.SaveAs($OutPath, 62)
 				}
 				$objExcel.Workbooks.Close()
@@ -1044,17 +1051,17 @@ function psxls2csv {
 				$InPath = psabspath $strInput
 			}
 			if ($strOutput -eq ""){
-				if ($tabSw -eq "on"){
+				if ($tabSw){
 					$OutPath = $InPath -replace ".xls.*", ".txt"
-					$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".txt")
+					$out = ([String]::Format("{0} -> {1}", $_.Name ,($_.Name -replace ".xls.*", ".txt")))
 				}else{
 					$OutPath = $InPath -replace ".xls.*", ".csv"
-					$out = $_.Name + " -> " + ($_.Name -replace ".xls.*", ".csv")
+					$out = ([String]::Format("{0} -> {1}", $_.Name ,($_.Name -replace ".xls.*", ".csv")))
 				}
 			}elseif ($strOutput -eq "-"){
 				$OutPath = [System.IO.Path]::GetTempFileName()
 			}else{
-				$OutPath = (get-location).tostring() + "\" + $strOutput
+				$OutPath = ([String]::Format("{0}\{1}", (get-location).tostring() ,$strOutput))
 			}
 			$objExcel = New-Object -ComObject Excel.Application
 			$objExcel.DisplayAlerts = $false
@@ -1062,10 +1069,9 @@ function psxls2csv {
 			$objExcel.Workbooks.open($InPath) | out-null
 		
 			$objSheet = $objExcel.Worksheets.Item($sheet)
-			if ($tabSw -eq "on"){
+			if ($tabSw){
 				$objSheet.SaveAs($OutPath, 42)
 			}else{
-###				$objSheet.SaveAs($OutPath, 6)
 				$objSheet.SaveAs($OutPath, 62)
 			}
 			$objExcel.Workbooks.Close()
@@ -1108,7 +1114,7 @@ function psxls2sheetname (){
 			$sheet = $args[$i]
 		}
 	}
-	if ($helpSw -eq $false){
+	if (-not $helpSw){
 		$xls = psexcel_open $input
 		if ($sheet -eq ""){
 			for ($i = 1; $i -le (psexcel_getSheetCount $xls); $i++){
@@ -1138,7 +1144,7 @@ function psprint (){
 	process{
 	}
 	end{
-		if ($helpSw -eq $false){
+		if (-not $helpSw){
 			$out = $args -join ""
 			write-output $out
 		}
@@ -1162,7 +1168,7 @@ function pstmpfile (){
 	process{
 	}
 	end{
-		if ($helpSw -eq $false){
+		if (-not $helpSw){
 			[System.IO.Path]::GetTempFileName()
 		}
 	}
@@ -1185,12 +1191,11 @@ function psabspath ($path){
 	process{
 	}
 	end{
-		if ($helpSw -eq $false){
+		if (-not $helpSw){
 			if ($path -match '^[A-Za-z]:' -or $path -match '^\\'){
 				$path
 			}else{
-#				(get-location).tostring() + "\" + $path
-				(get-location).ProviderPath + "\" + $path
+				[String]::Format("{0}\{1}", (get-location).ProviderPath ,$path)
 			}
 		}
 	}
@@ -1213,7 +1218,7 @@ function psreadpassword (){
 	process{
 	}
 	end{
-		if ($helpSw -eq $false){
+		if (-not $helpSw){
 			$ss = Read-Host -AsSecureString
 			$ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($ss)
 			$password = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
@@ -1240,7 +1245,7 @@ function psconwrite(){
 	process{
 	}
 	end{
-		if ($helpSw -eq $false){
+		if (-not $helpSw){
 			$out = $args -join ""
 			[Console]::Out.write($out)
 		}
@@ -1265,7 +1270,7 @@ function psconwriteline(){
 	process{
 	}
 	end{
-		if ($helpSw -eq $false){
+		if (-not $helpSw){
 			$out = $args -join ""
 			[Console]::Out.writeLine($out)
 		}
@@ -1290,7 +1295,7 @@ function psconreadline(){
 	process{
 	}
 	end{
-		if ($helpSw -eq $false){
+		if (-not $helpSw){
 			$input = [Console]::In.readLine()
 			write-output $input
 		}
@@ -1323,13 +1328,17 @@ function psconreadline(){
 #
 function psopen(){
 	begin{
-		$encoding = "Shift_JIS"
+		$encoding = 0
 		$helpSw = $false
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 				$helpSw = $true
 				write-output "Usage: psopen [-h|--help] [[-r|-w|-a] [inputfile|output]] [-e encoding]"
 				write-output "Open IO.Stream and get object."
+				write-output ""
+				write-output "  -e encoding            encoding for file(default 0 means Default)"
+				write-output "                         encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0"
+				write-output ""
 				write-output "ex. Handle as text"
 				write-output '  $inObj = psopen -r "input.txt"'
 				write-output '  $outObj = psopen -w "output.txt"'
@@ -1358,7 +1367,7 @@ function psopen(){
 				if ($args[$i] -match "^[A-Za-z]:" -or $args[$i] -match "^\\"){
 					$inputfile = $args[$i]
 				}else{
-					$inputfile = (get-location).tostring() + "\" + $args[$i]
+					$inputfile = ([String]::Format("{0}\{1}", (get-location).tostring() ,$args[$i]))
 					$inputfile = $inputfile -replace "^.*::", ""
 				}
 			}elseif ($args[$i] -eq "-w"){
@@ -1367,7 +1376,7 @@ function psopen(){
 				if ($args[$i] -match "^[A-Za-z]:" -or $args[$i] -match "^\\"){
 					$outputfile = $args[$i]
 				}else{
-					$outputfile = (get-location).tostring() + "\" + $args[$i]
+					$outputfile = ([String]::Format("{0}\{1}", (get-location).tostring() ,$args[$i]))
 					$outputfile = $outputfile -replace "^.*::", ""
 				}
 			}elseif ($args[$i] -eq "-a"){
@@ -1376,7 +1385,7 @@ function psopen(){
 				if ($args[$i] -match "^[A-Za-z]:" -or $args[$i] -match "^\\"){
 					$outputfile = $args[$i]
 				}else{
-					$outputfile = (get-location).tostring() + "\" + $args[$i]
+					$outputfile = ([String]::Format("{0}\{1}", (get-location).tostring() ,$args[$i]))
 					$outputfile = $outputfile -replace "^.*::", ""
 				}
 			}elseif ($args[$i] -eq "-e"){
@@ -1388,44 +1397,20 @@ function psopen(){
 	process{
 	}
 	end{
-		if ($helpSw -eq $false){
-			if ($encoding -eq "utf8n" -or 
-			    $encoding -eq "UTF8N" -or 
-			    $encoding -eq "utf-8n" -or 
-			    $encoding -eq "UTF-8N"){
+		if (-not $helpSw){
+			if ($encoding -match "^utf-*8n$"){
 				$enc = New-Object System.Text.UTF8Encoding $False
-			}elseif ($encoding -eq "utf8" -or 
-				  $encoding -eq "UTF8" -or 
-				  $encoding -eq "utf-8" -or 
-				  $encoding -eq "UTF-8"){
+			}elseif ($encoding -match "^utf-*8$"){
 				$enc = New-Object System.Text.UTF8Encoding $True
-			}elseif ($encoding -eq "utf16n" -or 
-				  $encoding -eq "UTF16N" -or 
-				  $encoding -eq "utf-16n" -or 
-				  $encoding -eq "UTF-16N" -or
-				  $encoding -eq "utf16len" -or 
-				  $encoding -eq "UTF16LEN" -or 
-				  $encoding -eq "utf-16len" -or 
-				  $encoding -eq "UTF-16LEN"){
+			}elseif ($encoding -match "^utf-*16n$" -or 
+				  $encoding -match "^utf-*16len$"){
 				$enc = New-Object System.Text.UnicodeEncoding $False,$False
-			}elseif ($encoding -eq "utf16" -or 
-				  $encoding -eq "UTF16" -or 
-				  $encoding -eq "utf-16" -or 
-				  $encoding -eq "UTF-16" -or
-				  $encoding -eq "utf16le" -or 
-				  $encoding -eq "UTF16LE" -or 
-				  $encoding -eq "utf-16le" -or 
-				  $encoding -eq "UTF-16LE"){
+			}elseif ($encoding -match "^utf-*16$" -or 
+				  $encoding -match "^utf-*16le$"){
 				$enc = New-Object System.Text.UnicodeEncoding $False,$True
-			}elseif ($encoding -eq "utf16ben" -or 
-				  $encoding -eq "UTF16BEN" -or 
-				  $encoding -eq "utf-16ben" -or 
-				  $encoding -eq "UTF-16BEN"){
+			}elseif ($encoding -match "^utf-*16ben$"){
 				$enc = New-Object System.Text.UnicodeEncoding $True,$False
-			}elseif ($encoding -eq "utf16be" -or 
-				  $encoding -eq "UTF16BE" -or 
-				  $encoding -eq "utf-16be" -or 
-				  $encoding -eq "UTF-16BE"){
+			}elseif ($encoding -match "^utf-*16be$"){
 				$enc = New-Object System.Text.UnicodeEncoding $True,$True
 			}else{
 				$enc = [Text.Encoding]::GetEncoding($encoding)
@@ -1448,6 +1433,11 @@ function psconvenc() {
 	for ($i = 0; $i -lt $args.length; $i++){
 		if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 			write-output "Usage: psconvenc -i inputfile -ie encoding -o outputfile -oe encoding"
+			write-output ""
+			write-output "  -ie encoding           encoding for input file(default 0 means Default)"
+			write-output "                         encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0"
+			write-output "  -oe encoding           encoding for output file(default 0 means Default)"
+			write-output ""
 			return
 		}elseif ($args[$i] -eq "-i"){
 			$i++
@@ -1487,16 +1477,14 @@ function psexcel_open($xlsPath) {
 
 	$objExcel = New-Object -ComObject Excel.Application
 
-#	$objExcel.Visible = $true
 	$objExcel.Visible = $false
 
-#	$objExcel.DisplayAlerts = $true
 	$objExcel.DisplayAlerts = $false
 
 	if ($xlsPath -match "^[A-Za-z]:" -or $xlsPath -match "^\\"){
 		$strPath = $xlsPath
 	}else{
-		$strPath = (get-location).tostring() + "\" + $xlsPath
+		$strPath = ([String]::Format("{0}\{1}", (get-location).tostring() ,$xlsPath))
 	}
 
 	try {
@@ -1543,7 +1531,7 @@ function psexcel_save($objExcel, $xlsPath) {
 	if ($xlsPath -match "^[A-Za-z]:" -or $xlsPath -match "^\\"){
 		$strPath = $xlsPath
 	}else{
-		$strPath = (get-location).tostring() + "\" + $xlsPath
+		$strPath = ([String]::Format("{0}\{1}", (get-location).tostring() ,$xlsPath))
 	}
 	$objExcel.Workbooks.item(1).SaveAs($strPath) | out-null
 }
@@ -1997,7 +1985,7 @@ function psprov(){
 			foreach ($i in $formatArray.keys){
 				psexcel_setCell $oOverlay 1 $i $rec.split($delimiter)[$formatArray[$i]]
 			}
-			if ($previewSw -eq $true){
+			if ($previewSw){
 				psexcel_preview $oOverlay 1
 			}else{
 				psexcel_print $oOverlay 1
@@ -2011,8 +1999,6 @@ function psprov(){
 		$input_path = ""
 		$format_path = ""
 		$formatArray = @{}
-		$files = @{}
-		$filesIndex = 0
 
 		for ($i = 0; $i -lt $args.length; $i++){
 			if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
@@ -2043,10 +2029,6 @@ function psprov(){
 			}elseif ($args[$i] -eq "-f"){
 				$i++
 				$format_path = $args[$i]
-			}else{
-#				$files[$filesIndex] = (resolve-path $args[$i]).Path
-				$files[$filesIndex] = psabspath $args[$i]
-				$filesIndex++
 			}
 		}
 
@@ -2069,7 +2051,7 @@ function psprov(){
 		}
 	}
 	process{
-		if ($helpSw -eq $false){
+		if (-not $helpSw){
 			if ($input_path -ne ""){
 				while (($rec = $oIn.readLine()) -ne $null){
 					psprov_prpv $rec
@@ -2080,7 +2062,7 @@ function psprov(){
 		}
 	}
 	end{
-		if ($helpSw -eq $false){
+		if (-not $helpSw){
 			if ($input_path -ne ""){
 				$oIn.close()
 			}
@@ -2145,10 +2127,6 @@ function psoracle_createsql($oc, $sql){
 	$ocmd = New-Object System.Data.OracleClient.OracleCommand
 	$ocmd.Connection = $oc
 	$ocmd.CommandText = $sql
-
-#	$otran = $oc.BeginTransaction()
-#	$otran.Commit()
-#	$ocmd.Transaction = $otran
 
 	return $ocmd
 }
@@ -2333,57 +2311,34 @@ function pssock_open($addr, $port, $encoding = 0){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_open server_ip server_port [encoding]"
 		write-output "Open socket for client."
+		write-output "  encoding           encoding for socket(default 0 means Default)"
+		write-output "                     encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0"
+		write-output ""
 		write-output "ex."
-		write-output '    $param = pssock_open "127.0.0.1" "12345" "UTF-8"'
+		write-output '    $param = pssock_open "127.0.0.1" "12345" "UTF8N"'
 		write-output ""
 		return
 	}
 
 	$client = New-Object System.Net.Sockets.TcpClient ($addr, $port)
 	$stream = $client.GetStream()
-	if ($encoding -eq "utf8n" -or 
-	    $encoding -eq "UTF8N" -or 
-	    $encoding -eq "utf-8n" -or 
-	    $encoding -eq "UTF-8N"){
+	if ($encoding -match "^utf-*8n$"){
 		$enc = New-Object System.Text.UTF8Encoding $False
-	}elseif ($encoding -eq "utf8" -or 
-		  $encoding -eq "UTF8" -or 
-		  $encoding -eq "utf-8" -or 
-		  $encoding -eq "UTF-8"){
+	}elseif ($encoding -match "^utf-*8$"){
 		$enc = New-Object System.Text.UTF8Encoding $True
-	}elseif ($encoding -eq "utf16n" -or 
-		  $encoding -eq "UTF16N" -or 
-		  $encoding -eq "utf-16n" -or 
-		  $encoding -eq "UTF-16N" -or
-		  $encoding -eq "utf16len" -or 
-		  $encoding -eq "UTF16LEN" -or 
-		  $encoding -eq "utf-16len" -or 
-		  $encoding -eq "UTF-16LEN"){
+	}elseif ($encoding -match "^utf-*16n$" -or
+		  $encoding -match "^utf-*16len$"){
 		$enc = New-Object System.Text.UnicodeEncoding $False,$False
-	}elseif ($encoding -eq "utf16" -or 
-		  $encoding -eq "UTF16" -or 
-		  $encoding -eq "utf-16" -or 
-		  $encoding -eq "UTF-16" -or
-		  $encoding -eq "utf16le" -or 
-		  $encoding -eq "UTF16LE" -or 
-		  $encoding -eq "utf-16le" -or 
-		  $encoding -eq "UTF-16LE"){
+	}elseif ($encoding -match "^utf-*16$" -or
+		  $encoding -match "^utf-*16le$"){
 		$enc = New-Object System.Text.UnicodeEncoding $False,$True
-	}elseif ($encoding -eq "utf16ben" -or 
-		  $encoding -eq "UTF16BEN" -or 
-		  $encoding -eq "utf-16ben" -or 
-		  $encoding -eq "UTF-16BEN"){
+	}elseif ($encoding -match "^utf-*16ben$"){
 		$enc = New-Object System.Text.UnicodeEncoding $True,$False
-	}elseif ($encoding -eq "utf16be" -or 
-		  $encoding -eq "UTF16BE" -or 
-		  $encoding -eq "utf-16be" -or 
-		  $encoding -eq "UTF-16BE"){
+	}elseif ($encoding -match "^utf-*16be$"){
 		$enc = New-Object System.Text.UnicodeEncoding $True,$True
 	}else{
 		$enc = [Text.Encoding]::GetEncoding($encoding)
 	}
-#	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
-#	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
 	$reader = New-Object IO.StreamReader($stream,$enc)
 	$writer = New-Object IO.StreamWriter($stream,$enc)
 	$param = @{"client" = $client; "stream" = $stream; "writer" = $writer; "reader" = $reader}
@@ -2541,57 +2496,34 @@ function pssock_accept($server, $encoding = 0){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: pssock_accept server [encoding]"
 		write-output "Accept connection from client."
+		write-output "  encoding           encoding for socket(default 0 means Default)"
+		write-output "                     encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0"
+		write-output ""
 		write-output "ex."
-		write-output '    $param = pssock_accept $server "UTF-8"'
+		write-output '    $param = pssock_accept $server "UTF8N"'
 		write-output ""
 		return
 	}
 
 	$client = $server.AcceptTcpClient()
 	$stream = $client.GetStream()
-	if ($encoding -eq "utf8n" -or 
-	    $encoding -eq "UTF8N" -or 
-	    $encoding -eq "utf-8n" -or 
-	    $encoding -eq "UTF-8N"){
+	if ($encoding -match "^utf-*8n$"){
 		$enc = New-Object System.Text.UTF8Encoding $False
-	}elseif ($encoding -eq "utf8" -or 
-		  $encoding -eq "UTF8" -or 
-		  $encoding -eq "utf-8" -or 
-		  $encoding -eq "UTF-8"){
+	}elseif ($encoding -match "^utf-*8$"){
 		$enc = New-Object System.Text.UTF8Encoding $True
-	}elseif ($encoding -eq "utf16n" -or 
-		  $encoding -eq "UTF16N" -or 
-		  $encoding -eq "utf-16n" -or 
-		  $encoding -eq "UTF-16N" -or
-		  $encoding -eq "utf16len" -or 
-		  $encoding -eq "UTF16LEN" -or 
-		  $encoding -eq "utf-16len" -or 
-		  $encoding -eq "UTF-16LEN"){
+	}elseif ($encoding -match "^utf-*16n$" -or
+		  $encoding -match "^utf-*16len$"){
 		$enc = New-Object System.Text.UnicodeEncoding $False,$False
-	}elseif ($encoding -eq "utf16" -or 
-		  $encoding -eq "UTF16" -or 
-		  $encoding -eq "utf-16" -or 
-		  $encoding -eq "UTF-16" -or
-		  $encoding -eq "utf16le" -or 
-		  $encoding -eq "UTF16LE" -or 
-		  $encoding -eq "utf-16le" -or 
-		  $encoding -eq "UTF-16LE"){
+	}elseif ($encoding -match "^utf-*16$" -or
+		  $encoding -match "^utf-*16le$"){
 		$enc = New-Object System.Text.UnicodeEncoding $False,$True
-	}elseif ($encoding -eq "utf16ben" -or 
-		  $encoding -eq "UTF16BEN" -or 
-		  $encoding -eq "utf-16ben" -or 
-		  $encoding -eq "UTF-16BEN"){
+	}elseif ($encoding -match "^utf-*16ben$"){
 		$enc = New-Object System.Text.UnicodeEncoding $True,$False
-	}elseif ($encoding -eq "utf16be" -or 
-		  $encoding -eq "UTF16BE" -or 
-		  $encoding -eq "utf-16be" -or 
-		  $encoding -eq "UTF-16BE"){
+	}elseif ($encoding -match "^utf-*16be$"){
 		$enc = New-Object System.Text.UnicodeEncoding $True,$True
 	}else{
 		$enc = [Text.Encoding]::GetEncoding($encoding)
 	}
-#	$reader = New-Object IO.StreamReader($stream,[Text.Encoding]::Default)
-#	$writer = New-Object IO.StreamWriter($stream,[Text.Encoding]::Default)
 	$reader = New-Object IO.StreamReader($stream,$enc)
 	$writer = New-Object IO.StreamWriter($stream,$enc)
 	$param = @{"client" = $client; "stream" = $stream; "reader" = $reader; "writer" = $writer}
@@ -2845,14 +2777,12 @@ function psrpa_init{
 		write-output ""
 		return
 	}
-#	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
-#	[void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 	add-type -assemblyname System.Drawing
 	add-type -assemblyname System.Windows.Forms
 	add-type -assemblyname microsoft.visualbasic
 	add-type -assemblyname system.windows.forms
-#	add-type -assemblyname UIAutomationClient
-#	add-type -assemblyname UIAutomationTypes
+	add-type -assemblyname UIAutomationClient
+	add-type -assemblyname UIAutomationTypes
 
 	$source = @" 
 		using System;
@@ -2931,9 +2861,6 @@ function psrpa_init{
 				}
 				SendInput(1, inp, Marshal.SizeOf(inp[0]));
 			}
-//			public static AutomationElement GetRootWindow(){ 
-//				return AutomationElement.RootElement; 
-//			}
 			public static AutomationElement GetMainWindowByTitle(string title) {
 				PropertyCondition cond = new System.Windows.Automation.PropertyCondition(System.Windows.Automation.AutomationElement.NameProperty, title);
 				return AutomationElement.RootElement.FindFirst(TreeScope.Element | TreeScope.Children, cond);
@@ -3107,23 +3034,7 @@ function psrpa_showMouseByClick($rpa, $wait = 5){
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	Start-Sleep $wait
 
-#	$pwidth = (
-#		gwmi win32_videocontroller | 
-#		out-string -stream | 
-#		select-string "CurrentHorizontalResolution" | 
-#		foreach{$_ -replace "^.*: *",""} | 
-#		sort | 
-#		select-object -Last 1
-#	)
 	$pwidth = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.width
-#	$pheight = (
-#		gwmi win32_videocontroller | 
-#		out-string -stream | 
-#		select-string "CurrentVerticalResolution" | 
-#		foreach{$_ -replace "^.*: *",""} | 
-#		sort | 
-#		select-object -Last 1
-#	)
 	$pheight = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.height
 	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
 	$gr = [System.Drawing.Graphics]::FromImage($img)
@@ -3434,6 +3345,7 @@ function psrpa_sendKeys ($rpa, $string){
 		write-output "ex."
 		write-output '    psrpa_sendKeys $rpa "any string"'
 		write-output '    psrpa_sendKeys $rpa "{BS}"'
+		write-output '    psrpa_sendKeys $rpa "{BS 5}"'
 		write-output '    psrpa_sendKeys $rpa "^a"'
 		write-output ""
 		return
@@ -3602,23 +3514,7 @@ function psrpa_getBmpByClick($rpa, $bmpfile, $wait = 5){
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	Start-Sleep $wait
 
-#	$pwidth = (
-#		gwmi win32_videocontroller | 
-#		out-string -stream | 
-#		select-string "CurrentHorizontalResolution" | 
-#		foreach{$_ -replace "^.*: *",""} | 
-#		sort | 
-#		select-object -Last 1
-#	)
 	$pwidth = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.width
-#	$pheight = (
-#		gwmi win32_videocontroller | 
-#		out-string -stream | 
-#		select-string "CurrentVerticalResolution" | 
-#		foreach{$_ -replace "^.*: *",""} | 
-#		sort | 
-#		select-object -Last 1
-#	)
 	$pheight = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.height
 	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
 	$gr = [System.Drawing.Graphics]::FromImage($img)
@@ -3776,21 +3672,7 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 		return
 	}
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
-#	$pwidth = (gwmi win32_videocontroller | 
-#		out-string -stream | 
-#		select-string "CurrentHorizontalResolution" | 
-#		foreach{$_ -replace "^.*: *",""} | 
-#		sort | 
-#		select-object -Last 1
-#	)
 	$pwidth = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.width
-#	$pheight = (gwmi win32_videocontroller | 
-#		out-string -stream | 
-#		select-string "CurrentVerticalResolution" | 
-#		foreach{$_ -replace "^.*: *",""} | 
-#		sort | 
-#		select-object -Last 1
-#	)
 	$pheight = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.height
 	if ($x1 -eq $null -or $x1 -eq ""){
 		$x1 = 0
@@ -3804,14 +3686,12 @@ function psrpa_searchBmp($rpa, $x1, $y1, $x2, $y2, $bmpfile){
 	if ($y2 -eq $null -or $y2 -eq ""){
 		$y2 = $pheight
 	}
-#	$scrimg = psrpa_getBmpFromInnerFunction $rpa 0 0 $pwidth $pheight
 	$scrimg = psrpa_getBmpFromInnerFunction $rpa $x1 $y1 $x2 $y2
 	$fileimg = New-Object System.Drawing.Bitmap((psabspath $bmpfile))
 	$pos_array = [Psrpa]::SearchImage($scrimg, $fileimg)
 	$scrimg.Dispose()
 	$fileimg.Dispose()
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
-#	return $pos_array
 	if ($pos_array[0] -lt 0){
 		return $pos_array
 	}else{
@@ -3863,23 +3743,7 @@ function psrpa_getBmpFromInnerFunction($rpa, $x1, $y1, $x2, $y2){
 	Start-Sleep -Milliseconds $rpa["BeforeWait"]
 	$width = $x2 - $x1
 	$height = $y2 - $y1
-#	$pwidth = (
-#		gwmi win32_videocontroller | 
-#		out-string -stream | 
-#		select-string "CurrentHorizontalResolution" | 
-#		foreach{$_ -replace "^.*: *",""} | 
-#		sort | 
-#		select-object -Last 1
-#	)
 	$pwidth = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.width
-#	$pheight = (
-#		gwmi win32_videocontroller | 
-#		out-string -stream | 
-#		select-string "CurrentVerticalResolution" | 
-#		foreach{$_ -replace "^.*: *",""} | 
-#		sort | 
-#		select-object -Last 1
-#	)
 	$pheight = [System.Windows.Forms.Screen]::PrimaryScreen.bounds.height
 	$img = New-Object System.Drawing.Bitmap([int]$pwidth, [int]$pheight)
 	$gr = [System.Drawing.Graphics]::FromImage($img)
@@ -3993,10 +3857,8 @@ function psrpa_uia_show_element($rpa, $element){
 	%{
 		'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
 		"ClassName = " + $_.Current.ClassName
-#		"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
 		"LocalizedControlType = " + $_.Current.LocalizedControlType
 		"Name = " + $_.Current.Name
-#		"ProcessId = " + $_.Current.ProcessId.tostring()
 		$_.GetSupportedPatterns() |
 		%{
 			"    SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
@@ -4074,10 +3936,8 @@ function psrpa_uia_show_element_all($rpa, $element){
 		"========================================================================="
 		'"' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
 		"ClassName = " + $_.Current.ClassName
-#		"ControlType.Id = " + $_.Current.ControlType.Id.tostring()
 		"LocalizedControlType = " + $_.Current.LocalizedControlType
 		"Name = " + $_.Current.Name
-#		"ProcessId = " + $_.Current.ProcessId.tostring()
 		$_.GetSupportedPatterns() |
 		%{
 			"    SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
@@ -4087,10 +3947,8 @@ function psrpa_uia_show_element_all($rpa, $element){
 			"-------------------------------------------------------------------------"
 			'    "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
 			"    ClassName = " + $_.Current.ClassName
-#			"    ControlType.Id = " + $_.Current.ControlType.Id.tostring()
 			"    LocalizedControlType = " + $_.Current.LocalizedControlType
 			"    Name = " + $_.Current.Name
-#			"    ProcessId = " + $_.Current.ProcessId.tostring()
 			$_.GetSupportedPatterns() |
 			%{
 				"        SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
@@ -4100,10 +3958,8 @@ function psrpa_uia_show_element_all($rpa, $element){
 				"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 				'        "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
 				"        ClassName = " + $_.Current.ClassName
-#				"        ControlType.Id = " + $_.Current.ControlType.Id.tostring()
 				"        LocalizedControlType = " + $_.Current.LocalizedControlType
 				"        Name = " + $_.Current.Name
-#				"        ProcessId = " + $_.Current.ProcessId.tostring()
 				$_.GetSupportedPatterns() |
 				%{
 					"            SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
@@ -4113,10 +3969,8 @@ function psrpa_uia_show_element_all($rpa, $element){
 					"........................................................................."
 					'            "' + $_.Current.ClassName + '" "' + $_.Current.LocalizedControlType + '" "' + $_.Current.Name + '"'
 					"            ClassName = " + $_.Current.ClassName
-#					"            ControlType.Id = " + $_.Current.ControlType.Id.tostring()
 					"            LocalizedControlType = " + $_.Current.LocalizedControlType
 					"            Name = " + $_.Current.Name
-#					"            ProcessId = " + $_.Current.ProcessId.tostring()
 					$_.GetSupportedPatterns() |
 					%{
 						"                SupportedPattern = " + $_.Id.tostring() + ":" + $_.ProgrammaticName.tostring()
@@ -4213,6 +4067,18 @@ function psrpa_uia_get_element($rpa, $element, $classname, $localizedcontroltype
 }
 
 #
+# Get element absolutely version of psrpa_uia_get_element
+#
+function psrpa_uia_get_elementZ($rpa_object, $parent_element, $class_name, $localized_controlname, $name){
+	$elm = psrpa_uia_get_element $rpa_object $parent_element $class_name $localized_controlname $name
+	while ($elm -eq $null){
+		sleep 1
+		$elm = psrpa_uia_get_element $rpa_object $parent_element $class_name $localized_controlname $name
+	}
+	return $elm
+}
+
+#
 # psrpa_uia_get_element_all - Get all ui-automation element in specfied element
 #
 function psrpa_uia_get_element_all($rpa, $element, $classname, $localizedcontroltype, $name){
@@ -4259,6 +4125,18 @@ function psrpa_uia_get_element_all($rpa, $element, $classname, $localizedcontrol
 				$_.Current.Name -match $name}
 		)
 	}
+}
+
+#
+# Get element absolutely version of psrpa_uia_get_element_all
+#
+function psrpa_uia_get_element_allZ($rpa_object, $parent_element, $class_name, $localized_controlname, $name){
+	$elm = psrpa_uia_get_element_all $rpa_object $parent_element $class_name $localized_controlname $name
+	while ($elm -eq $null){
+		sleep 1
+		$elm = psrpa_uia_get_element_all $rpa_object $parent_element $class_name $localized_controlname $name
+	}
+	return $elm
 }
 
 #
