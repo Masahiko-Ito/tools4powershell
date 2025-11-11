@@ -1431,6 +1431,3 @@ ex.
     $pattern = psrpa_uia_getPattern $rpa $elm "Invoke"
     $pattern.Invoke()
 ```
-
-## Youtube
-[PowerShell用便利機能集](https://youtu.be/6Evv53xYsNc)
