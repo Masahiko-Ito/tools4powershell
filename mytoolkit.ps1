@@ -4802,3 +4802,114 @@ function psrpa_uia_getPattern($rpa, $element, $pattern){
 	Start-Sleep -Milliseconds $rpa["AfterWait"]
 	return $ret
 }
+
+#
+# psUtf16toUnicode - Utf16(Hex string) to Unicode(Hex string)
+#
+function psUtf16toUnicode($utf16){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psUtf16toUnicode Utf16_hex_string"
+		return
+	}
+
+	if ($utf16.length -le 4){
+		$unicode = $utf16
+	}else{
+		$utf16High = $utf16.substring(0,4)
+		$utf16Low = $utf16.substring(4,4)
+		$utf16HighInt = [convert]::ToInt32($utf16High,16)
+		$utf16LowInt = [convert]::ToInt32($utf16Low,16)
+		$unicodeHighInt = $utf16HighInt -band [convert]::ToInt32("1111111111",2)
+		$unicodeLowInt = $utf16LowInt -band [convert]::ToInt32("1111111111",2)
+		$unicodeInt = ($unicodeHighInt -shl 10) + $unicodeLowInt + [convert]::ToInt32("10000",16)
+		$unicode = ([convert]::ToString($unicodeInt,16)).toupper()
+	}
+	return $unicode
+}
+
+#
+# psUnicodetoUtf16 - Unicode(Hex string) to Utf16(Hex string)
+#
+function psUnicodetoUtf16($unicode){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psUnicodetoUtf16 Unicode_hex_string"
+		return
+	}
+
+	if ($unicode.length -le 4){
+		$utf16 = $unicode
+	}else{
+		$unicodeDashInt = [convert]::ToInt32($unicode,16) - [convert]::ToInt32("10000",16)
+		$unicodeDashHighInt = $unicodeDashInt -shr 10
+		$unicodeDashLowInt = $unicodeDashInt -band [convert]::ToInt32("1111111111",2)
+		$utf16HighInt = [convert]::ToInt32("1101100000000000",2) -bor $unicodeDashHighInt
+		$utf16LowInt = [convert]::ToInt32("1101110000000000",2) -bor $unicodeDashLowInt
+		$utf16 = ([convert]::ToString($utf16HighInt,16) + [convert]::ToString($utf16LowInt,16)).toupper()
+	}
+	return $utf16
+}
+
+#
+# psUtf8toUnicode - Utf8(Hex string) to Unicode(Hex string)
+#
+function psUtf8toUnicode($utf8){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psUtf8toUnicode Utf8_hex_string"
+		return
+	}
+
+	if ($utf8.length -le 2){
+		$unicode = "00" + $utf8
+	}elseif ($utf8.length -le 4){
+		$utf8Int1 = [convert]::ToInt32($utf8.substring(0,2),16) -band [convert]::ToInt32("11111",2)
+		$utf8Int2 = [convert]::ToInt32($utf8.substring(2,2),16) -band [convert]::ToInt32("111111",2)
+		$unicodeInt = ($utf8int1 -shl 6) -bor $utf8int2
+		$unicode = [string]::format("{0:X4}",$unicodeInt)
+	}elseif ($utf8.length -le 6){
+		$utf8Int1 = [convert]::ToInt32($utf8.substring(0,2),16) -band [convert]::ToInt32("1111",2)
+		$utf8Int2 = [convert]::ToInt32($utf8.substring(2,2),16) -band [convert]::ToInt32("111111",2)
+		$utf8Int3 = [convert]::ToInt32($utf8.substring(4,2),16) -band [convert]::ToInt32("111111",2)
+		$unicodeInt = ($utf8int1 -shl 12) -bor ($utf8int2 -shl 6) -bor $utf8int3
+		$unicode = [string]::format("{0:X4}",$unicodeInt)
+	}else{
+		$utf8Int1 = [convert]::ToInt32($utf8.substring(0,2),16) -band [convert]::ToInt32("111",2)
+		$utf8Int2 = [convert]::ToInt32($utf8.substring(2,2),16) -band [convert]::ToInt32("111111",2)
+		$utf8Int3 = [convert]::ToInt32($utf8.substring(4,2),16) -band [convert]::ToInt32("111111",2)
+		$utf8Int4 = [convert]::ToInt32($utf8.substring(6,2),16) -band [convert]::ToInt32("111111",2)
+		$unicodeInt = ($utf8int1 -shl 18) -bor ($utf8int2 -shl 12) -bor ($utf8int3 -shl 6) -bor $utf8int4
+		$unicode = [string]::format("{0:X5}",$unicodeInt)
+	}
+	return $unicode
+}
+
+#
+# psUnicodetoUtf8 - Unicode(Hex string) to Utf8(Hex string)
+#
+function psUnicodetoUtf8($unicode){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psUnicodetoUtf8 Unicode_hex_string"
+		return
+	}
+
+	$uniint = [convert]::ToInt32($unicode,16)
+	if ($uniint -ge [convert]::ToInt32("0000",16) -and $uniint -le [convert]::ToInt32("007F",16)){
+		$utf8int = [convert]::ToInt32($uni,16) -band [convert]::ToInt32("FF",16)
+		$utf8 = [convert]::ToString($utf8int,16)
+	}elseif ($uniint -ge [convert]::ToInt32("0080",16) -and $uniint -le [convert]::ToInt32("07FF",16)){
+		$utf8byte1 = [convert]::ToInt32("11000000",2) + ($uniint -shr 6)
+		$utf8byte2 = [convert]::ToInt32("10000000",2) + ($uniint -band [convert]::ToInt32("111111",2))
+		$utf8 = ([convert]::ToString($utf8byte1,16) + [convert]::ToString($utf8byte2,16)).toupper()
+	}elseif ($uniint -ge [convert]::ToInt32("0800",16) -and $uniint -le [convert]::ToInt32("FFFF",16)){
+		$utf8byte1 = [convert]::ToInt32("11100000",2) + ($uniint -shr 12)
+		$utf8byte2 = [convert]::ToInt32("10000000",2) + (($uniint -shr 6) -band [convert]::ToInt32("111111",2))
+		$utf8byte3 = [convert]::ToInt32("10000000",2) + ($uniint -band [convert]::ToInt32("111111",2))
+		$utf8 = ([convert]::ToString($utf8byte1,16) + [convert]::ToString($utf8byte2,16) + [convert]::ToString($utf8byte3,16)).toupper()
+	}elseif ($uniint -ge [convert]::ToInt32("10000",16) -and $uniint -le [convert]::ToInt32("10FFFF",16)){
+		$utf8byte1 = [convert]::ToInt32("11110000",2) + ($uniint -shr 18)
+		$utf8byte2 = [convert]::ToInt32("10000000",2) + (($uniint -shr 12) -band [convert]::ToInt32("111111",2))
+		$utf8byte3 = [convert]::ToInt32("10000000",2) + (($uniint -shr 6) -band [convert]::ToInt32("111111",2))
+		$utf8byte4 = [convert]::ToInt32("10000000",2) + ($uniint -band [convert]::ToInt32("111111",2))
+		$utf8 = ([convert]::ToString($utf8byte1,16) + [convert]::ToString($utf8byte2,16) + [convert]::ToString($utf8byte3,16) + [convert]::ToString($utf8byte4,16)).toupper()
+	}
+	return $utf8
+}
