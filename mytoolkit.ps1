@@ -2074,14 +2074,28 @@ function psprov(){
 }
 
 #
-# psoracle_open - Connect to oracle
+# psoracle_open - Connect to Oracle
 #
 function psoracle_open($ip, $user, $password){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psoracle_open oracle_ip_address username password"
+		write-output "Usage: psoracle_open datasource username password"
 		write-output "Connect to oracle."
 		write-output "ex."
 		write-output '    $ocon = psoracle_open "127.0.0.1" "taro" "himitsu"'
+		write-output '      or'
+		write-output '    $datasource = @"'
+		write-output '    ('
+		write-output '        DESCRIPTION = ('
+		write-output '            ADDRESS_LIST = ('
+		write-output '                ADDRESS = (PROTOCOL = TCP)(HOST = 127.0.0.1)(PORT = 1521)'
+		write-output '            )'
+		write-output '        )'
+		write-output '        ('
+		write-output '            CONNECT_DATA = (SERVICE_NAME = XE)'
+		write-output '        )'
+		write-output '    )'
+		write-output '    "@'
+		write-output '    $ocon = psoracle_open $datasource "taro" "himitsu"'
 		write-output ""
 		return
 	}
@@ -2093,13 +2107,15 @@ function psoracle_open($ip, $user, $password){
 }
 
 #
-# psoracle_close - Disconnect from oracle
+# psoracle_close - Disconnect from Oracle
 #
 function psoracle_close($ocon){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psoracle_close oracle_connection"
-		write-output "Disconnect from oracle."
+		write-output "Disconnect from Oracle."
 		write-output "ex."
+		write-output '    $ocon = psoracle_open "127.0.0.1" "taro" "himitsu"'
+		write-output '    ... snip ...'
 		write-output '    psoracle_close $ocon'
 		write-output ""
 		return
@@ -2110,6 +2126,79 @@ function psoracle_close($ocon){
 }
 
 #
+# psoracle_begin - Begin transaction
+#
+function psoracle_begin($ocon){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_begin oracle_connection"
+		write-output "Begin transaction."
+		write-output "ex."
+		write-output '    $otran = psoracle_begin $ocon'
+		write-output '    ... snip ...'
+		write-output '    psoracle_free $otran'
+		write-output ""
+		return
+	}
+
+	$otran = $ocon.BeginTransaction()
+	return $otran
+}
+
+#
+# psoracle_settran - Set transaction for Oracle command
+#
+function psoracle_settran($ocmd, $otran){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_settran oracle_command oracle_transaction"
+		write-output "Set transaction for Oracle command."
+		write-output "ex."
+		write-output '    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"'
+		write-output '    $otran = psoracle_begin $ocon'
+		write-output '    psoracle_settran $ocmd $otran'
+		write-output ""
+		return
+	}
+
+	$ocmd.Transaction = $otran
+}
+
+#
+# psoracle_commit - commit transaction
+#
+function psoracle_commit($otran){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_commit oracle_transaction"
+		write-output "Commit transaction."
+		write-output "ex."
+		write-output '    $otran = psoracle_begin $ocon'
+		write-output '    ... snip ...'
+		write-output '    psoracle_commit $otran'
+		write-output ""
+		return
+	}
+
+	$otran.Commit()
+}
+
+#
+# psoracle_rollback - rollback transaction
+#
+function psoracle_rollback($otran){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_rollback oracle_transaction"
+		write-output "Rollback transaction."
+		write-output "ex."
+		write-output '    $otran = psoracle_begin $ocon'
+		write-output '    ... snip ...'
+		write-output '    psoracle_rollback $otran'
+		write-output ""
+		return
+	}
+
+	$otran.Rollback()
+}
+
+#
 # psoracle_createsql - Create SQL object with bind parameter
 #
 function psoracle_createsql($oc, $sql){
@@ -2117,8 +2206,10 @@ function psoracle_createsql($oc, $sql){
 		write-output "Usage: psoracle_createsql oracle_connection sql_command"
 		write-output "Create SQL object with bind parameter."
 		write-output "ex."
+		write-output '    $ocon = psoracle_open "127.0.0.1" "taro" "himitsu"'
+		write-output '    ... snip ...'
 		write-output '    $ocmd = psoracle_createsql $ocon "select * from table where id=:id_value"'
-		write-output '    ... something to do ...'
+		write-output '    ... snip ...'
 		write-output '    psoracle_free $ocmd'
 		write-output ""
 		return
@@ -2139,30 +2230,55 @@ function psoracle_bindsql($ocmd, $name, $value) {
 		write-output "Usage: psoracle_bindsql oracle_command name value"
 		write-output "Bind real value to bind variable."
 		write-output "ex."
-		write-output '    $id_value = psoracle_bindsql $ocmd "id_value" "12345"'
+		write-output '    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"'
+		write-output '    ... snip ...'
+#		write-output '    $id_value = psoracle_bindsql $ocmd ":id_value" "12345"'
+		write-output '    psoracle_bindsql $ocmd ":id_value" "12345"'
 		write-output ""
 		return
 	}
 
-	$bind = New-Object System.Data.OracleClient.OracleParameter($name, $value)
-	[void]$ocmd.Parameters.Add($bind)
-	return $bind
+#	$bind = New-Object System.Data.OracleClient.OracleParameter($name, $value)
+#	[void]$ocmd.Parameters.Add($bind)
+#	return $bind
+	[void]$ocmd.Parameters.AddWithValue($name, $value)
 }
 
 #
-# psoracle_unbindsql - Unbind bind variable
+# psoracle_clearbindsql - Remove all bind variable
 #
-function psoracle_unbindsql($ocmd, $bind){
+function psoracle_clearbindsql($ocmd){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psoracle_unbindsql oracle_command bind_object"
-		write-output "Unbind bind variable."
+		write-output "Usage: psoracle_clearbindsql oracle_command"
+		write-output "Remove all bind variable."
 		write-output "ex."
-		write-output '    psoracle_unbindsql $ocmd $id_value'
+		write-output '    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"'
+		write-output '    psoracle_bindsql $ocmd ":id_value" "12345"'
+		write-output '    ... snip ...'
+		write-output '    psoracle_clearbindsql $ocmd'
 		write-output ""
 		return
 	}
 
-	[void]$ocmd.Parameters.Remove($bind)
+	[void]$ocmd.Parameters.Clear()
+}
+
+#
+# psoracle_exeddl - Exuceute DDL
+#
+function psoracle_execddl($ocmd){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psoracle_execddl oracle_command"
+		write-output "Exuceute DDL."
+		write-output "ex."
+		write-output '    $ocmd = psoracle_createsql $ocon "create table ... snip ..."'
+		write-output '    ... snip ...'
+		write-output '    psoracle_execddl $ocmd'
+		write-output ""
+		return
+	}
+
+	$dummy = $ocmd.ExecuteNonQuery()
 }
 
 #
@@ -2173,6 +2289,8 @@ function psoracle_execupdatesql($ocmd){
 		write-output "Usage: psoracle_execupdatesql oracle_command"
 		write-output "Exuceute SQL with update."
 		write-output "ex."
+		write-output '    $ocmd = psoracle_createsql $ocon "update table set job = :job where id = :id"'
+		write-output '    ... snip ...'
 		write-output '    $count = psoracle_execupdatesql $ocmd'
 		write-output '    if ($count -lt 0){'
 		write-output '        write-output "Error: update SQL"'
@@ -2193,8 +2311,10 @@ function psoracle_execsql($ocmd){
 		write-output "Usage: psoracle_execsql oracle_command"
 		write-output "Exuceute SQL without update."
 		write-output "ex."
+		write-output '    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"'
+		write-output '    ... snip ...'
 		write-output '    $ocr = psoracle_execsql $ocmd'
-		write-output '    ... something to do ...'
+		write-output '    ... snip ...'
 		write-output '    psoracle_free $ocr'
 		write-output ""
 		return
@@ -2212,9 +2332,12 @@ function psoracle_fetch([Ref]$ocr){
 		write-output "Usage: psoracle_fetch ([Ref]oracle_reader)"
 		write-output "Fetch row."
 		write-output "ex."
+		write-output '    $ocr = psoracle_execsql $ocmd'
+		write-output '    ... snip ...'
 		write-output '    while (psoracle_fetch ([Ref]$ocr)){'
 		write-output '        write-output $ocr["id"]'
 		write-output '    }'
+		write-output '    psoracle_free $ocr'
 		write-output ""
 		return
 	}
@@ -2223,15 +2346,20 @@ function psoracle_fetch([Ref]$ocr){
 }
 
 #
-# psoracle_free - Free object for oracle access
+# psoracle_free - Free object for Oracle access
 #
 function psoracle_free($obj){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
 		write-output "Usage: psoracle_free oracle_object"
-		write-output "Free object for oracle access."
+		write-output "Free object for Oracle access."
 		write-output "ex."
+		write-output '    $ocr = psoracle_execsql $ocmd'
+		write-output '    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"'
+		write-output '    $otran = psoracle_begin $ocon'
+		write-output '    ... snip ...'
 		write-output '    psoracle_free $ocr'
 		write-output '    psoracle_free $ocmd'
+		write-output '    psoracle_free $otran'
 		write-output ""
 		return
 	}
@@ -2239,69 +2367,606 @@ function psoracle_free($obj){
 	$obj.Dispose()
 }
 
+##
+## psoracle_unbindsql - Unbind bind variable
+##
+#function psoracle_unbindsql($ocmd, $bind){
+#	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+#		write-output "Usage: psoracle_unbindsql oracle_command bind_object"
+#		write-output "Unbind bind variable."
+#		write-output "ex."
+#		write-output '    psoracle_unbindsql $ocmd $id_value'
+#		write-output ""
+#		return
+#	}
 #
-# psoracle_begin - Begin transaction
+#	[void]$ocmd.Parameters.Remove($bind)
+#}
+
 #
-function psoracle_begin($ocon){
+# psmssql_open - Connect to MSSQLServer
+#
+function psmssql_open($aDatasource,$aUserid,$aPassword,$aInitialcatalog,$aConnecttimeout = 15000){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psoracle_begin oracle_connection"
+		write-output "Usage: psmssql_open datasource username password dbname [timeout_ms]"
+		write-output "Connect to MSSQLServer."
+		write-output "ex."
+		write-output '    $mcon = psmssql_open "127.0.0.1" "taro" "himitsu" "foodb"'
+		write-output '      or'
+		write-output '    $port = 1433'
+		write-output '    $mcon = psmssql_open "127.0.0.1,$port" "taro" "himitsu" "foodb" 15000'
+		write-output ""
+		return
+	}
+	$builder = new-object System.Data.SqlClient.SqlConnectionStringBuilder(
+		"Data Source = $aDatasource;
+		User ID = $aUserid;
+		Password = $aPassword;
+		Initial Catalog = $aInitialcatalog;
+		Connect Timeout = $aConnecttimeout;
+		MultipleActiveResultSets = True"
+	)
+
+	$con = new-object System.Data.SqlClient.SqlConnection($builder.ConnectionString)
+	$con.Open()
+	return $con
+}
+
+#
+# psmssql_close - Disconnect from MSSQLServer
+#
+function psmssql_close($aConn){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_close mssql_connection"
+		write-output "Disconnect from MSSQLServer."
+		write-output "ex."
+		write-output '    $mcon = psmssql_open "127.0.0.1" "taro" "himitsu" "foodb" 15000'
+		write-output '    ... snip ...'
+		write-output '    psmssql_close $mcon'
+		write-output ""
+		return
+	}
+
+	$aConn.Close()
+	$aConn.Dispose()
+}
+
+#
+# psmssql_begin - Begin transaction
+#
+function psmssql_begin($aConnection){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_begin mssql_connection"
 		write-output "Begin transaction."
 		write-output "ex."
-		write-output '    $otran = psoracle_begin $ocon'
+		write-output '    $mcon = psmssql_open "127.0.0.1" "taro" "himitsu" "foodb" 15000'
+		write-output '    ... snip ...'
+		write-output '    $mtran = psmssql_begin $mcon'
+		write-output '    ... snip ...'
+		write-output '    psmssql_free $mtran'
 		write-output ""
 		return
 	}
 
-	$otran = $ocon.BeginTransaction()
-	return $otran
+	$tran = $aConnection.BeginTransaction()
+	return $tran
 }
 
 #
-# psoracle_settran - Set transaction for oracle command
+# psmssql_settran - Set transaction for MSSQLServer command
 #
-function psoracle_settran($ocmd, $otran){
+function psmssql_settran($aCommand, $aTran){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psoracle_settran oracle_command oracle_transaction"
-		write-output "Set transaction for oracle command."
+		write-output "Usage: psmssql_settran mssql_command mssql_transaction"
+		write-output "Set transaction for MSSQLServer command."
 		write-output "ex."
-		write-output '    psoracle_settran $ocmd $otran'
+		write-output '    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"'
+		write-output '    $mtran = psmssql_begin $mcon'
+		write-output '    psmssql_settran $mcmd $mtran'
 		write-output ""
 		return
 	}
 
-	$ocmd.Transaction = $otran
+	$aCommand.Transaction = $aTran
 }
 
 #
-# psoracle_rollback - rollback transaction
+# psmssql_commit - commit transaction
 #
-function psoracle_rollback($otran){
+function psmssql_commit($aTransaction){
 	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psoracle_rollback oracle_transaction"
-		write-output "Rollback transaction."
-		write-output "ex."
-		write-output '    psoracle_rollback $otran'
-		write-output ""
-		return
-	}
-
-	$otran.Rollback()
-}
-
-#
-# psoracle_commit - commit transaction
-#
-function psoracle_commit($otran){
-	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
-		write-output "Usage: psoracle_commit oracle_transaction"
+		write-output "Usage: psmssql_commit mssql_transaction"
 		write-output "Commit transaction."
 		write-output "ex."
-		write-output '    psoracle_commit $otran'
+		write-output '    $mtran = psmssql_begin $mcon'
+		write-output '    ... snip ...'
+		write-output '    psmssql_commit $mtran'
 		write-output ""
 		return
 	}
 
-	$otran.Commit()
+	$aTransaction.Commit()
+}
+
+#
+# psmssql_rollback - rollback transaction
+#
+function psmssql_rollback($aTransaction){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_rollback mssql_transaction"
+		write-output "Rollback transaction."
+		write-output "ex."
+		write-output '    $mtran = psmssql_begin $mcon'
+		write-output '    ... snip ...'
+		write-output '    psmssql_rollback $mtran'
+		write-output ""
+		return
+	}
+
+	$aTransaction.Rollback()
+}
+
+#
+# psmssql_createsql - Create SQL object with bind parameter
+#
+function psmssql_createsql($aCon,$aSql){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_createsql mssql_connection sql_command"
+		write-output "Create SQL object with bind parameter."
+		write-output "ex."
+		write-output '    $mcon = psmssql_open "127.0.0.1" "taro" "himitsu" "foodb" 15000'
+		write-output '    ... snip ...'
+		write-output '    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"'
+		write-output '    ... snip ...'
+		write-output '    psmssql_free $mcmd'
+		write-output ""
+		return
+	}
+
+	$com = new-object System.Data.SqlClient.SqlCommand($aSql, $aCon)
+	return $com
+}
+
+#
+# psmssql_bindsql - Bind real value to bind variable
+#
+function psmssql_bindsql($aCommand, $aName, $aValue){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_bindsql mssql_command name value"
+		write-output "Bind real value to bind variable."
+		write-output "ex."
+		write-output '    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"'
+		write-output '    ... snip ...'
+#		write-output '    $bind_id = psmssql_bindsql $mcmd "@id_value" "12345"'
+		write-output '    psmssql_bindsql $mcmd "@id_value" "12345"'
+		write-output ""
+		return
+	}
+
+#	$objsql = new-object System.Data.SqlClient.SqlParameter($aName, $aValue)
+#	[void]$aCommand.Parameters.Add($objsql)
+#	return $objsql
+	[void]$aCommand.Parameters.Add($aName, $aValue)
+}
+
+#
+# psmssql_clearbindsql - Remove all bind variable
+#
+function psmssql_clearbindsql($aCommand){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_clearbindsql mssql_command"
+		write-output "Remove all bind variable."
+		write-output "ex."
+		write-output '    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"'
+		write-output '    psmssql_bindsql $mcmd "@id_value" "12345"'
+		write-output '    ... snip ...'
+		write-output '    psmssql_clearbindsql $mcmd'
+		write-output ""
+		return
+	}
+
+	[void]$aCommand.Parameters.Clear()
+}
+
+#
+# psmssql_exeddl - Exuceute DDL
+#
+function psmssql_execddl($aCommand){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_execddl mssql_command"
+		write-output "Exuceute DDL."
+		write-output "ex."
+		write-output '    $mcmd = psmssql_createsql $mcon "create table ... snip ..."'
+		write-output '    ... snip ...'
+		write-output '    psmssql_execddl $mcmd'
+		write-output ""
+		return
+	}
+
+	[void]$aCommand.ExecuteNonQuery()
+}
+
+#
+# psmssql_execupdatesql - Exuceute SQL with update
+#
+function psmssql_execupdatesql($aCommand){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_execupdatesql mssql_command"
+		write-output "Exuceute SQL with update."
+		write-output "ex."
+		write-output '    $mcmd = psmssql_createsql $mcon "update table set job = @job where id = @id"'
+		write-output '    ... snip ...'
+		write-output '    $count = psmssql_execupdatesql $mcmd'
+		write-output '    if ($count -lt 0){'
+		write-output '        write-output "Error: update SQL"'
+		write-output '    }'
+		write-output ""
+		return
+	}
+
+	$rowcount = $aCommand.ExecuteNonQuery()
+	return $rowcount
+}
+
+#
+# psmssql_execsql - Exuceute SQL without update
+#
+function psmssql_execsql($aCommand){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_execsql mssql_command"
+		write-output "Exuceute SQL without update."
+		write-output "ex."
+		write-output '    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"'
+		write-output '    ... snip ...'
+		write-output '    $msr = psmssql_execsql $mcmd'
+		write-output '    ... snip ...'
+		write-output '    psmssql_free $msr'
+		write-output ""
+		return
+	}
+
+	$reader = $aCommand.ExecuteReader()
+	return ,$reader
+}
+
+#
+# psmssql_fetch - Fetch row
+#
+function psmssql_fetch($aReader){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_fetch mssql_reader"
+		write-output "Fetch row."
+		write-output "ex."
+		write-output '    $msr = psmssql_execsql $mcmd'
+		write-output '    ... snip ...'
+		write-output '    while (psmssql_fetch $msr){'
+		write-output '        write-output $msr["id"]'
+		write-output '    }'
+#		write-output '    psmssql_close_fetch $msr'
+		write-output '    psmssql_free $msr'
+		write-output ""
+		return
+	}
+
+	return $aReader.Read()
+}
+
+#
+# psmssql_free - Free object for MSSQLServer access
+#
+function psmssql_free($obj){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: psmssql_free mssql_object"
+		write-output "Free object for MSSQLServer access."
+		write-output "ex."
+		write-output '    $msr = psmssql_execsql $mcmd'
+		write-output '    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"'
+		write-output '    $mtran = psmssql_begin $mcon'
+		write-output '    ... snip ...'
+		write-output '    psmssql_free $msr'
+		write-output '    psmssql_free $mcmd'
+		write-output '    psmssql_free $mtran'
+		write-output ""
+		return
+	}
+
+	$obj.Dispose()
+}
+
+##
+## psmssql_unbindsql - Unbind bind variable
+##
+#function psmssql_unbindsql($aCommand, $aBind){
+#	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+#		write-output "Usage: psmssql_unbindsql mssql_command bind_object"
+#		write-output "Unbind bind variable."
+#		write-output "ex."
+#		write-output '    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"'
+#		write-output '    $id_value = psmssql_bindsql $mcmd "@id_value" "12345"'
+#		write-output '    ... snip ...'
+#		write-output '    psmssql_unbindsql $mcmd $id_value'
+#		write-output ""
+#		return
+#	}
+#
+#	[void]$aCommand.Parameters.Remove($aBind)
+#}
+
+#
+# pspgsql_open - Connect to PostgreSQL
+#
+function pspgsql_open($aHost, $aUser, $aPassword,$aDatabase,$aPort="5432"){
+#	[void][reflection.assembly]::LoadFrom("${PSSCriptRoot}\Npgsql.dll")
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_open ip_address username password dbname [port]"
+		write-output "Connect to mssqlserver."
+		write-output "ex."
+		write-output '    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb"'
+		write-output '      or'
+		write-output '    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb" "5432"'
+		write-output ""
+		return
+	}
+
+	$con = New-Object NpgSql.NpgsqlConnection("Host=${aHost};Username=${aUser};Password=${aPassword};Database=${aDatabase};Port=${aPort}")
+	$con.Open()
+	return $con
+}
+
+#
+# pspgsql_close - Disconnect from PostgreSQL
+#
+function pspgsql_close($aConn){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_close pgsql_connection"
+		write-output "Disconnect from PostgreSQL."
+		write-output "ex."
+		write-output '    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb"'
+		write-output '    ... snip ...'
+		write-output '    pspssql_close $pcon'
+		write-output ""
+		return
+	}
+
+	$aConn.Close()
+	$aConn.Dispose()
+}
+
+#
+# pspgsql_begin - Begin transaction
+#
+function pspgsql_begin($aConnection){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_begin pgsql_connection"
+		write-output "Begin transaction."
+		write-output "ex."
+		write-output '    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb"'
+		write-output '    ... snip ...'
+		write-output '    $ptran = pspgsql_begin $pcon'
+		write-output '    ... snip ...'
+		write-output '    pspgsql_free $ptran'
+		write-output ""
+		return
+	}
+
+	$tran = $aConnection.BeginTransaction()
+	return $tran
+}
+
+#
+# pspgsql_settran - Set transaction for PostgreSQL command
+#
+function pspgsql_settran($aCommand, $aTran){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_settran pgsql_command pgsql_transaction"
+		write-output "Set transaction for PostgreSQL command."
+		write-output "ex."
+		write-output '    $pcmd = pspgsql_createsql $pcon "select * from table where id = @id_value"'
+		write-output '    $ptran = pspgsql_begin $pcon'
+		write-output '    pspgsql_settran $pcmd $ptran'
+		write-output ""
+		return
+	}
+
+	$aCommand.Transaction = $aTran
+}
+
+#
+# pspgsql_commit - commit transaction
+#
+function pspgsql_commit($aTransaction){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_commit pgsql_transaction"
+		write-output "Commit transaction."
+		write-output "ex."
+		write-output '    $ptran = pspgsql_begin $pcon'
+		write-output '    ... snip ...'
+		write-output '    pspgsql_commit $ptran'
+		write-output ""
+		return
+	}
+
+	$aTransaction.Commit()
+}
+
+#
+# pspgsql_rollback - rollback transaction
+#
+function pspgsql_rollback($aTransaction){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_rollback pgsql_transaction"
+		write-output "Rollback transaction."
+		write-output "ex."
+		write-output '    $ptran = pspgsql_begin $pcon'
+		write-output '    ... snip ...'
+		write-output '    pspgsql_rollback $ptran'
+		write-output ""
+		return
+	}
+
+	$aTransaction.Rollback()
+}
+
+#
+# pspgsql_createsql - Create SQL object with bind parameter
+#
+function pspgsql_createsql($aConn,$aSql){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_createsql pgsql_connection sql_command"
+		write-output "Create SQL object with bind parameter."
+		write-output "ex."
+		write-output '    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb"'
+		write-output '    ... snip ...'
+		write-output '    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"'
+		write-output '    ... snip ...'
+		write-output '    pspgsql_free $pcmd'
+		write-output ""
+		return
+	}
+
+	$com = New-Object NpgSql.NpgSqlCommand($aSql, $aConn)
+	return $com
+}
+
+#
+# pspgsql_bindsql - Bind real value to bind variable
+#
+function pspgsql_bindsql($aCommand, $aName, $aValue){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_bindsql pgsql_command name value"
+		write-output "Bind real value to bind variable."
+		write-output "ex."
+		write-output '    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"'
+		write-output '    ... snip ...'
+		write-output '    pspgsql_bindsql $pcmd ":id_value" "12345"'
+		write-output ""
+		return
+	}
+
+	[void]$aCommand.Parameters.AddWithValue($aName, $aValue)
+}
+
+#
+# pspgsql_clearbindsql - Remove all bind variable
+#
+function pspgsql_clearbindsql($aCommand){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_clearbindsql pgsql_command"
+		write-output "Remove all bind variable."
+		write-output "ex."
+		write-output '    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"'
+		write-output '    pspgsql_bindsql $pcmd ":id_value" "12345"'
+		write-output '    ... snip ...'
+		write-output '    pspgsql_clearbindsql $pcmd'
+		write-output ""
+		return
+	}
+
+	[void]$aCommand.Parameters.Clear()
+}
+
+#
+# pspgsql_exeddl - Exuceute DDL
+#
+function pspgsql_execddl($aCommand){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_execddl pgsql_command"
+		write-output "Exuceute DDL."
+		write-output "ex."
+		write-output '    $pcmd = pspgsql_createsql $pcon "create table ... snip ..."'
+		write-output '    ... snip ...'
+		write-output '    pspgsql_execddl $pcmd'
+		write-output ""
+		return
+	}
+
+	[void]$aCommand.ExecuteNonQuery()
+}
+
+#
+# pspgsql_execupdatesql - Exuceute SQL with update
+#
+function pspgsql_execupdatesql($aCommand){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_execupdatesql pgsql_command"
+		write-output "Exuceute SQL with update."
+		write-output "ex."
+		write-output '    $pcmd = pspgsql_createsql $pcon "update table set job = :job where id = :id"'
+		write-output '    ... snip ...'
+		write-output '    $count = pspgsql_execupdatesql $pcmd'
+		write-output '    if ($count -lt 0){'
+		write-output '        write-output "Error: update SQL"'
+		write-output '    }'
+		write-output ""
+		return
+	}
+
+	$rowcount = $aCommand.ExecuteNonQuery()
+	return $rowcount
+}
+
+#
+# pspgsql_execsql - Exuceute SQL without update
+#
+function pspgsql_execsql($aCommand){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_execsql pgsql_command"
+		write-output "Exuceute SQL without update."
+		write-output "ex."
+		write-output '    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"'
+		write-output '    ... snip ...'
+		write-output '    $psr = pspgsql_execsql $pcmd'
+		write-output '    ... snip ...'
+		write-output '    pspgsql_free $psr'
+		write-output ""
+		return
+	}
+
+	$reader = $aCommand.ExecuteReader()
+	return ,$reader
+}
+
+#
+# pspgsql_fetch - Fetch row
+#
+function pspgsql_fetch($aReader){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_fetch pgsql_reader"
+		write-output "Fetch row."
+		write-output "ex."
+		write-output '    $psr = pspgsql_execsql $pcmd'
+		write-output '    ... snip ...'
+		write-output '    while (pspgsql_fetch $psr){'
+		write-output '        write-output $psr["id"]'
+		write-output '    }'
+		write-output '    pspgsql_free $psr'
+		write-output ""
+		return
+	}
+
+	return $aReader.Read()
+}
+
+#
+# pspgsql_free - Free object for PostgreSQL access
+#
+function pspgsql_free($obj){
+	if ($args[0] -eq "-h" -or $args[0] -eq "--help"){
+		write-output "Usage: pspgsql_free pgsql_object"
+		write-output "Free object for PostgreSQL access."
+		write-output "ex."
+		write-output '    $psr = pspgsql_execsql $pcmd'
+		write-output '    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"'
+		write-output '    $ptran = pspgsql_begin $pcon'
+		write-output '    ... snip ...'
+		write-output '    pspgsql_free $psr'
+		write-output '    pspgsql_free $pcmd'
+		write-output '    pspgsql_free $ptran'
+		write-output ""
+		return
+	}
+
+	$obj.Dispose()
 }
 
 #
