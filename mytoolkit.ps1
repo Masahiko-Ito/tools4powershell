@@ -4733,7 +4733,7 @@ function psrpa_uia_get_element($rpa, $element, $classname, $localizedcontroltype
 }
 
 #
-# Get element absolutely version of psrpa_uia_get_element
+# psrpa_uia_get_elementZ - Get element absolutely version of psrpa_uia_get_element
 #
 function psrpa_uia_get_elementZ($rpa_object, $parent_element, $class_name, $localized_controlname, $name){
 	$elm = psrpa_uia_get_element $rpa_object $parent_element $class_name $localized_controlname $name
@@ -4794,7 +4794,7 @@ function psrpa_uia_get_element_all($rpa, $element, $classname, $localizedcontrol
 }
 
 #
-# Get element absolutely version of psrpa_uia_get_element_all
+# psrpa_uia_get_element_allZ - Get element absolutely version of psrpa_uia_get_element_all
 #
 function psrpa_uia_get_element_allZ($rpa_object, $parent_element, $class_name, $localized_controlname, $name){
 	$elm = psrpa_uia_get_element_all $rpa_object $parent_element $class_name $localized_controlname $name

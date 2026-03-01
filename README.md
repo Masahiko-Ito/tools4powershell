@@ -1508,10 +1508,10 @@ ex.
     $help = psrpa_uia_get_element $rpa $app "" "メニュー項目" "ヘルプ\(H\)"
 ```
 
-# Get element absolutely version of psrpa_uia_get_element
+# psrpa_uia_get_elementZ - Get element absolutely version of psrpa_uia_get_element
 ```
 Usage: psrpa_uia_get_elementZ rpa_object parent_element class_name localized_controlname name
-Get all ui-automation element in specfied element absolutely.
+Get child ui-automation element absolutely.
 ```
 
 ## psrpa_uia_get_element_all - Get all ui-automation element in specfied element
@@ -1527,7 +1527,7 @@ ex.
     $help = psrpa_uia_get_element_all $rpa $app "" "メニュー項目" "ヘルプ\(H\)"
 ```
 
-## Get element absolutely version of psrpa_uia_get_element_all
+## psrpa_uia_get_element_allZ - Get element absolutely version of psrpa_uia_get_element_all
 ```
 Usage: psrpa_uia_get_element_allZ rpa_object parent_element class_name localized_controlname name
 Get all ui-automation element in specfied element absolutely.
