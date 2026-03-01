@@ -1433,6 +1433,7 @@ function psconvenc() {
 	for ($i = 0; $i -lt $args.length; $i++){
 		if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
 			write-output "Usage: psconvenc -i inputfile -ie encoding -o outputfile -oe encoding"
+			write-output "Convert encoding of text file."
 			write-output ""
 			write-output "  -ie encoding           encoding for input file(default 0 means Default)"
 			write-output "                         encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0"

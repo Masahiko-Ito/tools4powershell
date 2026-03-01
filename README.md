@@ -4,7 +4,7 @@ tools4powershell is a collection of some useful functions for powershell :)
 
 ## pscat - concatenate files and print on the standard output
 ```
-Usage: pscat [-h|--help] [-n] [input ...]
+Usage: pscat [-h|--help] [-e encoding] [-n] [input ...]
 Concatenate input(s), or standard input, to standard output.
 
   -e encoding    encoding for get-content called internally
@@ -13,25 +13,27 @@ Concatenate input(s), or standard input, to standard output.
 
 ## psgrep - print lines matching a pattern
 ```
-Usage: psgrep [-h|--help] [-v] [-i] regex [input ...]
+Usage: psgrep [-h|--help] [-v] [-i] [-sn] [-e encoding] regex [input ...]
 Search for regex in each input or standard input.
 
   -v             select non-matching lines
   -i             ignore case distinctions
+  -sn            show short filename
   -e encoding    encoding for get-content called internally
 ```
 
 ## pswcl - print newline counts for each file
 ```
-Usage: pswcl [-h|--help] [input ...]
+Usage: pswcl [-h|--help] [-sn] [-e encoding] [input ...]
 Print newline counts for each input, and a total line if more than one input is specified.
 
+  -sn                show short filename
   -e encoding        encoding for get-content called internally
 ```
 
 ## pssed - stream editor for filtering and transforming text
 ```
-Usage: pssed [-h|--help] regex string [input ...]
+Usage: pssed [-h|--help] [-e encoding] regex string [input ...]
 For each substring matching regex in each lines from input, substitute the string.
 
   -e encoding        encoding for get-content called internally
@@ -39,21 +41,23 @@ For each substring matching regex in each lines from input, substitute the strin
 
 ## pshead - output the first part of files
 ```
-Usage: pshead [-h|--help] [-l line_number] [input ...]
+Usage: pshead [-h|--help] [-l line_number] [-sn] [-e encoding] [input ...]
 Print the first 10 lines of each input to standard output.
 With no input, read standard input.
 
   -l line_number        print the first line_number lines instead of the first 10
+  -sn                   show short filename
   -e encoding           encoding for get-content called internally
 ```
 
 ## pstail - output the last part of files
 ```
-Usage: pstail [-h|--help] [-l line_number] [input ...]
+Usage: pstail [-h|--help] [-l line_number] [-sn] [-e encoding] [input ...]
 Print the last 10 lines of each input to standard output.
 With no input, read standard input.
 
   -l line_number        print the last line_number lines instead of the last 10
+  -sn                   show short filename
   -e encoding           encoding for get-content called internally
 ```
 
@@ -70,13 +74,15 @@ With no input, read standard input.
 
 ## pstee - read from standard input and write to standard output and files
 ```
-Usage: pstee [-h|--help] [output ...]
+Usage: pstee [-h|--help] [-e encoding] [output ...]
 Copy standard input to each output, and also to standard output.
+
+  -e encoding           encoding for out-file called internally
 ```
 
 ## psuniq - report or omit repeated lines
 ```
-Usage: psuniq [-h|--help] [-d|-c] [input ...]
+Usage: psuniq [-h|--help] [-d|-c] [-e encoding] [input ...]
 Filter adjacent matching lines from input (or standard input),
 writing to standard output.
 With no options, matching lines are merged to the first occurrence.
@@ -107,7 +113,7 @@ standard output.  The default join field is the first, delimited by ",".
 
 ## psxls2csv - convert excel to csv
 ```
-Usage: psxls2csv [-h|--help] [-i input] [-s sheet] [-o [output|-]]
+Usage: psxls2csv [-h|--help] [-i input] [-s sheet] [-t] [-e encoding] [-o [output|-]]
 Convert specified excel sheet to csv.
 If input is not specified, all excel files in current directory will be converted.
 If output is not specified, input will be converted into same filename, but with extention ".csv".
@@ -172,6 +178,9 @@ Read line and print it to console with newline.
 ```
 Usage: psopen [-h|--help] [[-r|-w|-a] [inputfile|output]] [-e encoding]
 Open IO.Stream and get object.
+  -e encoding            encoding for file(default 0 means Default)
+                         encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0
+
 ex. Handle as text
   $inObj = psopen -r "input.txt"
   $outObj = psopen -w "output.txt"
@@ -197,6 +206,11 @@ ex. Handle data as binary
 ## psconvenc - Convert encoding of text file
 ```
 Usage: psconvenc -i inputfile -ie encoding -o outputfile -oe encoding
+Convert encoding of text file
+
+  -ie encoding           encoding for input file(default 0 means Default)
+                         encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0
+  -oe encoding           encoding for output file(default 0 means Default)
 ```
 
 ## psexcel_open - Open excel_file and get excel_object for it
@@ -464,18 +478,74 @@ Print formatted data with overlay
 
 ## psoracle_open - Connect to oracle
 ```
-Usage: psoracle_open oracle_ip_address username password
+Usage: psoracle_open datasource username password
 Connect to oracle.
 ex.
     $ocon = psoracle_open "127.0.0.1" "taro" "himitsu"
+      or
+    $datasource = @"
+    (
+        DESCRIPTION = (
+            ADDRESS_LIST = (
+                ADDRESS = (PROTOCOL = TCP)(HOST = 127.0.0.1)(PORT = 1521)
+            )
+        )
+        (
+            CONNECT_DATA = (SERVICE_NAME = XE)
+        )
+    )
+    "@
+    $ocon = psoracle_open $datasource "taro" "himitsu"
 ```
 
-## psoracle_close - Disconnect from oracle
+## psoracle_close - Disconnect from Oracle
 ```
 Usage: psoracle_close oracle_connection
-Disconnect from oracle.
+Disconnect from Oracle.
 ex.
+    $ocon = psoracle_open "127.0.0.1" "taro" "himitsu"
+    ... snip ...
     psoracle_close $ocon
+```
+
+## psoracle_begin - Begin transaction
+```
+Usage: psoracle_begin oracle_connection
+Begin transaction.
+ex.
+    $otran = psoracle_begin $ocon
+    ... snip ...
+    psoracle_free $otran
+```
+
+## psoracle_settran - Set transaction for Oracle command
+```
+Usage: psoracle_settran oracle_command oracle_transaction
+Set transaction for Oracle command.
+ex.
+    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"
+    $otran = psoracle_begin $ocon
+    psoracle_settran $ocmd $otran
+```
+
+## psoracle_commit - commit transaction
+```
+Usage: psoracle_commit oracle_transaction
+Commit transaction.
+ex.
+    $otran = psoracle_begin $ocon
+    ... snip ...
+    psoracle_commit $otran
+```
+
+## psoracle_rollback - rollback transaction
+```
+Usage: psoracle_rollback oracle_transaction
+Rollback transaction.
+ex.
+    $otran = psoracle_begin $ocon
+    ... snip ...
+    psoracle_rollback $otran
 ```
 
 ## psoracle_createsql - Create SQL object with bind parameter
@@ -483,8 +553,10 @@ ex.
 Usage: psoracle_createsql oracle_connection sql_command
 Create SQL object with bind parameter.
 ex.
+    $ocon = psoracle_open "127.0.0.1" "taro" "himitsu"
+    ... snip ...
     $ocmd = psoracle_createsql $ocon "select * from table where id=:id_value"
-    ... something to do ...
+    ... snip ...
     psoracle_free $ocmd
 ```
 
@@ -493,15 +565,29 @@ ex.
 Usage: psoracle_bindsql oracle_command name value
 Bind real value to bind variable.
 ex.
-    $id_value = psoracle_bindsql $ocmd "id_value" "12345"
+    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"
+    ... snip ...
+    psoracle_bindsql $ocmd ":id_value" "12345"
+```
+## psoracle_clearbindsql - Remove all bind variable
+```
+Usage: psoracle_clearbindsql oracle_command
+Remove all bind variable.
+ex.
+    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"
+    psoracle_bindsql $ocmd ":id_value" "12345"
+    ... snip ...
+    psoracle_clearbindsql $ocmd
 ```
 
-## psoracle_unbindsql - Unbind bind variable
+## psoracle_exeddl - Exuceute DDL
 ```
-Usage: psoracle_unbindsql oracle_command bind_object
-Unbind bind variable.
+Usage: psoracle_execddl oracle_command
+Exuceute DDL.
 ex.
-    psoracle_unbindsql $ocmd $id_value
+    $ocmd = psoracle_createsql $ocon "create table ... snip ..."
+    ... snip ...
+    psoracle_execddl $ocmd
 ```
 
 ## psoracle_execupdatesql - Exuceute SQL with update
@@ -509,6 +595,8 @@ ex.
 Usage: psoracle_execupdatesql oracle_command
 Exuceute SQL with update.
 ex.
+    $ocmd = psoracle_createsql $ocon "update table set job = :job where id = :id"
+    ... snip ...
     $count = psoracle_execupdatesql $ocmd
     if ($count -lt 0){
         write-output "Error: update SQL"
@@ -520,8 +608,10 @@ ex.
 Usage: psoracle_execsql oracle_command
 Exuceute SQL without update.
 ex.
+    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"
+    ... snip ...
     $ocr = psoracle_execsql $ocmd
-    ... something to do ...
+    ... snip ...
     psoracle_free $ocr
 ```
 
@@ -530,50 +620,364 @@ ex.
 Usage: psoracle_fetch ([Ref]oracle_reader)
 Fetch row.
 ex.
+    $ocr = psoracle_execsql $ocmd
+    ... snip ...
     while (psoracle_fetch ([Ref]$ocr)){
         write-output $ocr["id"]
     }
+    psoracle_free $ocr
 ```
 
-## psoracle_free - Free object for oracle access
+## psoracle_free - Free object for Oracle access
 ```
 Usage: psoracle_free oracle_object
-Free object for oracle access.
+Free object for Oracle access.
 ex.
+    $ocr = psoracle_execsql $ocmd
+    $ocmd = psoracle_createsql $ocon "select * from table where id = :id_value"
+    $otran = psoracle_begin $ocon
+    ... snip ...
     psoracle_free $ocr
     psoracle_free $ocmd
+    psoracle_free $otran
 ```
 
-## psoracle_begin - Begin transaction
+## psmssql_open - Connect to MSSQLServer
 ```
-Usage: psoracle_begin oracle_connection
+Usage: psmssql_open datasource username password dbname [timeout_ms]
+Connect to MSSQLServer.
+ex.
+    $mcon = psmssql_open "127.0.0.1" "taro" "himitsu" "foodb"
+      or
+    $port = 1433
+    $mcon = psmssql_open "127.0.0.1,$port" "taro" "himitsu" "foodb" 15000
+```
+
+## psmssql_close - Disconnect from MSSQLServer
+```
+Usage: psmssql_close mssql_connection
+Disconnect from MSSQLServer.
+ex.
+    $mcon = psmssql_open "127.0.0.1" "taro" "himitsu" "foodb" 15000
+    ... snip ...
+    psmssql_close $mcon
+```
+
+## psmssql_begin - Begin transaction
+```
+Usage: psmssql_begin mssql_connection
 Begin transaction.
 ex.
-    $otran = psoracle_begin $ocon
+    $mcon = psmssql_open "127.0.0.1" "taro" "himitsu" "foodb" 15000
+    ... snip ...
+    $mtran = psmssql_begin $mcon
+    ... snip ...
+    psmssql_free $mtran
 ```
 
-## psoracle_settran - Set transaction for oracle command
+## psmssql_settran - Set transaction for MSSQLServer command
 ```
-Usage: psoracle_settran oracle_command oracle_transaction
-Set transaction for oracle command.
+Usage: psmssql_settran mssql_command mssql_transaction
+Set transaction for MSSQLServer command.
 ex.
-    psoracle_settran $ocmd $otran
+    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"
+    $mtran = psmssql_begin $mcon
+    psmssql_settran $mcmd $mtran
 ```
 
-## psoracle_rollback - rollback transaction
+## psmssql_commit - commit transaction
 ```
-Usage: psoracle_rollback oracle_transaction
-Rollback transaction.
-ex.
-    psoracle_rollback $otran
-```
-
-## psoracle_commit - commit transaction
-```
-Usage: psoracle_commit oracle_transaction
+Usage: psmssql_commit mssql_transaction
 Commit transaction.
 ex.
-    psoracle_commit $otran
+    $mtran = psmssql_begin $mcon
+    ... snip ...
+    psmssql_commit $mtran
+```
+
+## psmssql_rollback - rollback transaction
+```
+Usage: psmssql_rollback mssql_transaction
+Rollback transaction.
+ex.
+    $mtran = psmssql_begin $mcon
+    ... snip ...
+    psmssql_rollback $mtran
+```
+
+## psmssql_createsql - Create SQL object with bind parameter
+```
+Usage: psmssql_createsql mssql_connection sql_command
+Create SQL object with bind parameter.
+ex.
+    $mcon = psmssql_open "127.0.0.1" "taro" "himitsu" "foodb" 15000
+    ... snip ...
+    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"
+    ... snip ...
+    psmssql_free $mcmd
+```
+
+## psmssql_bindsql - Bind real value to bind variable
+```
+Usage: psmssql_bindsql mssql_command name value
+Bind real value to bind variable.
+ex.
+    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"
+    ... snip ...
+    psmssql_bindsql $mcmd "@id_value" "12345"
+```
+
+## psmssql_clearbindsql - Remove all bind variable
+```
+Usage: psmssql_clearbindsql mssql_command
+Remove all bind variable.
+ex.
+    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"
+    psmssql_bindsql $mcmd "@id_value" "12345"
+    ... snip ...
+    psmssql_clearbindsql $mcmd
+```
+
+## psmssql_clearbindsql - Remove all bind variable
+```
+Usage: psmssql_clearbindsql mssql_command
+Remove all bind variable.
+ex.
+    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"
+    psmssql_bindsql $mcmd "@id_value" "12345"
+    ... snip ...
+    psmssql_clearbindsql $mcmd
+```
+
+## psmssql_exeddl - Exuceute DDL
+```
+Usage: psmssql_execddl mssql_command
+Exuceute DDL.
+ex.
+    $mcmd = psmssql_createsql $mcon "create table ... snip ..."
+    ... snip ...
+    psmssql_execddl $mcmd
+```
+
+## psmssql_execupdatesql - Exuceute SQL with update
+```
+Usage: psmssql_execupdatesql mssql_command
+Exuceute SQL with update.
+ex.
+    $mcmd = psmssql_createsql $mcon "update table set job = @job where id = @id"
+    ... snip ...
+    $count = psmssql_execupdatesql $mcmd
+    if ($count -lt 0){
+        write-output "Error: update SQL"
+    }
+```
+
+## psmssql_execsql - Exuceute SQL without update
+```
+Usage: psmssql_execsql mssql_command
+Exuceute SQL without update.
+ex.
+    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"
+    ... snip ...
+    $msr = psmssql_execsql $mcmd
+    ... snip ...
+    psmssql_free $msr
+```
+
+## psmssql_execsql - Exuceute SQL without update
+```
+Usage: psmssql_execsql mssql_command
+Exuceute SQL without update.
+ex.
+    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"
+    ... snip ...
+    $msr = psmssql_execsql $mcmd
+    ... snip ...
+    psmssql_free $msr
+```
+
+## psmssql_fetch - Fetch row
+```
+Usage: psmssql_fetch mssql_reader
+Fetch row.
+ex.
+    $msr = psmssql_execsql $mcmd
+    ... snip ...
+    while (psmssql_fetch $msr){
+        write-output $msr["id"]
+    }
+    psmssql_free $msr
+```
+
+## psmssql_free - Free object for MSSQLServer access
+```
+Usage: psmssql_free mssql_object
+Free object for MSSQLServer access.
+ex.
+    $msr = psmssql_execsql $mcmd
+    $mcmd = psmssql_createsql $mcon "select * from table where id = @id_value"
+    $mtran = psmssql_begin $mcon
+    ... snip ...
+    psmssql_free $msr
+    psmssql_free $mcmd
+    psmssql_free $mtran
+```
+
+## pspgsql_open - Connect to PostgreSQL
+```
+Usage: pspgsql_open ip_address username password dbname [port]
+Connect to mssqlserver.
+ex.
+    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb"
+      or
+    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb" "5432"
+```
+
+## pspgsql_close - Disconnect from PostgreSQL
+```
+Usage: pspgsql_close pgsql_connection
+Disconnect from PostgreSQL.
+ex.
+    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb"
+    ... snip ...
+    pspssql_close $pcon
+```
+
+## pspgsql_begin - Begin transaction
+```
+Usage: pspgsql_begin pgsql_connection
+Begin transaction.
+ex.
+    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb"
+    ... snip ...
+    $ptran = pspgsql_begin $pcon
+    ... snip ...
+    pspgsql_free $ptran
+```
+
+## pspgsql_settran - Set transaction for PostgreSQL command
+```
+Usage: pspgsql_settran pgsql_command pgsql_transaction
+Set transaction for PostgreSQL command.
+ex.
+    $pcmd = pspgsql_createsql $pcon "select * from table where id = @id_value"
+    $ptran = pspgsql_begin $pcon
+    pspgsql_settran $pcmd $ptran
+```
+
+## pspgsql_commit - commit transaction
+```
+Usage: pspgsql_commit pgsql_transaction
+Commit transaction.
+ex.
+    $ptran = pspgsql_begin $pcon
+    ... snip ...
+    pspgsql_commit $ptran
+```
+
+## pspgsql_rollback - rollback transaction
+```
+Usage: pspgsql_rollback pgsql_transaction
+Rollback transaction.
+ex.
+    $ptran = pspgsql_begin $pcon
+    ... snip ...
+    pspgsql_rollback $ptran
+```
+
+## pspgsql_createsql - Create SQL object with bind parameter
+```
+Usage: pspgsql_createsql pgsql_connection sql_command
+Create SQL object with bind parameter.
+ex.
+    $pcon = pspgsql_open "127.0.0.1" "taro" "himitsu" "foodb"
+    ... snip ...
+    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"
+    ... snip ...
+    pspgsql_free $pcmd
+```
+
+## pspgsql_bindsql - Bind real value to bind variable
+```
+Usage: pspgsql_bindsql pgsql_command name value
+Bind real value to bind variable.
+ex.
+    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"
+    ... snip ...
+    pspgsql_bindsql $pcmd ":id_value" "12345"
+```
+
+## pspgsql_clearbindsql - Remove all bind variable
+```
+Usage: pspgsql_clearbindsql pgsql_command
+Remove all bind variable.
+ex.
+    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"
+    pspgsql_bindsql $pcmd ":id_value" "12345"
+    ... snip ...
+    pspgsql_clearbindsql $pcmd
+```
+
+## pspgsql_exeddl - Exuceute DDL
+```
+Usage: pspgsql_execddl pgsql_command
+Exuceute DDL.
+ex.
+    $pcmd = pspgsql_createsql $pcon "create table ... snip ..."
+    ... snip ...
+    pspgsql_execddl $pcmd
+```
+
+## pspgsql_execupdatesql - Exuceute SQL with update
+```
+Usage: pspgsql_execupdatesql pgsql_command
+Exuceute SQL with update.
+ex.
+    $pcmd = pspgsql_createsql $pcon "update table set job = :job where id = :id"
+    ... snip ...
+    $count = pspgsql_execupdatesql $pcmd
+    if ($count -lt 0){
+        write-output "Error: update SQL"
+    }
+```
+
+## pspgsql_execsql - Exuceute SQL without update
+```
+Usage: pspgsql_execsql pgsql_command
+Exuceute SQL without update.
+ex.
+    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"
+    ... snip ...
+    $psr = pspgsql_execsql $pcmd
+    ... snip ...
+    pspgsql_free $psr
+```
+
+## pspgsql_fetch - Fetch row
+```
+Usage: pspgsql_fetch pgsql_reader
+Fetch row.
+ex.
+    $psr = pspgsql_execsql $pcmd
+    ... snip ...
+    while (pspgsql_fetch $psr){
+        write-output $psr["id"]
+    }
+    pspgsql_free $psr
+```
+
+## pspgsql_free - Free object for PostgreSQL access
+```
+Usage: pspgsql_free pgsql_object
+Free object for PostgreSQL access.
+ex.
+    $psr = pspgsql_execsql $pcmd
+    $pcmd = pspgsql_createsql $pcon "select * from table where id = :id_value"
+    $ptran = pspgsql_begin $pcon
+    ... snip ...
+    pspgsql_free $psr
+    pspgsql_free $pcmd
+    pspgsql_free $ptran
 ```
 
 ## pssock_open - Open socket for client
@@ -646,11 +1050,14 @@ ex.
 ```
 Usage: pssock_accept server [encoding]
 Accept connection from client.
+  encoding           encoding for socket(default 0 means Default)
+                     encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0
+
 ex.
-    $param = pssock_accept $server "UTF-8"
+    $param = pssock_accept $server "UTF8N"
 ```
 
-## pssock_accept - Unaccept(disconnect) connection from client
+## pssock_unaccept - Unaccept(disconnect) connection from client
 ```
 Usage: pssock_unaccept socket_param
 Unaccept(disconnect) connection from client.
@@ -765,7 +1172,7 @@ ex.
 ## psrpa_init - Initialize rpa environment
 ```
 Usage: psrpa_init
-Initialize rpa environment.
+Initialize rpa environment and get rpa_object.
 ex.
     $rpa = psrpa_init
 ```
@@ -895,6 +1302,7 @@ Send keys(string, function, special keys etc)
 ex.
     psrpa_sendKeys $rpa "any string"
     psrpa_sendKeys $rpa "{BS}"
+    psrpa_sendKeys $rpa "{BS 5}"
     psrpa_sendKeys $rpa "^a"
 ```
 
@@ -905,9 +1313,9 @@ Send a key(Both of normal key and extended key are acceptable)
     virtual_keycode see https://msdn.microsoft.com/ja-jp/windows/desktop/dd375731
     action "down", "DOWN", "d", "D"
            "up", "UP", "u", "U"
-           
+           "send", "SEND", "downup", "DOWNUP"
     isExtended $true or $false
-               see https://learn.microsoft.com/en-us/windows/win32/inputdev/about-keyboard-input#extended-key-flag
+               see https://learn.microsoft.com/en-us/windows/win32/inputdev/about-keyboard-input#ex
                    https://kusidate.blog.fc2.com/blog-entry-31.html
 ex.
     $right_ctrl = 0xa3
@@ -1100,6 +1508,12 @@ ex.
     $help = psrpa_uia_get_element $rpa $app "" "メニュー項目" "ヘルプ\(H\)"
 ```
 
+# Get element absolutely version of psrpa_uia_get_element
+```
+Usage: psrpa_uia_get_elementZ rpa_object parent_element class_name localized_controlname name
+Get all ui-automation element in specfied element absolutely.
+```
+
 ## psrpa_uia_get_element_all - Get all ui-automation element in specfied element
 ```
 Usage: psrpa_uia_get_element_all rpa_object parent_element class_name localized_controlname name
@@ -1111,6 +1525,12 @@ Get all ui-automation element in specfied element.
 ex.
     $app = psrpa_uia_get_element_all $rpa $null "Notepad" "ウィンドウ" "無題 - メモ帳"
     $help = psrpa_uia_get_element_all $rpa $app "" "メニュー項目" "ヘルプ\(H\)"
+```
+
+## Get element absolutely version of psrpa_uia_get_element_all
+```
+Usage: psrpa_uia_get_element_allZ rpa_object parent_element class_name localized_controlname name
+Get all ui-automation element in specfied element absolutely.
 ```
 
 ## psrpa_uia_get - Get all ui-automation element in root window
@@ -1430,4 +1850,24 @@ ex.
     $elm = psrpa_uia_get ...snip...
     $pattern = psrpa_uia_getPattern $rpa $elm "Invoke"
     $pattern.Invoke()
+```
+
+## psUtf16toUnicode - Utf16(Hex string) to Unicode(Hex string)
+```
+Usage: psUtf16toUnicode Utf16_hex_string
+```
+
+## psUnicodetoUtf16 - Unicode(Hex string) to Utf16(Hex string)
+```
+Usage: psUnicodetoUtf16 Unicode_hex_string
+```
+
+## psUtf8toUnicode - Utf8(Hex string) to Unicode(Hex string)
+```
+Usage: psUtf8toUnicode Utf8_hex_string
+```
+
+## psUnicodetoUtf8 - Unicode(Hex string) to Utf8(Hex string)
+```
+Usage: psUnicodetoUtf8 Unicode_hex_string
 ```
