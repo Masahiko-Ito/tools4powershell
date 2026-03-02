@@ -476,10 +476,10 @@ Print formatted data with overlay
                         "A1=1" means "A1" cell in OVERLAY.XLS should be setted to "1st column" in INPUT.CSV
 ```
 
-## psoracle_open - Connect to oracle
+## psoracle_open - Connect to Oracle
 ```
 Usage: psoracle_open datasource username password
-Connect to oracle.
+Connect to Oracle.
 ex.
     $ocon = psoracle_open "127.0.0.1" "taro" "himitsu"
       or
