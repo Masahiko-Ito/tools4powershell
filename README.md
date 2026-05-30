@@ -1872,7 +1872,7 @@ Usage: psUtf8toUnicode Utf8_hex_string
 Usage: psUnicodetoUtf8 Unicode_hex_string
 ```
 
-## Export table of MS-Access into csv file
+## psmsacc_export - Export table of MS-Access into csv file
 ```
 Usage: psmsacc_export [-h|--help] {-d dbfile} {-t table_name} [-s separator] [-o outfile] [-e encoding]
 Export table of MS-Access into csv file.
