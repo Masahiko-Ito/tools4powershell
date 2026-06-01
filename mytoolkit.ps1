@@ -5587,15 +5587,17 @@ function psmsacc_export {
 	$DatabasePath = ""
 	$TableName = ""
 	$OutputPath = ".\psmsacc_export_output.csv"
+	$HeaderOn = $true
 	$Sep = ","
 	$enc = "0"
 	for ($i = 0; $i -lt $args.length; $i++){
 		if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
-			write-output "Usage: psmsacc_export [-h|--help] {-d dbfile} {-t table_name} [-s separator] [-o outfile] [-e encoding]"
+			write-output "Usage: psmsacc_export [-h|--help] {-d dbfile} {-t table_name} [-nh] [-s separator] [-o outfile] [-e encoding]"
 			write-output "Export table of MS-Access into csv file."
 			write-output ""
 			write-output "  -d dbfile         *.accdb"
 			write-output "  -t table_name     Table name to be exported."
+			write-output "  -nh               Output no header."
 			write-output "  -s separator      Separator char of outfile(default: ',')."
 			write-output "  -o outfile        output filename(default: psmsacc_export_output.csv)."
 			write-output "  -e encoding       encoding for outfile(default 0 means Default)"
@@ -5607,6 +5609,8 @@ function psmsacc_export {
 		}elseif ($args[$i] -eq "-t"){
 			$i++
 			$TableName = $args[$i]
+		}elseif ($args[$i] -eq "-nh"){
+			$HeaderOn = $false
 		}elseif ($args[$i] -eq "-s"){
 			$i++
 			$Sep = $args[$i]
@@ -5637,7 +5641,7 @@ function psmsacc_export {
 	$Connection.Open()
 
 	$SQLQuery = "SELECT * FROM [$TableName];"
-
+    
 	$Command = New-Object System.Data.OleDb.OleDbCommand
 	$Command.Connection = $Connection
 	$Command.CommandText = $SQLQuery
@@ -5645,11 +5649,13 @@ function psmsacc_export {
 	$DataReader = $Command.ExecuteReader()
 
 	$FieldCount = $DataReader.FieldCount
-	for ($i = 0; $i -lt $FieldCount; $i++) {
-		$Headers += $DataReader.GetName($i)
+	if ($HeaderON){
+		for ($i = 0; $i -lt $FieldCount; $i++) {
+			$Headers += $DataReader.GetName($i)
+		}
+		$HeaderRow = $Headers -join $Sep
+		$outObj.writeLine($HeaderRow)
 	}
-        $HeaderRow = $Headers -join $Sep
-	$outObj.writeLine($HeaderRow)
 
 	while ($DataReader.Read()) {
 		$Datas = @()

@@ -1874,13 +1874,14 @@ Usage: psUnicodetoUtf8 Unicode_hex_string
 
 ## psmsacc_export - Export table of MS-Access into csv file
 ```
-Usage: psmsacc_export [-h|--help] {-d dbfile} {-t table_name} [-s separator] [-o outfile] [-e encoding]
+Usage: psmsacc_export [-h|--help] {-d dbfile} {-t table_name} [-nh] [-s separator] [-o outfile] [-e encoding]
 Export table of MS-Access into csv file.
 
   -d dbfile         *.accdb
   -t table_name     Table name to be exported.
+  -nh               Output no header.
   -s separator      Separator char of outfile(default: ',').
   -o outfile        output filename(default: psmsacc_export_output.csv).
   -e encoding       encoding for outfile(default 0 means Default)
-                    encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0
+                    encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,
 ```
