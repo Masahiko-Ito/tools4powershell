@@ -1883,5 +1883,5 @@ Export table of MS-Access into csv file.
   -s separator      Separator char of outfile(default: ',').
   -o outfile        output filename(default: psmsacc_export_output.csv).
   -e encoding       encoding for outfile(default 0 means Default)
-                    encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,
+                    encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0
 ```
