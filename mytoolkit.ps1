@@ -1023,8 +1023,11 @@ function psxls2csv {
 					write-output $out
 				}elseif ($strOutput -eq "-"){
 					$OutPath = [System.IO.Path]::GetTempFileName()
+				}elseif ($strOutput -match "^[A-Za-z]:" -or $strOutput -match "^\\"){
+					$OutPath = $strOutput
 				}else{
 					$OutPath = ([String]::Format("{0}\{1}", (get-location).tostring() ,$strOutput))
+					$OutPath = $OutPath -replace "^.*::", ""
 				}
 				$objExcel = New-Object -ComObject Excel.Application
 				$objExcel.DisplayAlerts = $false
@@ -1060,8 +1063,11 @@ function psxls2csv {
 				}
 			}elseif ($strOutput -eq "-"){
 				$OutPath = [System.IO.Path]::GetTempFileName()
+			}elseif ($strOutput -match "^[A-Za-z]:" -or $strOutput -match "^\\"){
+				$OutPath = $strOutput
 			}else{
 				$OutPath = ([String]::Format("{0}\{1}", (get-location).tostring() ,$strOutput))
+				$OutPath = $OutPath -replace "^.*::", ""
 			}
 			$objExcel = New-Object -ComObject Excel.Application
 			$objExcel.DisplayAlerts = $false
@@ -1195,7 +1201,7 @@ function psabspath ($path){
 			if ($path -match '^[A-Za-z]:' -or $path -match '^\\'){
 				$path
 			}else{
-				[String]::Format("{0}\{1}", (get-location).ProviderPath ,$path)
+				([String]::Format("{0}\{1}", (get-location).ProviderPath ,$path))  -replace "^.*::", ""
 			}
 		}
 	}
@@ -1426,6 +1432,7 @@ function psopen(){
 		}
 	}
 }
+
 #
 # psconvenc - Convert encoding of text file
 #
@@ -1486,6 +1493,7 @@ function psexcel_open($xlsPath) {
 		$strPath = $xlsPath
 	}else{
 		$strPath = ([String]::Format("{0}\{1}", (get-location).tostring() ,$xlsPath))
+		$strPath = $strPath -replace "^.*::", ""
 	}
 
 	try {
@@ -1533,6 +1541,7 @@ function psexcel_save($objExcel, $xlsPath) {
 		$strPath = $xlsPath
 	}else{
 		$strPath = ([String]::Format("{0}\{1}", (get-location).tostring() ,$xlsPath))
+		$strPath = $strPath -replace "^.*::", ""
 	}
 	$objExcel.Workbooks.item(1).SaveAs($strPath) | out-null
 }
@@ -5586,9 +5595,9 @@ function psUnicodetoUtf8($unicode){
 function psmsacc_export {
 	$DatabasePath = ""
 	$TableName = ""
+	$Sep = ","
 	$OutputPath = ".\psmsacc_export_output.csv"
 	$HeaderOn = $true
-	$Sep = ","
 	$enc = "0"
 	for ($i = 0; $i -lt $args.length; $i++){
 		if ($args[$i] -eq "-h" -or $args[$i] -eq "--help"){
@@ -5597,10 +5606,10 @@ function psmsacc_export {
 			write-output ""
 			write-output "  -d dbfile         *.accdb"
 			write-output "  -t table_name     Table name to be exported."
-			write-output "  -nh               Output no header."
+			write-output "  -nh               Output No header."
 			write-output "  -s separator      Separator char of outfile(default: ',')."
 			write-output "  -o outfile        output filename(default: psmsacc_export_output.csv)."
-			write-output "  -e encoding       encoding for outfile(default 0 means Default)"
+			write-output "  -e encoding       encoding for outfile(default: 0 means Default)"
 			write-output "                    encoding utf8n,utf8,utf16n,utf16,utf16len,utf16le,utf16ben,utf16be,0"
 			return
 		}elseif ($args[$i] -eq "-d"){
@@ -5649,7 +5658,7 @@ function psmsacc_export {
 	$DataReader = $Command.ExecuteReader()
 
 	$FieldCount = $DataReader.FieldCount
-	if ($HeaderON){
+	if ($headerOn){
 		for ($i = 0; $i -lt $FieldCount; $i++) {
 			$Headers += $DataReader.GetName($i)
 		}
@@ -5667,7 +5676,7 @@ function psmsacc_export {
 			}
 			$Datas += $stringValue
 		}
-	        $DataRow = $Datas -join $Sep
+		$DataRow = $Datas -join $Sep
 		$outObj.writeLine($DataRow)
 	}
 	$outObj.close()
